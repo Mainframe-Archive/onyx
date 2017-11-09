@@ -1,0 +1,110 @@
+@font-face {
+  font-family: 'Muli';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Muli Regular'), local('Muli-Regular'),
+    url(./fonts/Muli-Regular.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: 'Muli';
+  font-style: normal;
+  font-weight: 600;
+  src: local('Muli SemiBold'), local('Muli-SemiBold'),
+    url(./fonts/Muli-SemiBold.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: 'Muli';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Muli Bold'), local('Muli-Bold'),
+    url(./fonts/Muli-Bold.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Poppins Regular'), local('Poppins-Regular'),
+    url(./fonts/Poppins-Regular.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  src: local('Poppins Medium'), local('Poppins-Medium'),
+    url(./fonts/Poppins-Medium.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  src: local('Poppins SemiBold'), local('Poppins-SemiBold'),
+    url(./fonts/Poppins-SemiBold.woff2) format('woff2');
+  unicode-range: U+0000-00ff, U+0131, U+0152-0153, U+02c6, U+02da, U+02dc,
+    U+2000-206f, U+2074, U+20ac, U+2212, U+2215;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+img {
+  max-width: 100%;
+}
+
+.ReactModal__Overlay {
+  position: fixed !important;
+  top: 0px !important;
+  left: 0px !important;
+  right: 0px !important;
+  bottom: 0px !important;
+  background-color: rgba(15, 32, 67, 0.9) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  z-index: 999 !important;
+  border: none !important;
+}
+
+.ReactModal__Content {
+  position: relative !important;
+  top: initial !important;
+  left: initial !important;
+  right: initial !important;
+  bottom: initial !important;
+  border: none !important;
+  background: none !important;
+  overflow: auto !important;
+  border-radius: 10px !important;
+  border-color: transparent !important;
+  outline: none !important;
+  padding: 0px !important;
+  margin: auto !important;
+}
+
+.message-image {
+  max-height: 100%;
+  width: auto;
+  max-width: calc(100vw - 400px);
+}
+
+.DraftEditor-root {
+  font-family: 'Muli';
+  font-size: 14px;
+}
