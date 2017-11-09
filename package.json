@@ -9,31 +9,19 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "dist": "electron-builder",
     "serve": "serve -s build",
-    "electron": "electron .",
-    "flow": "flow check"
+    "electron": "electron app",
+    "flow": "flow check",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "apollo-server-micro": "^1.1.7",
     "buffer": "^5.0.7",
     "bytes": "^3.0.0",
-    "commander": "^2.11.0",
-    "crc-32": "^1.1.1",
-    "debug": "^3.1.0",
     "draft-js": "^0.10.4",
-    "electron-is-dev": "^0.3.0",
-    "get-port": "^3.2.0",
     "graphql": "^0.10.5",
-    "graphql-subscriptions": "^0.5.4",
-    "graphql-tools": "^2.7.0",
-    "graphql-type-json": "^0.1.4",
-    "ip": "^1.1.5",
     "lodash": "^4.17.4",
-    "micro": "^9.0.0",
-    "micro-cors": "^0.0.4",
-    "microrouter": "^3.0.0",
     "moment": "^2.19.1",
-    "node-fetch": "^1.7.3",
     "prop-types": "^15.6.0",
     "qrcode.react": "^0.7.2",
     "query-string": "^5.0.1",
@@ -49,10 +37,7 @@
     "redux": "^3.7.2",
     "redux-logger": "^3.0.6",
     "rxjs": "^5.5.1",
-    "static-server": "^2.0.6",
-    "subscriptions-transport-ws": "^0.8.3",
-    "uuid": "^3.1.0",
-    "ws": "^3.2.0"
+    "subscriptions-transport-ws": "^0.8.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -64,13 +49,11 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "del-cli": "^1.1.0",
-    "electron": "^1.8.1",
     "electron-builder": "^19.43.4",
-    "electron-compile": "^6.4.2",
     "electron-prebuilt-compile": "^1.7.9",
-    "flow-bin": "^0.58.0",
+    "flow-bin": "^0.59.0",
     "flow-copy-source": "^1.2.1",
-    "prettier": "^1.7.4",
+    "prettier": "^1.8.2",
     "serve": "^6.4.0"
   }
 }

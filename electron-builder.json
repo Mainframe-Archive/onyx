@@ -1,0 +1,24 @@
+{
+  "appId": "com.mainframe.onyx",
+  "productName": "Onyx",
+  "artifactName": "${productName}.${ext}",
+  "directories": {
+    "buildResources": "assets"
+  },
+  "extraFiles": {
+    "from": "./build",
+    "to": "./build"
+  },
+  "linux": {
+    "category": "Network",
+    "target": "AppImage"
+  },
+  "mac": {
+    "icon": "icon.icns",
+    "target": "dir"
+  },
+  "win": {
+    "icon": "icon.ico",
+    "target": "nsis"
+  }
+}
