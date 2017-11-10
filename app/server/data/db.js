@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setAction = exports.getAction = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
+exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -24,13 +24,10 @@ const TYPING_TIMEOUT = 10000; // 10 secs in ms
 const log = (0, _debug2.default)('dcd:db'); // keyed by peer ID
 
 const db = {
-  actions: new Map(),
   address: '',
   contactRequests: new Map(),
   contacts: new Map(),
   convos: new Map(),
-  // TODO: store profiles mock as [address]: PeerProfile
-  // get own profile based on address
   profile: undefined,
   typings: new Map()
 };
@@ -91,33 +88,11 @@ const setContactRequest = exports.setContactRequest = (contact, request) => {
   _pubsub2.default.publish('contactRequested', contact.profile);
 };
 
-const getAction = exports.getAction = id => db.actions.get(id);
-
-const setAction = exports.setAction = (convoID, data) => {
-  const action = { convoID, data };
-  db.actions.set(data.id, action);
-  return action;
-};
-
 const getConversation = exports.getConversation = (id, withContacts = false) => {
   const convo = db.convos.get(id);
   if (convo) {
-    const messages = convo.messages && convo.messages.length ? convo.messages.map(msg => {
-      msg.blocks = msg.blocks.map(b => {
-        if (b.action != null && typeof b.action.id === 'string') {
-          const action = db.actions.get(b.action.id);
-          if (action != null) {
-            // $FlowIgnore
-            b.action = action.data;
-          }
-        }
-        return b;
-      });
-      return msg;
-    }) : [];
     // $FlowFixMe
     return _extends({}, convo, {
-      messages,
       peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers
     });
   }
@@ -195,13 +170,6 @@ const addMessage = exports.addMessage = (id, msg, fromSelf = false) => {
     msg.source = 'USER';
   }
   msg.timestamp = convo.lastActiveTimestamp = Date.now();
-
-  // $FlowFixMe
-  const actionBlock = msg.blocks.find(b => b.action != null);
-  if (actionBlock != null) {
-    // $FlowFixMe
-    setAction(id, actionBlock.action);
-  }
 
   const messages = convo.messages || [];
   // $FlowFixMe

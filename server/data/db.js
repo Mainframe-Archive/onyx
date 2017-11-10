@@ -19,20 +19,6 @@ export type Profile = {
   name?: ?string,
 }
 
-export type ActionState = 'PENDING' | 'DONE'
-
-export type ActionData = {
-  id: ID, // UUID for the action
-  assignee: ID, // public key
-  sender: ID, // public key
-  state: ActionState,
-  text: string,
-}
-
-export type MessageBlockAction = {
-  action: ActionData,
-}
-
 export type FileData = {
   name: string,
   url: string,
@@ -48,10 +34,7 @@ export type MessageBlockText = {
   text: string,
 }
 
-export type MessageBlock =
-  | MessageBlockAction
-  | MessageBlockFile
-  | MessageBlockText
+export type MessageBlock = MessageBlockFile | MessageBlockText
 
 export type MessageSource = 'SYSTEM' | 'USER'
 
@@ -123,16 +106,10 @@ type Viewer = {
   profile: ?Profile,
 }
 
-export type Action = {
-  convoID: ID,
-  data: ActionData,
-}
-
 type Timer = number
 type ConvoTypings = Map<ID, Timer> // keyed by peer ID
 
 type DB = {
-  actions: Map<ID, Action>,
   address: string,
   contactRequests: Map<ID, ContactRequest>,
   contacts: Map<ID, Contact>,
@@ -142,13 +119,10 @@ type DB = {
 }
 
 const db: DB = {
-  actions: new Map(),
   address: '',
   contactRequests: new Map(),
   contacts: new Map(),
   convos: new Map(),
-  // TODO: store profiles mock as [address]: PeerProfile
-  // get own profile based on address
   profile: undefined,
   typings: new Map(),
 }
@@ -213,40 +187,15 @@ export const setContactRequest = (
   pubsub.publish('contactRequested', contact.profile)
 }
 
-export const getAction = (id: ID): ?Action => db.actions.get(id)
-
-export const setAction = (convoID: ID, data: ActionData): Action => {
-  const action = { convoID, data }
-  db.actions.set(data.id, action)
-  return action
-}
-
 export const getConversation = (
   id: ID,
   withContacts: boolean = false,
 ): ?(Conversation | ConversationData) => {
   const convo = db.convos.get(id)
   if (convo) {
-    const messages =
-      convo.messages && convo.messages.length
-        ? convo.messages.map(msg => {
-            msg.blocks = msg.blocks.map(b => {
-              if (b.action != null && typeof b.action.id === 'string') {
-                const action = db.actions.get(b.action.id)
-                if (action != null) {
-                  // $FlowIgnore
-                  b.action = action.data
-                }
-              }
-              return b
-            })
-            return msg
-          })
-        : []
     // $FlowFixMe
     return {
       ...convo,
-      messages,
       peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers,
     }
   }
@@ -339,13 +288,6 @@ export const addMessage = (
     msg.source = 'USER'
   }
   msg.timestamp = convo.lastActiveTimestamp = Date.now()
-
-  // $FlowFixMe
-  const actionBlock = msg.blocks.find(b => b.action != null)
-  if (actionBlock != null) {
-    // $FlowFixMe
-    setAction(id, actionBlock.action)
-  }
 
   const messages = convo.messages || []
   // $FlowFixMe
