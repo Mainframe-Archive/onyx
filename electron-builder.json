@@ -5,10 +5,6 @@
   "directories": {
     "buildResources": "assets"
   },
-  "extraFiles": {
-    "from": "./build",
-    "to": "./build"
-  },
   "linux": {
     "category": "Network",
     "target": "AppImage"

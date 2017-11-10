@@ -1,40 +1,49 @@
-// @flow
+'use strict';
 
-import { Buffer } from 'buffer'
-import fetch from 'node-fetch'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-export default class Bzz {
-  _url: string
+var _buffer = require('buffer');
 
-  constructor(url: string) {
-    this._url = url
+var _nodeFetch = require('node-fetch');
+
+var _nodeFetch2 = _interopRequireDefault(_nodeFetch);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Bzz {
+
+  constructor(url) {
+    this._url = url;
   }
 
-  async uploadRaw(data: string | Buffer, headers: Object): Promise<string> {
-    const res = await fetch(`${this._url}/bzzr:`, {
-      body: typeof data === 'string' ? Buffer.from(data) : data,
+  async uploadRaw(data, headers) {
+    const res = await (0, _nodeFetch2.default)(`${this._url}/bzzr:`, {
+      body: typeof data === 'string' ? _buffer.Buffer.from(data) : data,
       headers,
-      method: 'POST',
-    })
-    const hash = await res.text()
-    return hash
+      method: 'POST'
+    });
+    const hash = await res.text();
+    return hash;
   }
 
-  downloadRaw(hash: string): Promise<Object> {
-    return fetch(`${this._url}/bzzr:/${hash}`)
+  downloadRaw(hash) {
+    return (0, _nodeFetch2.default)(`${this._url}/bzzr:/${hash}`);
   }
 
   // DOM-only
-  downloadRawBlob(hash: string): Promise<Blob> {
-    return this.downloadRaw(hash).then(res => res.blob())
+  downloadRawBlob(hash) {
+    return this.downloadRaw(hash).then(res => res.blob());
   }
 
   // node-only
-  downloadRawBuffer(hash: string): Promise<Buffer> {
-    return this.downloadRaw(hash).then(res => res.buffer())
+  downloadRawBuffer(hash) {
+    return this.downloadRaw(hash).then(res => res.buffer());
   }
 
-  downloadRawText(hash: string): Promise<string> {
-    return this.downloadRaw(hash).then(res => res.text())
+  downloadRawText(hash) {
+    return this.downloadRaw(hash).then(res => res.text());
   }
 }
+exports.default = Bzz;

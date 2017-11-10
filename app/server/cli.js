@@ -1,13 +1,19 @@
-// @flow
+'use strict';
 
-import program from 'commander'
+var _commander = require('commander');
 
-import { default as start } from './index'
+var _commander2 = _interopRequireDefault(_commander);
 
-program.usage('<swarm ws url> <swarm http url> <server port>').parse(process.argv)
+var _index = require('./index');
+
+var _index2 = _interopRequireDefault(_index);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_commander2.default.usage('<swarm ws url> <swarm http url> <server port>').parse(process.argv);
 
 // $FlowIgnore
-const [swarmWsUrl, swarmHttpUrl, portStr] = program.args
-const port = portStr ? parseInt(portStr, 10) : undefined
+const [swarmWsUrl, swarmHttpUrl, portStr] = _commander2.default.args;
+const port = portStr ? parseInt(portStr, 10) : undefined;
 
-start(swarmWsUrl, swarmHttpUrl, port)
+(0, _index2.default)(swarmWsUrl, swarmHttpUrl, port);

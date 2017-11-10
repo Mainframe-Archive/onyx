@@ -1,186 +1,79 @@
-// @flow
+'use strict';
 
-import { isObject, isString } from 'lodash'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.topicTyping = exports.topicMessage = exports.topicJoined = exports.profileResponse = exports.profileRequest = exports.contactRequest = exports.channelInvite = exports.actionState = exports.encodeProtocol = exports.decodeProtocol = undefined;
 
-import type { ActionState, ID, MessageBlock, Profile } from '../data/db'
-import { decodeMessage, encodeMessage, createKey } from '../lib'
-import type { ByteArray } from './types'
+var _lodash = require('lodash');
 
-const NONCE_SIZE = 8
-const receivedNonces: Set<string> = new Set()
+var _lib = require('../lib');
 
-export type ProtocolType =
-  | 'ACTION_STATE' // In channel or p2p topic
-  | 'CHANNEL_INVITE' // In p2p topic
-  | 'CONTACT_REQUEST' // In contact topic
-  | 'PROFILE_REQUEST' // In channel
-  | 'PROFILE_RESPONSE' // In channel
-  | 'TOPIC_JOINED' // In channel or p2p topic
-  | 'TOPIC_MESSAGE' // In channel or p2p topic
-  | 'TOPIC_TYPING' // In channel or p2p topic
+const NONCE_SIZE = 8;
+const receivedNonces = new Set(); // In channel or p2p topic
 
-export type ActionStatePayload = {
-  id: ID,
-  state: ActionState,
-}
-
-export type PeerInfo = {
-  address: string,
-  pubKey: ID,
-}
-
-export type ChannelInvitePayload = {
-  topic: ByteArray,
-  subject: string,
-  peers: Array<PeerInfo>,
-  dark: boolean,
-}
-
-export type ContactRequestPayload = {
-  address: string,
-  profile: Profile,
-  topic: ByteArray,
-}
-
-export type ProfileResponsePayload = {
-  profile: Profile,
-}
-
-export type TopicJoinedPayload = {
-  address: string,
-  profile?: ?Profile,
-}
-
-export type TopicMessagePayload = {
-  blocks: Array<MessageBlock>,
-}
-
-export type TopicTypingPayload = {
-  typing: boolean,
-}
-
-export type ProtocolPayload =
-  | ActionStatePayload
-  | ChannelInvitePayload
-  | ContactRequestPayload
-  | ProfileResponsePayload
-  | TopicJoinedPayload
-  | TopicMessagePayload
-  | TopicTypingPayload
-
-export type ProtocolEvent<T = ProtocolType, P = ProtocolPayload> = {
-  type: T,
-  payload: P,
-}
-
-export type ReceivedEvent = ProtocolEvent<*, *> & {
-  sender: ID,
-}
-
-export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
+const decodeProtocol = exports.decodeProtocol = msg => {
   try {
-    const envelope = JSON.parse(msg)
-    if (
-      isObject(envelope) &&
-      envelope.nonce != null &&
-      isObject(envelope.payload) &&
-      isString(envelope.payload.type)
-    ) {
+    const envelope = JSON.parse(msg);
+    if ((0, _lodash.isObject)(envelope) && envelope.nonce != null && (0, _lodash.isObject)(envelope.payload) && (0, _lodash.isString)(envelope.payload.type)) {
       if (receivedNonces.has(envelope.nonce)) {
-        console.warn('Duplicate message:', envelope)
+        console.warn('Duplicate message:', envelope);
       } else {
-        receivedNonces.add(envelope.nonce)
-        return envelope.payload
+        receivedNonces.add(envelope.nonce);
+        return envelope.payload;
       }
     } else {
-      console.warn('Unrecognised message format:', envelope)
+      console.warn('Unrecognised message format:', envelope);
     }
   } catch (err) {
-    console.warn('Failed to decode protocol message:', msg, err)
+    console.warn('Failed to decode protocol message:', msg, err);
   }
-}
+};
 
-export const encodeProtocol = (data: ProtocolEvent<*, *>) => {
+const encodeProtocol = exports.encodeProtocol = data => {
   const envelope = {
-    nonce: createKey(NONCE_SIZE, true),
-    payload: data,
-  }
-  return encodeMessage(JSON.stringify(envelope))
-}
+    nonce: (0, _lib.createKey)(NONCE_SIZE, true),
+    payload: data
+  };
+  return (0, _lib.encodeMessage)(JSON.stringify(envelope));
+};
 
-export type ActionStateEvent = ProtocolEvent<'ACTION_STATE', ActionStatePayload>
-
-export const actionState = (id: ID, state: ActionState): ActionStateEvent => ({
+const actionState = exports.actionState = (id, state) => ({
   type: 'ACTION_STATE',
-  payload: { id, state },
-})
+  payload: { id, state }
+});
 
-export type ChannelInviteEvent = ProtocolEvent<
-  'CHANNEL_INVITE',
-  ChannelInvitePayload,
->
-
-export const channelInvite = (
-  payload: ChannelInvitePayload,
-): ChannelInviteEvent => ({
+const channelInvite = exports.channelInvite = payload => ({
   type: 'CHANNEL_INVITE',
-  payload,
-})
+  payload
+});
 
-export type ContactRequestEvent = ProtocolEvent<
-  'CONTACT_REQUEST',
-  ContactRequestPayload,
->
-
-export const contactRequest = (
-  payload: ContactRequestPayload,
-): ContactRequestEvent => ({
+const contactRequest = exports.contactRequest = payload => ({
   type: 'CONTACT_REQUEST',
-  payload,
-})
+  payload
+});
 
-export type ProfileRequestEvent = ProtocolEvent<'PROFILE_REQUEST'>
-
-export const profileRequest = (): ProfileRequestEvent => ({
+const profileRequest = exports.profileRequest = () => ({
   type: 'PROFILE_REQUEST',
-  payload: {},
-})
+  payload: {}
+});
 
-export type ProfileResponseEvent = ProtocolEvent<
-  'PROFILE_RESPONSE',
-  ProfileResponsePayload,
->
-
-export const profileResponse = (profile: Profile): ProfileResponseEvent => ({
+const profileResponse = exports.profileResponse = profile => ({
   type: 'PROFILE_RESPONSE',
-  payload: { profile },
-})
+  payload: { profile }
+});
 
-export type TopicJoinedEvent = ProtocolEvent<'TOPIC_JOINED', TopicJoinedPayload>
-
-export const topicJoined = (
-  profile: ?Profile,
-  address?: string = '',
-): TopicJoinedEvent => ({
+const topicJoined = exports.topicJoined = (profile, address = '') => ({
   type: 'TOPIC_JOINED',
-  payload: { address, profile },
-})
+  payload: { address, profile }
+});
 
-export type TopicMessageEvent = ProtocolEvent<
-  'TOPIC_MESSAGE',
-  TopicMessagePayload,
->
-
-export const topicMessage = (
-  payload: TopicMessagePayload,
-): TopicMessageEvent => ({
+const topicMessage = exports.topicMessage = payload => ({
   type: 'TOPIC_MESSAGE',
-  payload,
-})
+  payload
+});
 
-export type TopicTypingEvent = ProtocolEvent<'TOPIC_TYPING', TopicTypingPayload>
-
-export const topicTyping = (typing: boolean): TopicTypingEvent => ({
+const topicTyping = exports.topicTyping = typing => ({
   type: 'TOPIC_TYPING',
-  payload: { typing },
-})
+  payload: { typing }
+});

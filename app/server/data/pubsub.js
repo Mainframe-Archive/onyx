@@ -1,5 +1,9 @@
-// @flow
+'use strict';
 
-import { PubSub } from 'graphql-subscriptions'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-export default new PubSub()
+var _graphqlSubscriptions = require('graphql-subscriptions');
+
+exports.default = new _graphqlSubscriptions.PubSub();

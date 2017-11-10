@@ -1,34 +1,40 @@
-// @flow
+'use strict';
 
-import debug from 'debug'
-import { withFilter } from 'graphql-subscriptions'
-import { makeExecutableSchema } from 'graphql-tools'
-import GraphQLJSON from 'graphql-type-json'
-import ip from 'ip'
-import uuid from 'uuid/v4'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-import {
-  deleteContactRequest,
-  getAction,
-  getContact,
-  getContactRequest,
-  getConversation,
-  getProfile,
-  getViewer,
-  updateConversationPointer,
-} from '../data/db'
-import pubsub from '../data/pubsub'
-import type Pss from '../lib/Pss'
-import {
-  acceptContact,
-  createChannel,
-  requestContact,
-  sendMessage,
-  setActionDone,
-  setTyping,
-} from '../pss/client'
+var _debug = require('debug');
 
-const log = debug('dcd:graphql:schema')
+var _debug2 = _interopRequireDefault(_debug);
+
+var _graphqlSubscriptions = require('graphql-subscriptions');
+
+var _graphqlTools = require('graphql-tools');
+
+var _graphqlTypeJson = require('graphql-type-json');
+
+var _graphqlTypeJson2 = _interopRequireDefault(_graphqlTypeJson);
+
+var _ip = require('ip');
+
+var _ip2 = _interopRequireDefault(_ip);
+
+var _v = require('uuid/v4');
+
+var _v2 = _interopRequireDefault(_v);
+
+var _db = require('../data/db');
+
+var _pubsub = require('../data/pubsub');
+
+var _pubsub2 = _interopRequireDefault(_pubsub);
+
+var _client = require('../pss/client');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const log = (0, _debug2.default)('dcd:graphql:schema');
 
 const typeDefs = `
 scalar JSON
@@ -152,163 +158,149 @@ type Subscription {
   messageAdded(id: ID!): MessageAddedPayload!
   typingsChanged(id: ID!): [Profile!]!
 }
-`
+`;
 
-export default (pss: Pss, port: number) => {
-  const serverURL = `http://${ip.address()}:${port}/graphql`
+exports.default = (pss, port) => {
+  const serverURL = `http://${_ip2.default.address()}:${port}/graphql`;
 
   const resolvers = {
-    JSON: GraphQLJSON,
+    JSON: _graphqlTypeJson2.default,
     MessageBlock: {
       __resolveType(obj) {
         if (obj.action) {
-          return 'MessageBlockAction'
+          return 'MessageBlockAction';
         }
         if (obj.file) {
-          return 'MessageBlockFile'
+          return 'MessageBlockFile';
         }
         if (obj.text) {
-          return 'MessageBlockText'
+          return 'MessageBlockText';
         }
-        return null
-      },
+        return null;
+      }
     },
     Query: {
-      contact: (root, { id }) => getContact(id, true),
-      conversation: (root, { id }) => getConversation(id, true),
+      contact: (root, { id }) => (0, _db.getContact)(id, true),
+      conversation: (root, { id }) => (0, _db.getConversation)(id, true),
       serverURL: () => serverURL,
-      viewer: () => getViewer(),
+      viewer: () => (0, _db.getViewer)()
     },
     Mutation: {
       acceptContact: async (root, { id }) => {
-        log('acceptContact', id)
-        const request = getContactRequest(id)
+        log('acceptContact', id);
+        const request = (0, _db.getContactRequest)(id);
         if (request != null) {
-          await acceptContact(pss, id, request)
+          await (0, _client.acceptContact)(pss, id, request);
         }
         // If the request doesn't exist, it's possible the contact is already accepted
-        const contact = getContact(id, true)
+        const contact = (0, _db.getContact)(id, true);
         if (contact != null) {
-          return contact
+          return contact;
         }
-        throw new Error('Contact request not found')
+        throw new Error('Contact request not found');
       },
       createChannel: async (root, { input }) => {
-        log('create channel', input)
-        const { topic } = await createChannel(
-          pss,
-          input.subject,
-          input.peers,
-          input.dark,
-        )
-        return getConversation(topic.hex, true)
+        log('create channel', input);
+        const { topic } = await (0, _client.createChannel)(pss, input.subject, input.peers, input.dark);
+        return (0, _db.getConversation)(topic.hex, true);
       },
       requestContact: async (root, { id }) => {
-        log('requestContact', id)
-        const { contact } = await requestContact(pss, id)
-        return contact
+        log('requestContact', id);
+        const { contact } = await (0, _client.requestContact)(pss, id);
+        return contact;
       },
       sendMessage: async (root, { input }) => {
-        const profile = getProfile()
+        const profile = (0, _db.getProfile)();
         if (profile == null) {
-          throw new Error('Profile not set')
+          throw new Error('Profile not set');
         }
 
-        const convo = getConversation(input.convoID)
+        const convo = (0, _db.getConversation)(input.convoID);
         if (convo == null) {
-          throw new Error('Invalid convoID')
+          throw new Error('Invalid convoID');
         }
         if (input.blocks == null || input.blocks.length === 0) {
-          throw new Error('Invalid block')
+          throw new Error('Invalid block');
         }
 
         // TODO: better blocks validation (sent as JSON - need to check the types)
         const blocks = input.blocks.map(b => {
           if (b.action) {
-            b.action.id = uuid()
-            b.action.sender = profile.id
-            b.action.state = 'PENDING'
+            b.action.id = (0, _v2.default)();
+            b.action.sender = profile.id;
+            b.action.state = 'PENDING';
           }
-          return b
-        })
-        const msg = await sendMessage(input.convoID, blocks)
+          return b;
+        });
+        const msg = await (0, _client.sendMessage)(input.convoID, blocks);
         if (msg == null) {
-          throw new Error('Error creating message')
+          throw new Error('Error creating message');
         }
-        return msg
+        return msg;
       },
       setActionDone: (root, { id }) => {
-        const action = getAction(id)
+        const action = (0, _db.getAction)(id);
         if (action == null) {
-          throw new Error('Action not found')
+          throw new Error('Action not found');
         }
-        setActionDone(action)
-        return getConversation(action.convoID)
+        (0, _client.setActionDone)(action);
+        return (0, _db.getConversation)(action.convoID);
       },
       setTyping: (root, { input }) => {
-        setTyping(input.convoID, input.typing)
-        return getConversation(input.convoID)
+        (0, _client.setTyping)(input.convoID, input.typing);
+        return (0, _db.getConversation)(input.convoID);
       },
-      updatePointer: (root, { id }) => updateConversationPointer(id),
+      updatePointer: (root, { id }) => (0, _db.updateConversationPointer)(id)
     },
     Subscription: {
       channelsChanged: {
-        subscribe: () => pubsub.asyncIterator('channelsChanged'),
+        subscribe: () => _pubsub2.default.asyncIterator('channelsChanged'),
         resolve: () => {
-          log('trigger channelsChanged subscription')
-          return getViewer()
-        },
+          log('trigger channelsChanged subscription');
+          return (0, _db.getViewer)();
+        }
       },
       contactChanged: {
-        subscribe: withFilter(
-          () => pubsub.asyncIterator('contactChanged'),
-          (payload, variables) => payload.profile.id === variables.id,
-        ),
+        subscribe: (0, _graphqlSubscriptions.withFilter)(() => _pubsub2.default.asyncIterator('contactChanged'), (payload, variables) => payload.profile.id === variables.id),
         resolve: payload => {
-          log('trigger contactChanged subscription', payload)
-          return payload
-        },
+          log('trigger contactChanged subscription', payload);
+          return payload;
+        }
       },
       contactRequested: {
-        subscribe: () => pubsub.asyncIterator('contactRequested'),
+        subscribe: () => _pubsub2.default.asyncIterator('contactRequested'),
         resolve: payload => {
-          log('trigger contactRequested subscription', payload)
-          return payload
-        },
+          log('trigger contactRequested subscription', payload);
+          return payload;
+        }
       },
       contactsChanged: {
-        subscribe: () => pubsub.asyncIterator('contactsChanged'),
+        subscribe: () => _pubsub2.default.asyncIterator('contactsChanged'),
         resolve: () => {
-          log('trigger contactsChanged subscription')
-          return getViewer()
-        },
+          log('trigger contactsChanged subscription');
+          return (0, _db.getViewer)();
+        }
       },
       messageAdded: {
-        subscribe: withFilter(
-          () => pubsub.asyncIterator('messageAdded'),
-          (payload, variables) => payload.id === variables.id,
-        ),
+        subscribe: (0, _graphqlSubscriptions.withFilter)(() => _pubsub2.default.asyncIterator('messageAdded'), (payload, variables) => payload.id === variables.id),
         resolve: payload => {
-          log('trigger messageAdded subscription', payload.id, payload.message)
+          log('trigger messageAdded subscription', payload.id, payload.message);
           return {
-            conversation: updateConversationPointer(payload.id),
-            message: payload.message,
-          }
-        },
+            conversation: (0, _db.updateConversationPointer)(payload.id),
+            message: payload.message
+          };
+        }
       },
       typingsChanged: {
-        subscribe: withFilter(
-          () => pubsub.asyncIterator('typingsChanged'),
-          (payload, variables) => payload.id === variables.id,
-        ),
+        subscribe: (0, _graphqlSubscriptions.withFilter)(() => _pubsub2.default.asyncIterator('typingsChanged'), (payload, variables) => payload.id === variables.id),
         resolve: payload => {
-          const profiles = payload.peers.map(c => c.profile)
-          log('trigger typingsChanged subscription', payload.id, profiles)
-          return profiles
-        },
-      },
-    },
-  }
+          const profiles = payload.peers.map(c => c.profile);
+          log('trigger typingsChanged subscription', payload.id, profiles);
+          return profiles;
+        }
+      }
+    }
+  };
 
-  return makeExecutableSchema({ typeDefs, resolvers })
-}
+  return (0, _graphqlTools.makeExecutableSchema)({ typeDefs, resolvers });
+};

@@ -1,147 +1,29 @@
-// @flow
+'use strict';
 
-import debug from 'debug'
-import { merge } from 'lodash'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setAction = exports.getAction = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
 
-import pubsub from './pubsub'
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-import type { ByteArray } from '../pss/types'
+var _debug = require('debug');
 
-const TYPING_TIMEOUT = 10000 // 10 secs in ms
+var _debug2 = _interopRequireDefault(_debug);
 
-const log = debug('dcd:db')
+var _lodash = require('lodash');
 
-export type ID = string
+var _pubsub = require('./pubsub');
 
-export type Profile = {
-  id: ID, // base64-encoded public key
-  avatar?: ?string,
-  name?: ?string,
-}
+var _pubsub2 = _interopRequireDefault(_pubsub);
 
-export type ActionState = 'PENDING' | 'DONE'
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-export type ActionData = {
-  id: ID, // UUID for the action
-  assignee: ID, // public key
-  sender: ID, // public key
-  state: ActionState,
-  text: string,
-}
+const TYPING_TIMEOUT = 10000; // 10 secs in ms
 
-export type MessageBlockAction = {
-  action: ActionData,
-}
+const log = (0, _debug2.default)('dcd:db'); // keyed by peer ID
 
-export type FileData = {
-  name: string,
-  url: string,
-  contentType?: string,
-  size?: number,
-}
-
-export type MessageBlockFile = {
-  file: FileData,
-}
-
-export type MessageBlockText = {
-  text: string,
-}
-
-export type MessageBlock =
-  | MessageBlockAction
-  | MessageBlockFile
-  | MessageBlockText
-
-export type MessageSource = 'SYSTEM' | 'USER'
-
-export type Message = {
-  sender: ID, // Address
-  blocks: Array<MessageBlock>,
-  source: MessageSource,
-  timestamp: number,
-}
-
-export type SendMessage = {
-  sender?: ?ID,
-  blocks: Array<MessageBlock>,
-  source?: ?MessageSource,
-  timestamp?: ?number,
-}
-
-export type ConvoType = 'CHANNEL' | 'DIRECT'
-
-export type Conversation = {
-  id: ID, // Topic hex
-  lastActiveTimestamp: number,
-  messages: Array<Message>,
-  messageCount: number,
-  // $FlowIgnore
-  peers: Array<ID>,
-  type: ConvoType,
-  pointer: number,
-  subject?: ?string,
-}
-
-export type ConversationData = {
-  id: ID, // Topic hex
-  lastActiveTimestamp: number,
-  messages: Array<Message>,
-  messageCount: number,
-  // $FlowIgnore
-  peers: Array<Contact | ContactData>,
-  type: ConvoType,
-  pointer: number,
-  subject?: ?string,
-}
-
-export type ContactState = 'ACCEPTED' | 'RECEIVED' | 'SENT'
-
-export type Contact = {
-  profile: Profile,
-  address?: ?string,
-  convoID?: ?ID,
-  state?: ?ContactState,
-}
-
-export type ContactData = {
-  profile: Profile,
-  address?: ?string,
-  convoID?: ?ID,
-  convo?: ?Conversation,
-  state?: ?ContactState,
-}
-
-export type ContactRequest = {
-  address: string,
-  topic: ByteArray,
-}
-
-type Viewer = {
-  channels: Array<ConversationData>,
-  contacts: Array<ContactData>,
-  profile: ?Profile,
-}
-
-export type Action = {
-  convoID: ID,
-  data: ActionData,
-}
-
-type Timer = number
-type ConvoTypings = Map<ID, Timer> // keyed by peer ID
-
-type DB = {
-  actions: Map<ID, Action>,
-  address: string,
-  contactRequests: Map<ID, ContactRequest>,
-  contacts: Map<ID, Contact>,
-  convos: Map<ID, Conversation>,
-  profile: ?Profile,
-  typings: Map<ID, ConvoTypings>,
-}
-
-const db: DB = {
+const db = {
   actions: new Map(),
   address: '',
   contactRequests: new Map(),
@@ -150,217 +32,191 @@ const db: DB = {
   // TODO: store profiles mock as [address]: PeerProfile
   // get own profile based on address
   profile: undefined,
-  typings: new Map(),
-}
+  typings: new Map()
+};
 
-const resetTyping = (convoID: ID, peerID: ID) =>
-  setTimeout(setTyping, TYPING_TIMEOUT, convoID, peerID, false)
+const resetTyping = (convoID, peerID) => setTimeout(setTyping, TYPING_TIMEOUT, convoID, peerID, false);
 
-const setTypings = (convoID: ID, typings: ConvoTypings) => {
-  db.typings.set(convoID, typings)
-  const peers = Array.from(typings.keys()).map(id => getContact(id))
+const setTypings = (convoID, typings) => {
+  db.typings.set(convoID, typings);
+  const peers = Array.from(typings.keys()).map(id => getContact(id));
 
-  pubsub.publish('typingsChanged', { id: convoID, peers })
-  return peers
-}
+  _pubsub2.default.publish('typingsChanged', { id: convoID, peers });
+  return peers;
+};
 
-export const setTyping = (convoID: ID, peerID: ID, typing: boolean) => {
-  let convoTypings = db.typings.get(convoID)
+const setTyping = exports.setTyping = (convoID, peerID, typing) => {
+  let convoTypings = db.typings.get(convoID);
   if (convoTypings == null) {
-    convoTypings = new Map()
+    convoTypings = new Map();
     if (typing) {
-      convoTypings.set(peerID, resetTyping(convoID, peerID))
-      return setTypings(convoID, convoTypings)
+      convoTypings.set(peerID, resetTyping(convoID, peerID));
+      return setTypings(convoID, convoTypings);
     } // Otherwise nothing to do
   } else {
     // Discard existing timer if set
-    const peerTimer = convoTypings.get(peerID)
+    const peerTimer = convoTypings.get(peerID);
     if (peerTimer != null) {
-      clearTimeout(peerTimer)
-      convoTypings.delete(peerID)
+      clearTimeout(peerTimer);
+      convoTypings.delete(peerID);
     }
     if (typing) {
-      convoTypings.set(peerID, resetTyping(convoID, peerID))
+      convoTypings.set(peerID, resetTyping(convoID, peerID));
     }
-    return setTypings(convoID, convoTypings)
+    return setTypings(convoID, convoTypings);
   }
-}
+};
 
-export const setAddress = (address: string = '') => {
-  db.address = address
-}
+const setAddress = exports.setAddress = (address = '') => {
+  db.address = address;
+};
 
-export const getAddress = (): string => db.address
+const getAddress = exports.getAddress = () => db.address;
 
-export const setProfile = (profile: Profile) => {
-  db.profile = profile
-}
+const setProfile = exports.setProfile = profile => {
+  db.profile = profile;
+};
 
-export const getProfile = (): ?Profile => db.profile
+const getProfile = exports.getProfile = () => db.profile;
 
-export const deleteContactRequest = (id: ID) => db.contactRequests.delete(id)
+const deleteContactRequest = exports.deleteContactRequest = id => db.contactRequests.delete(id);
 
-export const getContactRequest = (id: ID) => db.contactRequests.get(id)
+const getContactRequest = exports.getContactRequest = id => db.contactRequests.get(id);
 
-export const setContactRequest = (
-  contact: Contact,
-  request: ContactRequest,
-) => {
-  log('set contact request', contact, request)
-  db.contacts.set(contact.profile.id, contact)
-  db.contactRequests.set(contact.profile.id, request)
-  pubsub.publish('contactsChanged', getContacts())
-  pubsub.publish('contactRequested', contact.profile)
-}
+const setContactRequest = exports.setContactRequest = (contact, request) => {
+  log('set contact request', contact, request);
+  db.contacts.set(contact.profile.id, contact);
+  db.contactRequests.set(contact.profile.id, request);
+  _pubsub2.default.publish('contactsChanged', getContacts());
+  _pubsub2.default.publish('contactRequested', contact.profile);
+};
 
-export const getAction = (id: ID): ?Action => db.actions.get(id)
+const getAction = exports.getAction = id => db.actions.get(id);
 
-export const setAction = (convoID: ID, data: ActionData): Action => {
-  const action = { convoID, data }
-  db.actions.set(data.id, action)
-  return action
-}
+const setAction = exports.setAction = (convoID, data) => {
+  const action = { convoID, data };
+  db.actions.set(data.id, action);
+  return action;
+};
 
-export const getConversation = (
-  id: ID,
-  withContacts: boolean = false,
-): ?(Conversation | ConversationData) => {
-  const convo = db.convos.get(id)
+const getConversation = exports.getConversation = (id, withContacts = false) => {
+  const convo = db.convos.get(id);
   if (convo) {
-    const messages =
-      convo.messages && convo.messages.length
-        ? convo.messages.map(msg => {
-            msg.blocks = msg.blocks.map(b => {
-              if (b.action != null && typeof b.action.id === 'string') {
-                const action = db.actions.get(b.action.id)
-                if (action != null) {
-                  // $FlowIgnore
-                  b.action = action.data
-                }
-              }
-              return b
-            })
-            return msg
-          })
-        : []
+    const messages = convo.messages && convo.messages.length ? convo.messages.map(msg => {
+      msg.blocks = msg.blocks.map(b => {
+        if (b.action != null && typeof b.action.id === 'string') {
+          const action = db.actions.get(b.action.id);
+          if (action != null) {
+            // $FlowIgnore
+            b.action = action.data;
+          }
+        }
+        return b;
+      });
+      return msg;
+    }) : [];
     // $FlowFixMe
-    return {
-      ...convo,
+    return _extends({}, convo, {
       messages,
-      peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers,
-    }
+      peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers
+    });
   }
-}
+};
 
-export const getContact = (
-  id: ID,
-  withConvo: boolean = false,
-): ?(Contact | ContactData) => {
-  const contact = db.contacts.get(id)
+const getContact = exports.getContact = (id, withConvo = false) => {
+  const contact = db.contacts.get(id);
   if (contact) {
-    const convo =
-      withConvo && contact.convoID != null
-        ? getConversation(contact.convoID)
-        : undefined
+    const convo = withConvo && contact.convoID != null ? getConversation(contact.convoID) : undefined;
     // $FlowFixMe
-    return { ...contact, convo }
+    return _extends({}, contact, { convo });
   }
-}
+};
 
-export const getContacts = (withConvo: boolean = false) =>
-  Array.from(db.contacts.keys()).map(id => getContact(id, withConvo))
+const getContacts = exports.getContacts = (withConvo = false) => Array.from(db.contacts.keys()).map(id => getContact(id, withConvo));
 
-export const getConversations = (filterType?: ConvoType) => {
-  const convos = Array.from(db.convos.keys()).map(id =>
-    getConversation(id, true),
-  )
-  return filterType ? convos.filter(c => c && c.type === filterType) : convos
-}
+const getConversations = exports.getConversations = filterType => {
+  const convos = Array.from(db.convos.keys()).map(id => getConversation(id, true));
+  return filterType ? convos.filter(c => c && c.type === filterType) : convos;
+};
 
-export const getChannels = () => getConversations('CHANNEL')
+const getChannels = exports.getChannels = () => getConversations('CHANNEL');
 
 // $FlowFixMe
-export const getViewer = (): Viewer => ({
+const getViewer = exports.getViewer = () => ({
   channels: getChannels(),
   contacts: getContacts(true),
-  profile: getProfile(),
-})
+  profile: getProfile()
+});
 
-export const setContact = (contact: Contact) => {
-  db.contacts.set(contact.profile.id, contact)
-  log('set contact', contact)
-  pubsub.publish('contactChanged', getContact(contact.profile.id, true))
-  pubsub.publish('contactsChanged')
-}
+const setContact = exports.setContact = contact => {
+  db.contacts.set(contact.profile.id, contact);
+  log('set contact', contact);
+  _pubsub2.default.publish('contactChanged', getContact(contact.profile.id, true));
+  _pubsub2.default.publish('contactsChanged');
+};
 
-export const setConversation = (convo: Conversation) => {
-  db.convos.set(convo.id, convo)
-  log('set convo', convo)
-  pubsub.publish(
-    convo.type === 'CHANNEL' ? 'channelsChanged' : 'contactsChanged',
-  )
-}
+const setConversation = exports.setConversation = convo => {
+  db.convos.set(convo.id, convo);
+  log('set convo', convo);
+  _pubsub2.default.publish(convo.type === 'CHANNEL' ? 'channelsChanged' : 'contactsChanged');
+};
 
-export const updateConversationPointer = (id: ID): ?Conversation => {
-  const convo = db.convos.get(id)
+const updateConversationPointer = exports.updateConversationPointer = id => {
+  const convo = db.convos.get(id);
   if (convo != null && convo.pointer != convo.messages.length) {
-    convo.lastActiveTimestamp = Date.now()
-    convo.pointer = convo.messages.length
-    setConversation(convo)
+    convo.lastActiveTimestamp = Date.now();
+    convo.pointer = convo.messages.length;
+    setConversation(convo);
   }
-  return convo
-}
+  return convo;
+};
 
-export const upsertContact = (contact: Contact) => {
-  const existing = getContact(contact.profile.id)
-  setContact(existing ? merge({}, existing, contact) : contact)
-}
+const upsertContact = exports.upsertContact = contact => {
+  const existing = getContact(contact.profile.id);
+  setContact(existing ? (0, _lodash.merge)({}, existing, contact) : contact);
+};
 
-export const addMessage = (
-  id: ID,
-  msg: Message | SendMessage,
-  fromSelf: boolean = false,
-): ?Message => {
-  const convo = getConversation(id)
+const addMessage = exports.addMessage = (id, msg, fromSelf = false) => {
+  const convo = getConversation(id);
   if (convo == null) {
-    log('invalid addMessage call: conversation not found', id)
-    return
+    log('invalid addMessage call: conversation not found', id);
+    return;
   }
 
   if (fromSelf) {
     if (db.profile == null || db.profile.id == null) {
-      log('invalid addMessage call from self: profile ID is not defined')
-      return
+      log('invalid addMessage call from self: profile ID is not defined');
+      return;
     }
-    msg.sender = db.profile.id
+    msg.sender = db.profile.id;
   }
 
   if (msg.source == null) {
-    msg.source = 'USER'
+    msg.source = 'USER';
   }
-  msg.timestamp = convo.lastActiveTimestamp = Date.now()
+  msg.timestamp = convo.lastActiveTimestamp = Date.now();
 
   // $FlowFixMe
-  const actionBlock = msg.blocks.find(b => b.action != null)
+  const actionBlock = msg.blocks.find(b => b.action != null);
   if (actionBlock != null) {
     // $FlowFixMe
-    setAction(id, actionBlock.action)
+    setAction(id, actionBlock.action);
   }
 
-  const messages = convo.messages || []
+  const messages = convo.messages || [];
   // $FlowFixMe
-  messages.push(msg)
-  convo.messages = messages
-  convo.messageCount = messages.length
+  messages.push(msg);
+  convo.messages = messages;
+  convo.messageCount = messages.length;
 
   if (fromSelf) {
-    convo.pointer = messages.length
+    convo.pointer = messages.length;
   }
 
-  setConversation(convo)
-  pubsub.publish('messageAdded', { id, message: msg })
+  setConversation(convo);
+  _pubsub2.default.publish('messageAdded', { id, message: msg });
   // $FlowFixMe
-  return msg
-}
+  return msg;
+};
 
-export default db
+exports.default = db;

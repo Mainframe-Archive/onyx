@@ -1,130 +1,96 @@
-// @flow
+'use strict';
 
-import crc32 from 'crc-32'
-import debug from 'debug'
-import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject'
-import { Subscriber } from 'rxjs/Subscriber'
-import WebSocket from 'ws'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.setActionDone = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.setupPss = exports.setPeerPublicKey = undefined;
 
-import db, {
-  addMessage,
-  deleteContactRequest,
-  getAction,
-  getAddress,
-  getContact,
-  getProfile,
-  setAction,
-  setAddress,
-  setContact,
-  setContactRequest,
-  setConversation,
-  setProfile,
-  setTyping as setTypingPeer,
-  upsertContact,
-  type Action,
-  type ContactRequest,
-  type ConvoType,
-  type ID,
-  type MessageBlock,
-  type SendMessage,
-} from '../data/db'
-import pubsub from '../data/pubsub'
-import { Pss, RPC, base64ToArray, base64ToHex, encodeHex } from '../lib'
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-import {
-  decodeProtocol,
-  encodeProtocol,
-  actionState,
-  channelInvite,
-  contactRequest,
-  profileRequest,
-  profileResponse,
-  topicJoined,
-  topicMessage,
-  topicTyping,
-  type ChannelInvitePayload,
-  type ContactRequestPayload,
-  type PeerInfo,
-  type ReceivedEvent,
-  type TopicJoinedPayload,
-} from './protocol'
-import createTopicSubject, { type TopicSubject } from './TopicSubject'
-import type { ByteArray } from './types'
+var _crc = require('crc-32');
 
-const logClient = debug('dcd:pss:client')
-const topics: Map<ID, TopicSubject> = new Map()
+var _crc2 = _interopRequireDefault(_crc);
+
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
+var _WebSocketSubject = require('rxjs/observable/dom/WebSocketSubject');
+
+var _Subscriber = require('rxjs/Subscriber');
+
+var _ws = require('ws');
+
+var _ws2 = _interopRequireDefault(_ws);
+
+var _db = require('../data/db');
+
+var _db2 = _interopRequireDefault(_db);
+
+var _pubsub = require('../data/pubsub');
+
+var _pubsub2 = _interopRequireDefault(_pubsub);
+
+var _lib = require('../lib');
+
+var _protocol = require('./protocol');
+
+var _TopicSubject = require('./TopicSubject');
+
+var _TopicSubject2 = _interopRequireDefault(_TopicSubject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const logClient = (0, _debug2.default)('dcd:pss:client');
+const topics = new Map();
 
 const staticProfiles = {
   '1': {
-    id:
-      'BEsvPh4GgAb0q0yxvl7MUZicVoZk4wkdAzxht99bWqFA2vx+x/gKYOo8p9jQoBnnE323XJDyN4SyhW1qPCV/9dU=',
+    id: 'BEsvPh4GgAb0q0yxvl7MUZicVoZk4wkdAzxht99bWqFA2vx+x/gKYOo8p9jQoBnnE323XJDyN4SyhW1qPCV/9dU=',
     name: 'Shane Howley',
     avatar: '/shane.png',
-    bio: 'VP Engineering - Mainframe',
+    bio: 'VP Engineering - Mainframe'
   },
   '2': {
-    id:
-      'BPBoMDbiLf04b3sMKVzmL5+dRcoXu1TOMSXDzt9wrxLbpVHlb4dj3M01EmKyf2Cg1tt4aeBiStd3DGY9KDk0khw=',
+    id: 'BPBoMDbiLf04b3sMKVzmL5+dRcoXu1TOMSXDzt9wrxLbpVHlb4dj3M01EmKyf2Cg1tt4aeBiStd3DGY9KDk0khw=',
     name: 'Carl Youngblood',
     avatar: '/carl.png',
-    bio: 'CTO - Mainframe',
+    bio: 'CTO - Mainframe'
   },
   '3': {
-    id:
-      'BJHMlYspghyCalSrtD6ysDE1bsRW0kkVpYJX5SV09bEn6Dbxl2BZxoHf8GE3e+CEBuBUy71p0zbFFRIBp3Cc23g=',
+    id: 'BJHMlYspghyCalSrtD6ysDE1bsRW0kkVpYJX5SV09bEn6Dbxl2BZxoHf8GE3e+CEBuBUy71p0zbFFRIBp3Cc23g=',
     name: 'Adam Clarke',
     avatar: '/adam.png',
-    bio: 'Front-end Engineer - Mainframe',
-  },
-}
+    bio: 'Front-end Engineer - Mainframe'
+  }
+};
 
-export const setPeerPublicKey = (
-  pss: Pss,
-  id: ID,
-  topic: ByteArray,
-  address: string = '',
-) => pss.setPeerPublicKey(base64ToArray(id), topic, address)
+const setPeerPublicKey = exports.setPeerPublicKey = (pss, id, topic, address = '') => pss.setPeerPublicKey((0, _lib.base64ToArray)(id), topic, address);
 
-export const setupPss = async (url: string, serverURL: string) => {
-  logClient(`connecting to Swarm ${url}`)
-  const ws = new WebSocketSubject({
+const setupPss = exports.setupPss = async (url, serverURL) => {
+  logClient(`connecting to Swarm ${url}`);
+  const ws = new _WebSocketSubject.WebSocketSubject({
     url,
-    WebSocketCtor: WebSocket,
-  })
-  const pss = new Pss(new RPC(ws))
+    WebSocketCtor: _ws2.default
+  });
+  const pss = new _lib.Pss(new _lib.RPC(ws));
 
-  const [id, address] = await Promise.all([
-    pss.getPublicKey(),
-    pss.getBaseAddr(),
-  ])
-  logClient(`connected to Swarm with public key ${id}`)
+  const [id, address] = await Promise.all([pss.getPublicKey(), pss.getBaseAddr()]);
+  logClient(`connected to Swarm with public key ${id}`);
 
-  setAddress(address)
-  setProfile({ id })
+  (0, _db.setAddress)(address);
+  (0, _db.setProfile)({ id });
 
-  return pss
-}
+  return pss;
+};
 
-export const createContactTopic = (
-  pss: Pss,
-  publicKey: string,
-): Promise<ByteArray> => pss.stringToTopic(`dcd:contact:${publicKey}`)
+const createContactTopic = exports.createContactTopic = (pss, publicKey) => pss.stringToTopic(`dcd:contact:${publicKey}`);
 
-export const createRandomTopic = (pss: Pss): Promise<ByteArray> =>
-  pss.stringToTopic(
-    Math.random()
-      .toString(36)
-      .substr(2),
-  )
+const createRandomTopic = exports.createRandomTopic = pss => pss.stringToTopic(Math.random().toString(36).substr(2));
 
-const addTopic = (
-  topic: TopicSubject,
-  type: ConvoType,
-  peers: Array<ID>,
-  channel?: ChannelInvitePayload,
-) => {
-  topics.set(topic.hex, topic)
-  setConversation({
+const addTopic = (topic, type, peers, channel) => {
+  topics.set(topic.hex, topic);
+  (0, _db.setConversation)({
     dark: channel ? channel.dark : false,
     id: topic.hex,
     lastActiveTimestamp: Date.now(),
@@ -133,386 +99,340 @@ const addTopic = (
     pointer: 0,
     peers,
     subject: channel ? channel.subject : undefined,
-    type,
-  })
-}
+    type
+  });
+};
 
 // Join new channel topic with peers identified by public key
-export const joinChannelTopic = async (
-  pss: Pss,
-  channel: ChannelInvitePayload,
-  otherPeers: Array<PeerInfo>,
-): Promise<TopicSubject> => {
-  logClient('join channel topic', channel)
+const joinChannelTopic = exports.joinChannelTopic = async (pss, channel, otherPeers) => {
+  logClient('join channel topic', channel);
 
-  const topic = await createTopicSubject(pss, channel.topic)
-  const peers = await Promise.all(
-    otherPeers.map(async p => {
-      const contact = getContact(p.pubKey)
-      if (contact == null) {
-        setContact({
-          address: p.address,
-          profile: { id: p.pubKey },
-        })
-      }
-      await setPeerPublicKey(pss, p.pubKey, channel.topic, p.address)
-      logClient('add peer', channel.topic, p.pubKey)
-      topic.addPeer(p.pubKey)
-      return p.pubKey
-    }),
-  )
+  const topic = await (0, _TopicSubject2.default)(pss, channel.topic);
+  const peers = await Promise.all(otherPeers.map(async p => {
+    const contact = (0, _db.getContact)(p.pubKey);
+    if (contact == null) {
+      (0, _db.setContact)({
+        address: p.address,
+        profile: { id: p.pubKey }
+      });
+    }
+    await setPeerPublicKey(pss, p.pubKey, channel.topic, p.address);
+    logClient('add peer', channel.topic, p.pubKey);
+    topic.addPeer(p.pubKey);
+    return p.pubKey;
+  }));
 
-  addTopic(topic, 'CHANNEL', peers, channel)
-  return topic
-}
+  addTopic(topic, 'CHANNEL', peers, channel);
+  return topic;
+};
 
 // Join existing direct (p2p) topic with peer
-export const joinDirectTopic = async (
-  pss: Pss,
-  topicID: ByteArray,
-  peer: PeerInfo,
-): Promise<TopicSubject> => {
-  const [topic] = await Promise.all([
-    createTopicSubject(pss, topicID),
-    setPeerPublicKey(pss, peer.pubKey, topicID, peer.address),
-  ])
-  topic.addPeer(peer.pubKey)
-  addTopic(topic, 'DIRECT', [peer.pubKey])
-  return topic
-}
+const joinDirectTopic = exports.joinDirectTopic = async (pss, topicID, peer) => {
+  const [topic] = await Promise.all([(0, _TopicSubject2.default)(pss, topicID), setPeerPublicKey(pss, peer.pubKey, topicID, peer.address)]);
+  topic.addPeer(peer.pubKey);
+  addTopic(topic, 'DIRECT', [peer.pubKey]);
+  return topic;
+};
 
-export const sendMessage = (
-  topicHex: ID,
-  blocks: Array<MessageBlock>,
-): ?SendMessage => {
-  const topic = topics.get(topicHex)
+const sendMessage = exports.sendMessage = (topicHex, blocks) => {
+  const topic = topics.get(topicHex);
   if (topic == null) {
-    logClient('cannot sent message to missing topic:', topicHex)
-    return
+    logClient('cannot sent message to missing topic:', topicHex);
+    return;
   }
 
   const message = {
     blocks,
-    source: 'USER',
-  }
-  topic.next(topicMessage(message))
-  addMessage(topicHex, message, true)
+    source: 'USER'
+  };
+  topic.next((0, _protocol.topicMessage)(message));
+  (0, _db.addMessage)(topicHex, message, true);
 
-  return message
-}
+  return message;
+};
 
-export const setActionDone = (action: Action) => {
-  const topic = topics.get(action.convoID)
+const setActionDone = exports.setActionDone = action => {
+  const topic = topics.get(action.convoID);
   if (topic == null) {
-    logClient('cannot set action to missing topic:', action.convoID)
+    logClient('cannot set action to missing topic:', action.convoID);
   } else {
-    action.data.state = 'DONE'
-    setAction(action.convoID, action.data)
-    addMessage(
-      action.convoID,
-      {
-        blocks: [{ action: action.data }],
-        source: 'SYSTEM',
-      },
-      true,
-    )
-    topic.next(actionState(action.data.id, 'DONE'))
+    action.data.state = 'DONE';
+    (0, _db.setAction)(action.convoID, action.data);
+    (0, _db.addMessage)(action.convoID, {
+      blocks: [{ action: action.data }],
+      source: 'SYSTEM'
+    }, true);
+    topic.next((0, _protocol.actionState)(action.data.id, 'DONE'));
   }
-}
+};
 
-export const setTyping = (topicHex: ID, typing: boolean) => {
-  const topic = topics.get(topicHex)
+const setTyping = exports.setTyping = (topicHex, typing) => {
+  const topic = topics.get(topicHex);
   if (topic == null) {
-    logClient('cannot set typing to missing topic:', topicHex)
+    logClient('cannot set typing to missing topic:', topicHex);
   } else {
-    topic.next(topicTyping(typing))
+    topic.next((0, _protocol.topicTyping)(typing));
   }
-}
+};
 
-const handleTopicJoined = (
-  pss: Pss,
-  topic: TopicSubject,
-  payload: TopicJoinedPayload,
-) => {
+const handleTopicJoined = (pss, topic, payload) => {
   if (payload.profile == null || !payload.profile.id) {
-    return
+    return;
   }
-  const contact = getContact(payload.profile.id)
-  if (
-    contact != null &&
-    (!contact.address || contact.address.length < payload.address.length)
-  ) {
+  const contact = (0, _db.getContact)(payload.profile.id);
+  if (contact != null && (!contact.address || contact.address.length < payload.address.length)) {
     // Update contact's public key with a more precise address if provided
-    setPeerPublicKey(pss, contact.profile.id, topic._topic, payload.address)
+    setPeerPublicKey(pss, contact.profile.id, topic._topic, payload.address);
   }
-}
+};
 
-const handleTopicMessage = (topic: TopicSubject, msg: ReceivedEvent) => {
+const handleTopicMessage = (topic, msg) => {
   switch (msg.type) {
-    case 'ACTION_STATE': {
-      const action = getAction(msg.payload.id)
-      if (action != null) {
-        action.data.state = msg.payload.state
-        setAction(action.convoID, action.data)
-        addMessage(action.convoID, {
-          blocks: [{ action: action.data }],
-          sender: msg.sender,
-          source: 'SYSTEM',
-        })
-      }
-      break
-    }
-    case 'TOPIC_MESSAGE':
-      logClient('received topic message', msg.sender, msg.payload)
-      addMessage(topic.hex, { ...msg.payload, sender: msg.sender })
-      break
-    case 'TOPIC_TYPING':
-      setTypingPeer(topic.hex, msg.sender, msg.payload.typing)
-      break
-    default:
-      logClient('unhandled message topic type', msg.type)
-  }
-}
-
-const createChannelTopicSubscription = (pss: Pss, topic: TopicSubject) => {
-  const log = debug(`dcd:pss:client:topic:channel:${topic.hex}`)
-  log('create subscription')
-  return topic.subscribe((msg: ReceivedEvent) => {
-    log('received message', msg)
-    switch (msg.type) {
-      case 'PROFILE_REQUEST': {
-        const profile = getProfile()
-        if (profile == null) {
-          log('received profile request before profile is setup, ignoring')
-        } else {
-          topic.toPeer(msg.sender, profileResponse(profile))
+    case 'ACTION_STATE':
+      {
+        const action = (0, _db.getAction)(msg.payload.id);
+        if (action != null) {
+          action.data.state = msg.payload.state;
+          (0, _db.setAction)(action.convoID, action.data);
+          (0, _db.addMessage)(action.convoID, {
+            blocks: [{ action: action.data }],
+            sender: msg.sender,
+            source: 'SYSTEM'
+          });
         }
-        break
+        break;
       }
+    case 'TOPIC_MESSAGE':
+      logClient('received topic message', msg.sender, msg.payload);
+      (0, _db.addMessage)(topic.hex, _extends({}, msg.payload, { sender: msg.sender }));
+      break;
+    case 'TOPIC_TYPING':
+      (0, _db.setTyping)(topic.hex, msg.sender, msg.payload.typing);
+      break;
+    default:
+      logClient('unhandled message topic type', msg.type);
+  }
+};
+
+const createChannelTopicSubscription = (pss, topic) => {
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:channel:${topic.hex}`);
+  log('create subscription');
+  return topic.subscribe(msg => {
+    log('received message', msg);
+    switch (msg.type) {
+      case 'PROFILE_REQUEST':
+        {
+          const profile = (0, _db.getProfile)();
+          if (profile == null) {
+            log('received profile request before profile is setup, ignoring');
+          } else {
+            topic.toPeer(msg.sender, (0, _protocol.profileResponse)(profile));
+          }
+          break;
+        }
       case 'PROFILE_RESPONSE':
-        upsertContact({ profile: msg.payload.profile })
-        break
+        (0, _db.upsertContact)({ profile: msg.payload.profile });
+        break;
       case 'TOPIC_JOINED':
-        handleTopicJoined(pss, topic, msg.payload)
+        handleTopicJoined(pss, topic, msg.payload);
         // Always update latest profile provided by the user
-        upsertContact({ profile: msg.payload.profile })
-        break
+        (0, _db.upsertContact)({ profile: msg.payload.profile });
+        break;
       case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
-        handleTopicMessage(topic, msg)
-        break
+        handleTopicMessage(topic, msg);
+        break;
       default:
-        log('unhandled message type', msg.type)
+        log('unhandled message type', msg.type);
     }
-  })
-}
+  });
+};
 
-const createP2PTopicSubscription = (pss: Pss, topic: TopicSubject) => {
-  const log = debug(`dcd:pss:client:topic:p2p:${topic.hex}`)
-  return topic.subscribe((msg: ReceivedEvent) => {
-    log('received message', msg)
+const createP2PTopicSubscription = (pss, topic) => {
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:p2p:${topic.hex}`);
+  return topic.subscribe(msg => {
+    log('received message', msg);
     switch (msg.type) {
       case 'CHANNEL_INVITE':
-        joinChannel(pss, msg.payload)
-        break
+        joinChannel(pss, msg.payload);
+        break;
       case 'TOPIC_JOINED':
-        handleTopicJoined(pss, topic, msg.payload)
-        upsertContact({
+        handleTopicJoined(pss, topic, msg.payload);
+        (0, _db.upsertContact)({
           address: msg.payload.address,
           profile: msg.payload.profile,
-          state: 'ACCEPTED',
-        })
-        break
+          state: 'ACCEPTED'
+        });
+        break;
       case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
-        handleTopicMessage(topic, msg)
-        break
+        handleTopicMessage(topic, msg);
+        break;
       default:
-        log('unhandled message type', msg.type)
+        log('unhandled message type', msg.type);
     }
-  })
-}
+  });
+};
 
-export const acceptContact = async (
-  pss: Pss,
-  id: ID,
-  request: ContactRequest,
-) => {
-  const existing = getContact(id)
+const acceptContact = exports.acceptContact = async (pss, id, request) => {
+  const existing = (0, _db.getContact)(id);
   if (existing == null) {
-    throw new Error(`Contact not found: ${id}`)
+    throw new Error(`Contact not found: ${id}`);
   }
 
   const topic = await joinDirectTopic(pss, request.topic, {
     address: request.address,
-    pubKey: id,
-  })
-  const topicSubscription = createP2PTopicSubscription(pss, topic)
+    pubKey: id
+  });
+  const topicSubscription = createP2PTopicSubscription(pss, topic);
 
   // Delete request and update contact data with the created convo
-  deleteContactRequest(id)
-  setContact({
+  (0, _db.deleteContactRequest)(id);
+  (0, _db.setContact)({
     address: request.address,
     convoID: topic.hex,
     profile: existing.profile,
-    state: 'ACCEPTED',
-  })
+    state: 'ACCEPTED'
+  });
 
-  topic.next(topicJoined(getProfile(), getAddress()))
+  topic.next((0, _protocol.topicJoined)((0, _db.getProfile)(), (0, _db.getAddress)()));
 
-  return { topic, topicSubscription }
-}
+  return { topic, topicSubscription };
+};
 
-export const joinChannel = async (pss: Pss, channel: ChannelInvitePayload) => {
-  const profile = getProfile()
+const joinChannel = exports.joinChannel = async (pss, channel) => {
+  const profile = (0, _db.getProfile)();
   if (profile == null) {
-    throw new Error('Cannot join channel before profile is setup')
+    throw new Error('Cannot join channel before profile is setup');
   }
 
-  logClient('join channel', profile.id, channel)
+  logClient('join channel', profile.id, channel);
 
-  const otherPeers = channel.peers.filter(p => p.pubKey !== profile.id)
-  const topic = await joinChannelTopic(pss, channel, otherPeers)
-  const topicSubscription = createChannelTopicSubscription(pss, topic)
+  const otherPeers = channel.peers.filter(p => p.pubKey !== profile.id);
+  const topic = await joinChannelTopic(pss, channel, otherPeers);
+  const topicSubscription = createChannelTopicSubscription(pss, topic);
 
-  topic.next(topicJoined(getProfile(), getAddress()))
+  topic.next((0, _protocol.topicJoined)((0, _db.getProfile)(), (0, _db.getAddress)()));
 
   otherPeers.forEach(p => {
-    const contact = getContact(p.pubKey)
+    const contact = (0, _db.getContact)(p.pubKey);
     if (contact == null) {
-      topic.toPeer(p.pubKey, profileRequest())
+      topic.toPeer(p.pubKey, (0, _protocol.profileRequest)());
     }
-  })
+  });
 
-  return { topic, topicSubscription }
-}
+  return { topic, topicSubscription };
+};
 
-export const createChannel = async (
-  pss: Pss,
-  subject: string,
-  peers: Array<ID>,
-  dark: boolean,
-) => {
-  const profile = getProfile()
+const createChannel = exports.createChannel = async (pss, subject, peers, dark) => {
+  const profile = (0, _db.getProfile)();
   if (profile == null) {
-    throw new Error('Cannot create channel before profile is setup')
+    throw new Error('Cannot create channel before profile is setup');
   }
 
-  const filteredPeers = peers.map(id => getContact(id)).filter(Boolean)
+  const filteredPeers = peers.map(id => (0, _db.getContact)(id)).filter(Boolean);
   const otherPeers = filteredPeers.map(c => ({
-    address: (!dark && c.address) || '',
-    pubKey: c.profile.id,
-  }))
+    address: !dark && c.address || '',
+    pubKey: c.profile.id
+  }));
 
   // Create and join the topic for this channel
-  const topicID = await createRandomTopic(pss)
+  const topicID = await createRandomTopic(pss);
   const channel = {
     dark,
     topic: topicID,
     subject,
-    peers: [
-      { pubKey: profile.id, address: dark ? '' : getAddress() },
-      ...otherPeers,
-    ],
-  }
+    peers: [{ pubKey: profile.id, address: dark ? '' : (0, _db.getAddress)() }, ...otherPeers]
+  };
 
-  const topic = await joinChannelTopic(pss, channel, otherPeers)
-  const topicSubscription = createChannelTopicSubscription(pss, topic)
+  const topic = await joinChannelTopic(pss, channel, otherPeers);
+  const topicSubscription = createChannelTopicSubscription(pss, topic);
 
   // Invite peers to the newly created topic
   filteredPeers.forEach(c => {
-    const peerTopic = c.convoID && topics.get(c.convoID)
+    const peerTopic = c.convoID && topics.get(c.convoID);
     if (peerTopic) {
-      peerTopic.next(channelInvite(channel))
+      peerTopic.next((0, _protocol.channelInvite)(channel));
     }
-  })
+  });
 
-  topic.next(topicJoined(getProfile()))
+  topic.next((0, _protocol.topicJoined)((0, _db.getProfile)()));
 
   return {
     topic,
-    topicSubscription,
-  }
-}
+    topicSubscription
+  };
+};
 
-export const addContactRequest = async (
-  pss: Pss,
-  payload: ContactRequestPayload,
-) => {
+const addContactRequest = exports.addContactRequest = async (pss, payload) => {
   const contact = {
     profile: payload.profile,
-    state: 'RECEIVED',
-  }
-  setContactRequest(contact, {
+    state: 'RECEIVED'
+  };
+  (0, _db.setContactRequest)(contact, {
     address: payload.address,
-    topic: payload.topic,
-  })
-  return contact
-}
+    topic: payload.topic
+  });
+  return contact;
+};
 
-export const requestContact = async (pss: Pss, id: string) => {
-  const profile = getProfile()
+const requestContact = exports.requestContact = async (pss, id) => {
+  const profile = (0, _db.getProfile)();
   if (profile == null) {
-    throw new Error('Cannot call requestContact() before profile is setup')
+    throw new Error('Cannot call requestContact() before profile is setup');
   }
 
   // Get topic for contact + create random new p2p topic
-  const [contactTopic, newTopic] = await Promise.all([
-    createContactTopic(pss, id),
-    createRandomTopic(pss),
-  ])
-  const log = debug(`dcd:pss:client:topic:p2p:${encodeHex(contactTopic)}`)
+  const [contactTopic, newTopic] = await Promise.all([createContactTopic(pss, id), createRandomTopic(pss)]);
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:p2p:${(0, _lib.encodeHex)(contactTopic)}`);
 
   // Create p2p topic and setup keys
-  const [topic] = await Promise.all([
-    joinDirectTopic(pss, newTopic, { pubKey: id, address: '' }),
-    setPeerPublicKey(pss, id, contactTopic),
-  ])
+  const [topic] = await Promise.all([joinDirectTopic(pss, newTopic, { pubKey: id, address: '' }), setPeerPublicKey(pss, id, contactTopic)]);
 
-  const topicSubscription = createP2PTopicSubscription(pss, topic)
+  const topicSubscription = createP2PTopicSubscription(pss, topic);
 
-  const existing = getContact(id)
+  const existing = (0, _db.getContact)(id);
   const contact = {
     convoID: topic.hex,
     profile: existing ? existing.profile : { id },
-    state: 'SENT',
-  }
-  setContact(contact)
+    state: 'SENT'
+  };
+  (0, _db.setContact)(contact);
 
-  const req = contactRequest({
-    address: getAddress(),
+  const req = (0, _protocol.contactRequest)({
+    address: (0, _db.getAddress)(),
     profile,
-    topic: newTopic,
-  })
-  log('request contact', req)
+    topic: newTopic
+  });
+  log('request contact', req);
   // Send message requesting contact
-  await pss.sendAsym(base64ToHex(id), contactTopic, encodeProtocol(req))
+  await pss.sendAsym((0, _lib.base64ToHex)(id), contactTopic, (0, _protocol.encodeProtocol)(req));
 
   return {
     contact,
     topic,
-    topicSubscription,
-  }
-}
+    topicSubscription
+  };
+};
 
 // Setup own contact topic and start subscribing to it
-export const setupContactTopic = async (pss: Pss) => {
-  const profile = getProfile()
+const setupContactTopic = exports.setupContactTopic = async pss => {
+  const profile = (0, _db.getProfile)();
   if (profile == null || profile.id == null) {
-    throw new Error('Cannot setup contact topic: profile is not setup')
+    throw new Error('Cannot setup contact topic: profile is not setup');
   }
 
-  const topic = await createContactTopic(pss, profile.id)
-  const subscription = await pss.subscribeTopic(topic)
-  const log = debug(`dcd:pss:client:topic:contact:${encodeHex(topic)}`)
+  const topic = await createContactTopic(pss, profile.id);
+  const subscription = await pss.subscribeTopic(topic);
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:contact:${(0, _lib.encodeHex)(topic)}`);
 
   return pss.createSubscription(subscription).subscribe(msg => {
-    log('received message', msg)
-    const data = decodeProtocol(msg.data)
+    log('received message', msg);
+    const data = (0, _protocol.decodeProtocol)(msg.data);
     if (data && data.type === 'CONTACT_REQUEST') {
-      addContactRequest(pss, data.payload)
+      addContactRequest(pss, data.payload);
     }
-  })
-}
+  });
+};

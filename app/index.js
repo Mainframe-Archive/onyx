@@ -1,10 +1,10 @@
-import { app, BrowserWindow, Menu } from 'electron'
-import isDev from 'electron-is-dev'
-import getPort from 'get-port'
-import path from 'path'
-import StaticServer from 'static-server'
+const { app, BrowserWindow, Menu } = require('electron')
+const isDev = require('electron-is-dev')
+const getPort = require('get-port')
+const path = require('path')
+const StaticServer = require('static-server')
 
-import createGraphQLServer from './server'
+const createGraphQLServer = require('./server').default
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL = (config && config.swarmWsUrl) || 'ws://localhost:8501'

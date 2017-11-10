@@ -8,9 +8,10 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "dist": "electron-builder",
-    "serve": "serve -s build",
+    "build": "react-scripts build && mv build app/build",
+    "clean": "del app/build && del app/server",
+    "compile": "babel server --out-dir app/server",
+    "dist": "yarn clean && yarn build && yarn compile && electron-builder",
     "electron": "electron app",
     "flow": "flow check",
     "postinstall": "electron-builder install-app-deps"
@@ -25,10 +26,10 @@
     "prop-types": "^15.6.0",
     "qrcode.react": "^0.7.2",
     "query-string": "^5.0.1",
-    "react": "^16.0.0",
+    "react": "^16.1.0",
     "react-apollo": "^1.4.16",
     "react-blockies": "^1.2.2",
-    "react-dom": "^16.0.0",
+    "react-dom": "^16.1.0",
     "react-modal": "^3.1.0",
     "react-native-web": "^0.1.13",
     "react-redux": "^5.0.6",
@@ -49,11 +50,10 @@
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "del-cli": "^1.1.0",
-    "electron-builder": "^19.43.4",
+    "electron-builder": "~19.28.4",
     "electron-prebuilt-compile": "^1.7.9",
     "flow-bin": "^0.59.0",
     "flow-copy-source": "^1.2.1",
-    "prettier": "^1.8.2",
-    "serve": "^6.4.0"
+    "prettier": "^1.8.2"
   }
 }

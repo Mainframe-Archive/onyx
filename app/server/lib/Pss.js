@@ -1,97 +1,82 @@
-// @flow
+'use strict';
 
-import { Observable } from 'rxjs/Observable'
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-import type RPC from './RPC'
-import { decodeMessage, encodeHex } from './utils'
+var _Observable = require('rxjs/Observable');
 
-export type ByteArray = Array<number>
+var _utils = require('./utils');
 
-export default class Pss {
-  _rpc: RPC
+class Pss {
 
-  constructor(rpc: RPC) {
-    this._rpc = rpc
+  constructor(rpc) {
+    this._rpc = rpc;
   }
 
-  getBaseAddr(): Promise<string> {
-    return this._rpc.promise('pss_baseAddr')
+  getBaseAddr() {
+    return this._rpc.promise('pss_baseAddr');
   }
 
-  getPublicKey(): Promise<string> {
-    return this._rpc.promise('pss_getPublicKey')
+  getPublicKey() {
+    return this._rpc.promise('pss_getPublicKey');
   }
 
-  sendAsym(
-    hexKey: string,
-    topic: ByteArray,
-    message: ByteArray,
-  ): Promise<null> {
-    return this._rpc.promise('pss_sendAsym', [hexKey, topic, message])
+  sendAsym(hexKey, topic, message) {
+    return this._rpc.promise('pss_sendAsym', [hexKey, topic, message]);
   }
 
-  sendSym(keyID: string, topic: ByteArray, message: ByteArray): Promise<null> {
-    return this._rpc.promise('pss_sendSym', [keyID, topic, message])
+  sendSym(keyID, topic, message) {
+    return this._rpc.promise('pss_sendSym', [keyID, topic, message]);
   }
 
-  setPeerPublicKey(
-    key: ByteArray,
-    topic: ByteArray,
-    address: string,
-  ): Promise<null> {
-    return this._rpc.promise('pss_setPeerPublicKey', [key, topic, address])
+  setPeerPublicKey(key, topic, address) {
+    return this._rpc.promise('pss_setPeerPublicKey', [key, topic, address]);
   }
 
-  setSymmetricKey(
-    key: ByteArray,
-    topic: ByteArray,
-    address: string,
-  ): Promise<string> {
-    return this._rpc.promise('pss_setSymmetricKey', [key, topic, address, true])
+  setSymmetricKey(key, topic, address) {
+    return this._rpc.promise('pss_setSymmetricKey', [key, topic, address, true]);
   }
 
-  stringToTopic(str: string): Promise<ByteArray> {
-    return this._rpc.promise('pss_stringToTopic', [str])
+  stringToTopic(str) {
+    return this._rpc.promise('pss_stringToTopic', [str]);
   }
 
-  subscribeTopic(topic: ByteArray): Promise<string> {
-    return this._rpc.promise('pss_subscribe', ['receive', topic])
+  subscribeTopic(topic) {
+    return this._rpc.promise('pss_subscribe', ['receive', topic]);
   }
 
-  createSubscription(subscription: string): Observable<Object> {
-    return Observable.create(observer => {
+  createSubscription(subscription) {
+    return _Observable.Observable.create(observer => {
       return this._rpc.subscribe({
         next: msg => {
-          if (
-            msg.method === 'pss_subscription' &&
-            msg.params != null &&
-            msg.params.subscription === subscription
-          ) {
-            const { result } = msg.params
+          if (msg.method === 'pss_subscription' && msg.params != null && msg.params.subscription === subscription) {
+            const { result } = msg.params;
             if (result && result.Msg) {
               try {
                 observer.next({
-                  data: decodeMessage(result.Msg),
-                  keyID: result.Key,
-                })
+                  data: (0, _utils.decodeMessage)(result.Msg),
+                  keyID: result.Key
+                });
               } catch (err) {
-                console.warn('Error handling message', result, err)
+                console.warn('Error handling message', result, err);
               }
             }
           }
         },
         error: err => {
-          observer.error(err)
+          observer.error(err);
         },
         complete: () => {
-          observer.complete()
-        },
-      })
-    })
+          observer.complete();
+        }
+      });
+    });
   }
 
-  async createTopicSubscription(topic: ByteArray): Promise<Observable<Object>> {
-    const subscription = await this.subscribeTopic(topic)
-    return this.createSubscription(subscription)
+  async createTopicSubscription(topic) {
+    const subscription = await this.subscribeTopic(topic);
+    return this.createSubscription(subscription);
   }
 }
+exports.default = Pss;
