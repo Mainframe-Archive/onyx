@@ -152,6 +152,7 @@ type Mutation {
 type Subscription {
   actionChanged(id: ID!): Action!
   channelsChanged: Viewer!
+  connectionClosed: Boolean
   contactChanged(id: ID!): Contact!
   contactRequested: Profile!
   contactsChanged: Viewer!
@@ -162,6 +163,11 @@ type Subscription {
 
 exports.default = (pss, port) => {
   const serverURL = `http://${_ip2.default.address()}:${port}/graphql`;
+
+  const onWSClosed = err => {
+    _pubsub2.default.publish('connectionClosed', err);
+  };
+  pss._rpc._transport.subscribe(null, onWSClosed, onWSClosed);
 
   const resolvers = {
     JSON: _graphqlTypeJson2.default,
@@ -258,6 +264,13 @@ exports.default = (pss, port) => {
         resolve: () => {
           log('trigger channelsChanged subscription');
           return (0, _db.getViewer)();
+        }
+      },
+      connectionClosed: {
+        subscribe: () => _pubsub2.default.asyncIterator('connectionClosed'),
+        resolve: err => {
+          log('trigger connectionClosed subscription');
+          return err != null;
         }
       },
       contactChanged: {

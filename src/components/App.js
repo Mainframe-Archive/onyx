@@ -5,7 +5,9 @@ import { compose, gql, graphql } from 'react-apollo'
 import { connect } from 'react-redux'
 import { StyleSheet, View } from 'react-native-web'
 import { groupBy } from 'lodash'
+import PropTypes from 'prop-types'
 
+import { restart } from '../data/Electron'
 import {
   getOpenChannel,
   getOpenContact,
@@ -30,6 +32,7 @@ import Conversation from './Conversation'
 import Loader from './Loader'
 import Icon from './Icon'
 import Text from './Text'
+import Modal from './Modal'
 
 import ConversationTitle from './LeftNav/ConversationTitle'
 import Profile from './LeftNav/Profile'
@@ -54,7 +57,7 @@ type Props = {
   subscribeToContactsChanged: SubscribeFunc,
 }
 
-type ModalName = 'channel' | 'contact' | 'profile'
+type ModalName = 'channel' | 'connection' | 'contact' | 'profile'
 
 type State = {
   openModal: ?ModalName,
@@ -62,22 +65,42 @@ type State = {
 }
 
 class App extends Component<Props, State> {
+  static contextTypes = {
+    client: PropTypes.object.isRequired,
+  }
+
   state = {
     openModal: undefined,
     openProfile: undefined,
   }
 
   unsubscribeChannelsChanged: UnsubscribeFunc
+  unsubscribeConnectionClosed: UnsubscribeFunc
   unsubscribeContactsChanged: UnsubscribeFunc
 
   componentDidMount() {
     this.unsubscribeChannelsChanged = this.props.subscribeToChannelsChanged()
     this.unsubscribeContactsChanged = this.props.subscribeToContactsChanged()
+
+    this.unsubscribeConnectionClosed = this.context.client
+      .subscribe({
+        query: gql`
+          subscription ConnectionClosed {
+            connectionClosed
+          }
+        `,
+      })
+      .subscribe({
+        next: () => {
+          this.setState({ openModal: 'connection' })
+        },
+      })
   }
 
   componentWillUnmount() {
     this.unsubscribeChannelsChanged()
     this.unsubscribeContactsChanged()
+    this.unsubscribeConnectionClosed()
   }
 
   onCloseModal = () => {
@@ -125,6 +148,20 @@ class App extends Component<Props, State> {
         onPressAddContact={this.onPressAddContact}
         onCloseModal={this.onCloseModal}
       />
+    )
+  }
+
+  renderConnectionClosedModal() {
+    const { openModal } = this.state
+
+    return (
+      <Modal
+        isOpen={openModal === 'connection'}
+        onRequestClose={restart}
+        title="Disconnected from Swarm"
+      >
+        <Text>Connection closed. You need to restart the app.</Text>
+      </Modal>
     )
   }
 
@@ -193,6 +230,7 @@ class App extends Component<Props, State> {
     return (
       <View style={styles.layout}>
         {this.renderAddContactModal()}
+        {this.renderConnectionClosedModal()}
         {this.renderCreateChannelModal()}
         {this.renderProfileModal()}
         <View style={styles.column}>

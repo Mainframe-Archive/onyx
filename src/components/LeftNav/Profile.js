@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   redText: {
     color: COLORS.PRIMARY_RED,
-    fontWeight: 600,
+    fontWeight: '600',
   },
   large: {
     fontWeight: '500',

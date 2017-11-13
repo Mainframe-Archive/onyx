@@ -1,8 +1,9 @@
-const { app, BrowserWindow, Menu } = require('electron')
-const isDev = require('electron-is-dev')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+const { appReady, is } = require('electron-util')
 const getPort = require('get-port')
 const path = require('path')
 const StaticServer = require('static-server')
+const url = require('url')
 
 const createGraphQLServer = require('./server').default
 
@@ -11,13 +12,19 @@ const SWARM_WS_URL = (config && config.swarmWsUrl) || 'ws://localhost:8501'
 const SWARM_HTTP_URL =
   (config && config.swarmHttpUrl) || 'http://localhost:8500'
 
+const loadingWindowURL = url.format({
+  protocol: 'file',
+  slashes: true,
+  pathname: path.join(__dirname, 'loading.html'),
+})
+
 const menu = Menu.buildFromTemplate([
   {
-    label: 'Application',
+    label: is.macos ? 'Onyx' : 'File',
     submenu: [
       {
         label: 'Quit',
-        accelerator: 'Command+Q',
+        accelerator: 'CmdOrCtrl+Q',
         click: () => {
           app.quit()
         },
@@ -52,8 +59,7 @@ const menu = Menu.buildFromTemplate([
       },
       {
         label: 'Toggle Developer Tools',
-        accelerator:
-          process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        accelerator: is.macos ? 'Alt+Command+I' : 'Ctrl+Shift+I',
         click: (item, focusedWindow) => {
           if (focusedWindow) focusedWindow.toggleDevTools()
         },
@@ -67,14 +73,42 @@ const menu = Menu.buildFromTemplate([
   },
 ])
 
-let mainWindow
+let appServer, loadingWindow, mainWindow
 
-const createWindow = url => {
+const createLoadingWindow = async () => {
+  await appReady
+  if (loadingWindow != null || mainWindow != null) {
+    return
+  }
+
+  loadingWindow = new BrowserWindow({ width: 400, height: 300, show: false })
+
+  loadingWindow.loadURL(loadingWindowURL)
+
+  loadingWindow.once('ready-to-show', () => {
+    loadingWindow.show()
+  })
+
+  loadingWindow.on('closed', () => {
+    loadingWindow = null
+  })
+}
+
+const createMainWindow = async url => {
+  await appReady
+
   Menu.setApplicationMenu(menu)
 
-  mainWindow = new BrowserWindow({ width: 800, height: 600 })
+  mainWindow = new BrowserWindow({ width: 800, height: 600, show: false })
 
   mainWindow.loadURL(url)
+
+  mainWindow.on('ready-to-show', () => {
+    if (loadingWindow) {
+      loadingWindow.close()
+    }
+    mainWindow.show()
+  })
 
   mainWindow.on('closed', () => {
     mainWindow = null
@@ -93,7 +127,7 @@ const startAppServer = async () => {
       app.on('quit', () => {
         appServer.stop()
       })
-      resolve(appPort)
+      resolve(appServer)
     })
   })
 }
@@ -105,23 +139,49 @@ const startGraphQLServer = async appPort => {
 }
 
 const start = async () => {
-  const appPort = isDev ? 3000 : await startAppServer()
-  const graphqlPort = await startGraphQLServer(appPort)
-  const url = `http://localhost:${appPort}/?port=${graphqlPort}`
+  createLoadingWindow()
 
-  if (app.isReady()) {
-    createWindow(url)
+  let appPort
+  if (is.development) {
+    appPort = 3000
   } else {
-    app.on('ready', () => {
-      createWindow(url)
-    })
+    if (appServer == null) {
+      appServer = await startAppServer()
+    }
+    appPort = appServer.port
   }
 
-  app.on('activate', () => {
-    if (mainWindow === null) {
-      createWindow(url)
+  try {
+    const graphqlPort = await startGraphQLServer(appPort)
+    const url = `http://localhost:${appPort}/?port=${graphqlPort}`
+
+    createMainWindow(url)
+    app.on('activate', () => {
+      if (mainWindow == null) {
+        createMainWindow(url)
+      }
+    })
+  } catch (err) {
+    if (appServer != null) {
+      appServer.stop()
     }
-  })
+
+    if (loadingWindow == null) {
+      console.error(err)
+    } else {
+      loadingWindow.webContents.on('did-finish-load', () => {
+        loadingWindow.webContents.send('connection-failed')
+      })
+    }
+  }
 }
+
+ipcMain.on('restart', () => {
+  if (mainWindow != null) {
+    mainWindow.close()
+    mainWindow = null
+  }
+  start()
+})
 
 start()

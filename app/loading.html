@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Onyx - Loading...</title>
+    <style type="text/css">
+      .hidden { display: none }
+    </style>
+  </head>
+  <body>
+    <div id="loading">
+      <h1>Loading...</h1>
+    </div>
+    <div id="error" class="hidden">
+      <p>Error connecting to Swarm. Make sure the Swarm node is up and restart the app.</p>
+      <button id="restart">Restart</button>
+    </div>
+  </body>
+  <script>
+  ;(function() {
+  const electron = require('electron')
+  const $loading = document.getElementById('loading')
+  const $error = document.getElementById('error')
+
+  document.getElementById('restart').addEventListener('click', () => {
+    electron.ipcRenderer.send('restart')
+  })
+
+  electron.ipcRenderer.on('connection-failed', () => {
+    $loading.className = 'hidden'
+    $error.className = ''
+  })
+})()
+</script>
+</html>
