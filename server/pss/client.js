@@ -6,16 +6,18 @@ import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject'
 import { Subscriber } from 'rxjs/Subscriber'
 import WebSocket from 'ws'
 
-import db, {
+import {
   addMessage,
   deleteContactRequest,
   getAddress,
   getContact,
   getProfile,
+  getConversations,
   setAddress,
   setContact,
   setContactRequest,
   setConversation,
+  hasConversation,
   setProfile,
   setTyping as setTypingPeer,
   upsertContact,
@@ -26,7 +28,14 @@ import db, {
   type SendMessage,
 } from '../data/db'
 import pubsub from '../data/pubsub'
-import { Pss, RPC, base64ToArray, base64ToHex, encodeHex } from '../lib'
+import {
+  Pss,
+  RPC,
+  base64ToArray,
+  base64ToHex,
+  encodeHex,
+  hexToArray,
+} from '../lib'
 
 import {
   decodeProtocol,
@@ -101,6 +110,40 @@ export const setupPss = async (url: string, serverURL: string) => {
   return pss
 }
 
+export const subscribeToStoredConvos = async (pss: Pss) => {
+  const convos = getConversations()
+  convos.forEach(async c => {
+    switch (c.type) {
+      case 'DIRECT':
+        const contact = c.peers[0]
+        const dmTopic = await joinDirectTopic(pss, hexToArray(c.id), {
+          address: contact.address,
+          pubKey: contact.profile.id,
+        })
+        createP2PTopicSubscription(pss, dmTopic)
+        break
+      case 'CHANNEL':
+        const channel = {
+          subject: c.subject,
+          topic: hexToArray(c.id),
+        }
+        const peers = c.peers.reduce((acc, p) => {
+          const profile = getProfile()
+          if (p.profile.id !== profile.id) {
+            acc.push({
+              pubKey: p.profile.id,
+              address: p.address,
+            })
+          }
+          return acc
+        }, [])
+        const chanTopic = await joinChannelTopic(pss, channel, peers)
+        createChannelTopicSubscription(pss, chanTopic)
+        break
+    }
+  })
+}
+
 export const createContactTopic = (
   pss: Pss,
   publicKey: string,
@@ -120,17 +163,19 @@ const addTopic = (
   channel?: ChannelInvitePayload,
 ) => {
   topics.set(topic.hex, topic)
-  setConversation({
-    dark: channel ? channel.dark : false,
-    id: topic.hex,
-    lastActiveTimestamp: Date.now(),
-    messages: [],
-    messageCount: 0,
-    pointer: 0,
-    peers,
-    subject: channel ? channel.subject : undefined,
-    type,
-  })
+  if (!hasConversation(topic.hex)) {
+    setConversation({
+      dark: channel ? channel.dark : false,
+      id: topic.hex,
+      lastActiveTimestamp: Date.now(),
+      messages: [],
+      messageCount: 0,
+      pointer: 0,
+      peers,
+      subject: channel ? channel.subject : undefined,
+      type,
+    })
+  }
 }
 
 // Join new channel topic with peers identified by public key

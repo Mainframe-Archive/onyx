@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.setupPss = exports.setPeerPublicKey = undefined;
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -24,8 +24,6 @@ var _ws = require('ws');
 var _ws2 = _interopRequireDefault(_ws);
 
 var _db = require('../data/db');
-
-var _db2 = _interopRequireDefault(_db);
 
 var _pubsub = require('../data/pubsub');
 
@@ -84,23 +82,59 @@ const setupPss = exports.setupPss = async (url, serverURL) => {
   return pss;
 };
 
+const subscribeToStoredConvos = exports.subscribeToStoredConvos = async pss => {
+  const convos = (0, _db.getConversations)();
+  convos.forEach(async c => {
+    switch (c.type) {
+      case 'DIRECT':
+        const contact = c.peers[0];
+        const dmTopic = await joinDirectTopic(pss, (0, _lib.hexToArray)(c.id), {
+          address: contact.address,
+          pubKey: contact.profile.id
+        });
+        createP2PTopicSubscription(pss, dmTopic);
+        break;
+      case 'CHANNEL':
+        const channel = {
+          subject: c.subject,
+          topic: (0, _lib.hexToArray)(c.id)
+        };
+        const peers = c.peers.reduce((acc, p) => {
+          const profile = (0, _db.getProfile)();
+          if (p.profile.id !== profile.id) {
+            acc.push({
+              pubKey: p.profile.id,
+              address: p.address
+            });
+          }
+          return acc;
+        }, []);
+        const chanTopic = await joinChannelTopic(pss, channel, peers);
+        createChannelTopicSubscription(pss, chanTopic);
+        break;
+    }
+  });
+};
+
 const createContactTopic = exports.createContactTopic = (pss, publicKey) => pss.stringToTopic(`dcd:contact:${publicKey}`);
 
 const createRandomTopic = exports.createRandomTopic = pss => pss.stringToTopic(Math.random().toString(36).substr(2));
 
 const addTopic = (topic, type, peers, channel) => {
   topics.set(topic.hex, topic);
-  (0, _db.setConversation)({
-    dark: channel ? channel.dark : false,
-    id: topic.hex,
-    lastActiveTimestamp: Date.now(),
-    messages: [],
-    messageCount: 0,
-    pointer: 0,
-    peers,
-    subject: channel ? channel.subject : undefined,
-    type
-  });
+  if (!(0, _db.hasConversation)(topic.hex)) {
+    (0, _db.setConversation)({
+      dark: channel ? channel.dark : false,
+      id: topic.hex,
+      lastActiveTimestamp: Date.now(),
+      messages: [],
+      messageCount: 0,
+      pointer: 0,
+      peers,
+      subject: channel ? channel.subject : undefined,
+      type
+    });
+  }
 };
 
 // Join new channel topic with peers identified by public key
