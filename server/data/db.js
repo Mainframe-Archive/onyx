@@ -210,10 +210,6 @@ export const setProfile = (profile: Profile) => {
   store.set('state.profile', profile)
 }
 
-const updateStore = (key, value) => {
-  // const store = store.get
-}
-
 export const getProfile = (): ?Profile => store.get('state.profile')
 
 export const deleteContactRequest = (id: ID) => {

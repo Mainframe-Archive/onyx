@@ -42,8 +42,6 @@ const resetState = () => {
   });
 };
 
-log(store.get('state'));
-
 if (!store.has('state')) {
   resetState();
 }
@@ -97,10 +95,6 @@ const getAddress = exports.getAddress = () => store.get('state.address');
 
 const setProfile = exports.setProfile = profile => {
   store.set('state.profile', profile);
-};
-
-const updateStore = (key, value) => {
-  // const store = store.get
 };
 
 const getProfile = exports.getProfile = () => store.get('state.profile');

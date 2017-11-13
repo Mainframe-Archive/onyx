@@ -391,7 +391,6 @@ class Conversation extends Component<Props, State> {
     this.unsubscribeMessageAdded = this.props.subscribeToMessageAdded(
       this.props.id,
     )
-    console.log('sub to typing')
     this.unsubscribeTypingsChanged = this.context.client
       .subscribe({
         query: gql`
@@ -406,7 +405,6 @@ class Conversation extends Component<Props, State> {
       })
       .subscribe({
         next: ({ typingsChanged }) => {
-          console.log('typing changed...: ', typingsChanged)
           const toBe = typingsChanged.length > 1 ? 'are' : 'is'
           const typingText =
             typingsChanged.length > 0

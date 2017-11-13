@@ -25,7 +25,7 @@ const start = async (
   const pss = await setupPss(swarmWsUrl, appUrl)
   // Start listening to the "contact request" topic and handle these requests
   await setupContactTopic(pss)
-  // Set subscriptions for stored FileData
+  // Set subscriptions for stored convos
   await subscribeToStoredConvos(pss)
   // Start the GraphQL server
   await createServer(pss, swarmHttpUrl, serverPort)
