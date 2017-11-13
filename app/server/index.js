@@ -28,6 +28,8 @@ const start = async (swarmWsUrl = SWARM_WS_URL, swarmHttpUrl = SWARM_HTTP_URL, s
   const pss = await (0, _client.setupPss)(swarmWsUrl, appUrl);
   // Start listening to the "contact request" topic and handle these requests
   await (0, _client.setupContactTopic)(pss);
+  // Set subscriptions for stored convos
+  await (0, _client.subscribeToStoredConvos)(pss);
   // Start the GraphQL server
   await (0, _server2.default)(pss, swarmHttpUrl, serverPort);
 };
