@@ -159,7 +159,7 @@ if (!store.has('state')) {
   resetState()
 }
 
-const _typings: { [ID]: ConvoTypings } = new Map()
+const _typings: Map<ID, ConvoTypings> = new Map()
 
 const resetTyping = (convoID: ID, peerID: ID) => {
   return setTimeout(setTyping, TYPING_TIMEOUT, convoID, peerID, false)
@@ -213,13 +213,11 @@ export const setProfile = (profile: Profile) => {
 export const getProfile = (): ?Profile => store.get('state.profile')
 
 export const deleteContactRequest = (id: ID) => {
-  const requests = store.get('state.contactRequests')
-  delete requests[id]
-  store.set('state.contactRequests', requests)
+  store.delete(`state.contactRequests.${id}`)
 }
 
 export const getContactRequest = (id: ID) => {
-  return store.get('state.contactRequests')[id]
+  return store.get(`state.contactRequests.${id}`)
 }
 
 export const setContactRequest = (
@@ -233,7 +231,7 @@ export const setContactRequest = (
   pubsub.publish('contactRequested', contact.profile)
 }
 
-export const getAction = (id: ID): ?Action => store.get('state.actions')[id]
+export const getAction = (id: ID): ?Action => store.get(`state.actions.${id}`)
 
 export const setAction = (convoID: ID, data: ActionData): Action => {
   const action = { convoID, data }
@@ -245,14 +243,14 @@ export const getConversation = (
   id: ID,
   withContacts: boolean = false,
 ): ?(Conversation | ConversationData) => {
-  const convo = store.get('state.convos')[id]
+  const convo = store.get(`state.convos.${id}`)
   if (convo) {
     const messages =
       convo.messages && convo.messages.length
         ? convo.messages.map(msg => {
             msg.blocks = msg.blocks.map(b => {
               if (b.action != null && typeof b.action.id === 'string') {
-                const action = store.get('state.actions')[b.action.id]
+                const action = store.get(`state.actions.${b.action.id}`)
                 if (action != null) {
                   // $FlowIgnore
                   b.action = action.data
@@ -276,7 +274,7 @@ export const getContact = (
   id: ID,
   withConvo: boolean = false,
 ): ?(Contact | ContactData) => {
-  const contact = store.get('state.contacts')[id]
+  const contact = store.get(`state.contacts.${id}`)
   if (contact) {
     const convo =
       withConvo && contact.convoID != null
@@ -289,12 +287,12 @@ export const getContact = (
 
 export const getContacts = (withConvo: boolean = false) =>{
   const storedContacts = store.get('state.contacts')
-  return Array.from(Object.keys(storedContacts)).map(id => getContact(id, withConvo))
+  return Object.keys(storedContacts).map(id => getContact(id, withConvo))
 }
 
 export const getConversations = (filterType?: ConvoType) => {
   const storedConvos = store.get('state.convos')
-  const convos = Array.from(Object.keys(storedConvos)).map(id =>
+  const convos = Object.keys(storedConvos).map(id =>
     getConversation(id, true),
   )
   return filterType ? convos.filter(c => c && c.type === filterType) : convos
@@ -329,7 +327,7 @@ export const setConversation = (convo: Conversation) => {
 }
 
 export const updateConversationPointer = (id: ID): ?Conversation => {
-  const convo = store.get('state.convos')[id]
+  const convo = store.get(`state.convos.${id}`)
   if (convo != null && convo.pointer != convo.messages.length) {
     convo.lastActiveTimestamp = Date.now()
     convo.pointer = convo.messages.length
