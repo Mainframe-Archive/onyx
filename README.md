@@ -8,7 +8,9 @@ Run `yarn` to install all the dependencies.
 
 ## Project structure
 
-- `build`: bundled client, used by the desktop app
+- `app`: electron app
+- `assets`: build assets (app icons)
+- `dist`: app builds
 - `public`: assets that will be added to the `build` folder
 - `server`: server logic handling the connection to PSS and exposing a local GraphQL server
 - `src`: client source
