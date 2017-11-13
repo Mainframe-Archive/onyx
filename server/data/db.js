@@ -1,9 +1,9 @@
 // @flow
 
 import debug from 'debug'
-import { merge } from 'lodash'
-
+import Store from 'electron-store'
 import pubsub from './pubsub'
+import { merge } from 'lodash'
 
 import type { ByteArray } from '../pss/types'
 
@@ -129,43 +129,57 @@ export type Action = {
 }
 
 type Timer = number
-type ConvoTypings = Map<ID, Timer> // keyed by peer ID
+type ConvoTypings = { [ID]: Timer } // keyed by peer ID
 
-type DB = {
-  actions: Map<ID, Action>,
+type State = {
+  actions: { [ID]: Action },
   address: string,
-  contactRequests: Map<ID, ContactRequest>,
-  contacts: Map<ID, Contact>,
-  convos: Map<ID, Conversation>,
+  contactRequests: { [ID]: ContactRequest },
+  contacts: { [ID]: Contact },
+  convos: { [ID]: Conversation },
   profile: ?Profile,
-  typings: Map<ID, ConvoTypings>,
 }
 
-const db: DB = {
-  actions: new Map(),
-  address: '',
-  contactRequests: new Map(),
-  contacts: new Map(),
-  convos: new Map(),
-  // TODO: store profiles mock as [address]: PeerProfile
-  // get own profile based on address
-  profile: undefined,
-  typings: new Map(),
+const store = new Store()
+
+const resetState = () => {
+  store.set('state', {
+    actions: {},
+    address: '',
+    contactRequests: {},
+    contacts: {},
+    convos: {},
+    // TODO: store profiles mock as [address]: PeerProfile
+    // get own profile based on address
+    profile: undefined,
+  })
 }
 
-const resetTyping = (convoID: ID, peerID: ID) =>
-  setTimeout(setTyping, TYPING_TIMEOUT, convoID, peerID, false)
+if (!store.has('state')) {
+  resetState()
+}
 
-const setTypings = (convoID: ID, typings: ConvoTypings) => {
-  db.typings.set(convoID, typings)
-  const peers = Array.from(typings.keys()).map(id => getContact(id))
+const _typings: { [ID]: ConvoTypings } = new Map()
 
+const resetTyping = (convoID: ID, peerID: ID) => {
+  return setTimeout(setTyping, TYPING_TIMEOUT, convoID, peerID, false)
+}
+
+const setTypings = (convoID: ID, convoTypings: ConvoTypings) => {
+  _typings.set(convoID, convoTypings)
+  const peers = Array.from(convoTypings.keys()).reduce((acc, id) => {
+    const contact = getContact(id)
+    if (contact) {
+      acc.push(contact)
+    }
+    return acc
+  }, [])
   pubsub.publish('typingsChanged', { id: convoID, peers })
   return peers
 }
 
 export const setTyping = (convoID: ID, peerID: ID, typing: boolean) => {
-  let convoTypings = db.typings.get(convoID)
+  let convoTypings = _typings.get(convoID)
   if (convoTypings == null) {
     convoTypings = new Map()
     if (typing) {
@@ -187,37 +201,47 @@ export const setTyping = (convoID: ID, peerID: ID, typing: boolean) => {
 }
 
 export const setAddress = (address: string = '') => {
-  db.address = address
+  store.set('state.address', address)
 }
 
-export const getAddress = (): string => db.address
+export const getAddress = (): string => store.get('state.address')
 
 export const setProfile = (profile: Profile) => {
-  db.profile = profile
+  store.set('state.profile', profile)
 }
 
-export const getProfile = (): ?Profile => db.profile
+const updateStore = (key, value) => {
+  // const store = store.get
+}
 
-export const deleteContactRequest = (id: ID) => db.contactRequests.delete(id)
+export const getProfile = (): ?Profile => store.get('state.profile')
 
-export const getContactRequest = (id: ID) => db.contactRequests.get(id)
+export const deleteContactRequest = (id: ID) => {
+  const requests = store.get('state.contactRequests')
+  delete requests[id]
+  store.set('state.contactRequests', requests)
+}
+
+export const getContactRequest = (id: ID) => {
+  return store.get('state.contactRequests')[id]
+}
 
 export const setContactRequest = (
   contact: Contact,
   request: ContactRequest,
 ) => {
   log('set contact request', contact, request)
-  db.contacts.set(contact.profile.id, contact)
-  db.contactRequests.set(contact.profile.id, request)
+  store.set(`state.contacts.${contact.profile.id}`, contact)
+  store.set(`state.contactRequests.${contact.profile.id}`, request)
   pubsub.publish('contactsChanged', getContacts())
   pubsub.publish('contactRequested', contact.profile)
 }
 
-export const getAction = (id: ID): ?Action => db.actions.get(id)
+export const getAction = (id: ID): ?Action => store.get('state.actions')[id]
 
 export const setAction = (convoID: ID, data: ActionData): Action => {
   const action = { convoID, data }
-  db.actions.set(data.id, action)
+  store.set(`state.actions.${data.id}`, action)
   return action
 }
 
@@ -225,14 +249,14 @@ export const getConversation = (
   id: ID,
   withContacts: boolean = false,
 ): ?(Conversation | ConversationData) => {
-  const convo = db.convos.get(id)
+  const convo = store.get('state.convos')[id]
   if (convo) {
     const messages =
       convo.messages && convo.messages.length
         ? convo.messages.map(msg => {
             msg.blocks = msg.blocks.map(b => {
               if (b.action != null && typeof b.action.id === 'string') {
-                const action = db.actions.get(b.action.id)
+                const action = store.get('state.actions')[b.action.id]
                 if (action != null) {
                   // $FlowIgnore
                   b.action = action.data
@@ -256,7 +280,7 @@ export const getContact = (
   id: ID,
   withConvo: boolean = false,
 ): ?(Contact | ContactData) => {
-  const contact = db.contacts.get(id)
+  const contact = store.get('state.contacts')[id]
   if (contact) {
     const convo =
       withConvo && contact.convoID != null
@@ -267,11 +291,14 @@ export const getContact = (
   }
 }
 
-export const getContacts = (withConvo: boolean = false) =>
-  Array.from(db.contacts.keys()).map(id => getContact(id, withConvo))
+export const getContacts = (withConvo: boolean = false) =>{
+  const storedContacts = store.get('state.contacts')
+  return Array.from(Object.keys(storedContacts)).map(id => getContact(id, withConvo))
+}
 
 export const getConversations = (filterType?: ConvoType) => {
-  const convos = Array.from(db.convos.keys()).map(id =>
+  const storedConvos = store.get('state.convos')
+  const convos = Array.from(Object.keys(storedConvos)).map(id =>
     getConversation(id, true),
   )
   return filterType ? convos.filter(c => c && c.type === filterType) : convos
@@ -287,14 +314,18 @@ export const getViewer = (): Viewer => ({
 })
 
 export const setContact = (contact: Contact) => {
-  db.contacts.set(contact.profile.id, contact)
+  store.set(`state.contacts.${contact.profile.id}`, contact)
   log('set contact', contact)
   pubsub.publish('contactChanged', getContact(contact.profile.id, true))
   pubsub.publish('contactsChanged')
 }
 
+export const hasConversation = (convoId: Conversation) => {
+  return store.has(`state.convos.${convoId}`)
+}
+
 export const setConversation = (convo: Conversation) => {
-  db.convos.set(convo.id, convo)
+  store.set(`state.convos.${convo.id}`, convo)
   log('set convo', convo)
   pubsub.publish(
     convo.type === 'CHANNEL' ? 'channelsChanged' : 'contactsChanged',
@@ -302,7 +333,7 @@ export const setConversation = (convo: Conversation) => {
 }
 
 export const updateConversationPointer = (id: ID): ?Conversation => {
-  const convo = db.convos.get(id)
+  const convo = store.get('state.convos')[id]
   if (convo != null && convo.pointer != convo.messages.length) {
     convo.lastActiveTimestamp = Date.now()
     convo.pointer = convo.messages.length
@@ -328,11 +359,12 @@ export const addMessage = (
   }
 
   if (fromSelf) {
-    if (db.profile == null || db.profile.id == null) {
+    const profile = getProfile()
+    if (profile == null || profile.id == null) {
       log('invalid addMessage call from self: profile ID is not defined')
       return
     }
-    msg.sender = db.profile.id
+    msg.sender = profile.id
   }
 
   if (msg.source == null) {
@@ -362,5 +394,3 @@ export const addMessage = (
   // $FlowFixMe
   return msg
 }
-
-export default db

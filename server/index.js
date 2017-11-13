@@ -2,7 +2,7 @@
 
 import ip from 'ip'
 
-import { setupPss, setupContactTopic } from './pss/client'
+import { setupPss, setupContactTopic, subscribeToStoredConvos } from './pss/client'
 import createServer from './server'
 
 const SWARM_WS_URL = process.env.SWARM_WS_URL || 'ws://localhost:8547'
@@ -25,6 +25,8 @@ const start = async (
   const pss = await setupPss(swarmWsUrl, appUrl)
   // Start listening to the "contact request" topic and handle these requests
   await setupContactTopic(pss)
+  // Set subscriptions for stored FileData
+  await subscribeToStoredConvos(pss)
   // Start the GraphQL server
   await createServer(pss, swarmHttpUrl, serverPort)
 }
