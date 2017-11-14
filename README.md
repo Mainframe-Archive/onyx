@@ -25,4 +25,4 @@ Once ready, you can run `yarn electron` to start the electron app, connecting to
 
 ## License
 
-[MIT](https://github.com/thusfresh/onyx/blob/master/LICENSE)
+[MIT](LICENSE)
