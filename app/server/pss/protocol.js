@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.topicTyping = exports.topicMessage = exports.topicJoined = exports.profileResponse = exports.profileRequest = exports.contactRequest = exports.channelInvite = exports.actionState = exports.encodeProtocol = exports.decodeProtocol = undefined;
+exports.topicTyping = exports.topicMessage = exports.topicJoined = exports.profileResponse = exports.profileRequest = exports.contactRequest = exports.channelInvite = exports.encodeProtocol = exports.decodeProtocol = undefined;
 
 var _crypto = require('crypto');
 
@@ -42,11 +42,6 @@ const encodeProtocol = exports.encodeProtocol = data => {
   };
   return (0, _erebos.encodeMessage)(JSON.stringify(envelope));
 };
-
-const actionState = exports.actionState = (id, state) => ({
-  type: 'ACTION_STATE',
-  payload: { id, state }
-});
 
 const channelInvite = exports.channelInvite = payload => ({
   type: 'CHANNEL_INVITE',

@@ -10,7 +10,6 @@ import uuid from 'uuid/v4'
 
 import {
   deleteContactRequest,
-  getAction,
   getContact,
   getContactRequest,
   getConversation,
@@ -24,7 +23,6 @@ import {
   createChannel,
   requestContact,
   sendMessage,
-  setActionDone,
   setTyping,
 } from '../pss/client'
 
@@ -70,7 +68,7 @@ type Message {
   blocks: [MessageBlock!]!
 }
 
-union MessageBlock = MessageBlockText | MessageBlockFile | MessageBlockAction
+union MessageBlock = MessageBlockText | MessageBlockFile
 
 type MessageBlockText {
   text: String!
@@ -80,23 +78,11 @@ type MessageBlockFile {
   file: File!
 }
 
-type MessageBlockAction {
-  action: Action!
-}
-
 type File {
   name: String!
   hash: String!
   mimeType: String
   size: Int
-}
-
-type Action {
-  id: ID!
-  assignee: ID!
-  sender: ID!
-  state: String!
-  text: String!
 }
 
 input ChannelInput {
@@ -138,13 +124,11 @@ type Mutation {
   createChannel(input: ChannelInput!): Conversation!
   requestContact(id: ID!): Contact!
   sendMessage(input: MessageInput!): Message!
-  setActionDone(id: ID!): Conversation!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
 }
 
 type Subscription {
-  actionChanged(id: ID!): Action!
   channelsChanged: Viewer!
   contactChanged(id: ID!): Contact!
   contactRequested: Profile!
@@ -161,9 +145,6 @@ export default (pss: PSS, port: number) => {
     JSON: GraphQLJSON,
     MessageBlock: {
       __resolveType(obj) {
-        if (obj.action) {
-          return 'MessageBlockAction'
-        }
         if (obj.file) {
           return 'MessageBlockFile'
         }
@@ -221,29 +202,11 @@ export default (pss: PSS, port: number) => {
         if (input.blocks == null || input.blocks.length === 0) {
           throw new Error('Invalid block')
         }
-
-        // TODO: better blocks validation (sent as JSON - need to check the types)
-        const blocks = input.blocks.map(b => {
-          if (b.action) {
-            b.action.id = uuid()
-            b.action.sender = profile.id
-            b.action.state = 'PENDING'
-          }
-          return b
-        })
-        const msg = await sendMessage(input.convoID, blocks)
+        const msg = await sendMessage(input.convoID, input.blocks)
         if (msg == null) {
           throw new Error('Error creating message')
         }
         return msg
-      },
-      setActionDone: (root, { id }) => {
-        const action = getAction(id)
-        if (action == null) {
-          throw new Error('Action not found')
-        }
-        setActionDone(action)
-        return getConversation(action.convoID)
       },
       setTyping: (root, { input }) => {
         setTyping(input.convoID, input.typing)

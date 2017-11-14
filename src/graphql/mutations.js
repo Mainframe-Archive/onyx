@@ -91,23 +91,6 @@ export const SendMessageMutation = graphql(
   },
 )
 
-export type SetActionDoneFunc = (id: ID) => Promise<*>
-
-export const SetActionDoneMutation = graphql(
-  gql`
-    mutation SetActionDoneMutation($id: ID!) {
-      setActionDone(id: $id) {
-        lastActiveTimestamp
-      }
-    }
-  `,
-  {
-    props: ({ mutate }) => ({
-      setActionDone: (id: ID) => mutate({ variables: { id } }),
-    }),
-  },
-)
-
 export type TypingInput = {
   convoID: ID,
   typing: boolean,

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.setActionDone = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -154,21 +154,6 @@ const sendMessage = exports.sendMessage = (topicHex, blocks) => {
   return message;
 };
 
-const setActionDone = exports.setActionDone = action => {
-  const topic = topics.get(action.convoID);
-  if (topic == null) {
-    logClient('cannot set action to missing topic:', action.convoID);
-  } else {
-    action.data.state = 'DONE';
-    (0, _db.setAction)(action.convoID, action.data);
-    (0, _db.addMessage)(action.convoID, {
-      blocks: [{ action: action.data }],
-      source: 'SYSTEM'
-    }, true);
-    topic.next((0, _protocol.actionState)(action.data.id, 'DONE'));
-  }
-};
-
 const setTyping = exports.setTyping = (topicHex, typing) => {
   const topic = topics.get(topicHex);
   if (topic == null) {
@@ -191,20 +176,6 @@ const handleTopicJoined = (pss, topic, payload) => {
 
 const handleTopicMessage = (topic, msg) => {
   switch (msg.type) {
-    case 'ACTION_STATE':
-      {
-        const action = (0, _db.getAction)(msg.payload.id);
-        if (action != null) {
-          action.data.state = msg.payload.state;
-          (0, _db.setAction)(action.convoID, action.data);
-          (0, _db.addMessage)(action.convoID, {
-            blocks: [{ action: action.data }],
-            sender: msg.sender,
-            source: 'SYSTEM'
-          });
-        }
-        break;
-      }
     case 'TOPIC_MESSAGE':
       logClient('received topic message', msg.sender, msg.payload);
       (0, _db.addMessage)(topic.hex, _extends({}, msg.payload, { sender: msg.sender }));
@@ -241,7 +212,6 @@ const createChannelTopicSubscription = (pss, topic) => {
         // Always update latest profile provided by the user
         (0, _db.upsertContact)({ profile: msg.payload.profile });
         break;
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg);
@@ -268,7 +238,6 @@ const createP2PTopicSubscription = (pss, topic) => {
           state: 'ACCEPTED'
         });
         break;
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg);
