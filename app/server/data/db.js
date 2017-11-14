@@ -91,6 +91,10 @@ const setAddress = exports.setAddress = (address = '') => {
 const getAddress = exports.getAddress = () => store.get('state.address');
 
 const setProfile = exports.setProfile = profile => {
+  const id = store.get('state.profile.id');
+  if (id != null && id !== profile.id) {
+    resetState();
+  }
   store.set('state.profile', profile);
 };
 
