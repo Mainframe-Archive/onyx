@@ -20,7 +20,7 @@ import {
   setContactRequest,
   setConversation,
   hasConversation,
-  setProfile,
+  setProfileId,
   setTyping as setTypingPeer,
   upsertContact,
   type Action,
@@ -102,7 +102,7 @@ export const setupPss = async (url: string, serverURL: string) => {
   logClient(`connected to Swarm with public key ${id}`)
 
   setAddress(address)
-  setProfile({ id })
+  setProfileId(id)
 
   return pss
 }

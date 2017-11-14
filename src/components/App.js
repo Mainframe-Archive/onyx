@@ -25,7 +25,7 @@ import {
 import Contact from './Contact'
 import CreateChannelModal, { type ChannelData } from './CreateChannelModal'
 import AddContactModal from './AddContactModal'
-import UserProfileModal from './UserProfileModal'
+import UserProfileModal, { SelfUserProfileModal } from './UserProfileModal'
 import Conversation from './Conversation'
 import Loader from './Loader'
 import Icon from './Icon'
@@ -69,6 +69,14 @@ class App extends Component<Props, State> {
 
   unsubscribeChannelsChanged: UnsubscribeFunc
   unsubscribeContactsChanged: UnsubscribeFunc
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data && nextProps.data.viewer && !nextProps.data.viewer.profile.name) {
+      this.setState({
+        openProfile: nextProps.data.viewer.profile,
+      })
+    }
+  }
 
   componentDidMount() {
     this.unsubscribeChannelsChanged = this.props.subscribeToChannelsChanged()
@@ -130,13 +138,22 @@ class App extends Component<Props, State> {
 
   renderProfileModal() {
     const { openProfile } = this.state
-    return (
-      <UserProfileModal
-        profile={openProfile}
-        serverURL={this.props.data.serverURL}
-        onCloseModal={this.onCloseModal}
-      />
-    )
+    if (openProfile) {
+      const isSelf = openProfile.id === this.props.data.viewer.profile.id
+      return isSelf ? (
+        <SelfUserProfileModal
+          serverURL={this.props.data.serverURL}
+          onCloseModal={this.onCloseModal}
+        />
+      ) : (
+        <UserProfileModal
+          profile={openProfile}
+          serverURL={this.props.data.serverURL}
+          onCloseModal={this.onCloseModal}
+        />
+      )
+    }
+    return null
   }
 
   renderCreateChannelModal() {

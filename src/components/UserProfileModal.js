@@ -1,9 +1,13 @@
 // @flow
 
 import React, { Component } from 'react'
+import { gql, graphql } from 'react-apollo'
 
 import Modal from './Modal'
 import UserProfile from './UserProfile'
+import EditProfile from './EditProfile'
+
+import { ProfileData } from '../graphql/fragments'
 
 type Props = {
   profile: {
@@ -12,28 +16,83 @@ type Props = {
     name: ?string,
     bio?: ?string,
   },
+  editRequired?: booleam,
   serverURL?: ?string,
   onCloseModal: () => void,
 }
 
-export default class UserProfileModal extends Component<Props> {
+type State = {
+  editMode: boolean,
+}
+
+export default class UserProfileModal extends Component<Props, State> {
+
+  state: State = {
+    editMode: false,
+  }
+
+  onToggleEdit = () => {
+    this.setState({
+      editMode: !this.state.editMode,
+    })
+  }
+
   render() {
-    const { profile, onCloseModal, serverURL } = this.props
+    const { profile, onCloseModal, serverURL, editRequired } = this.props
 
     if (profile == null) {
       return null
     }
+    const title = this.state.editMode || editRequired
+      ? 'Edit Profile'
+      : profile.name || profile.id.substr(0, 8)
 
-    const title = profile.name || profile.id.substr(0, 8)
     return (
-      <Modal isOpen onRequestClose={onCloseModal} title={title}>
-        <UserProfile
-          profile={profile}
-          keyQRCode
-          hideTitle
-          serverURL={serverURL}
-        />
+      <Modal isOpen onRequestClose={editRequired ? null : onCloseModal} title={title}>
+        {
+          this.state.editMode || editRequired ? (
+            <EditProfile
+              profile={profile}
+              keyQRCode
+              hideTitle
+              serverURL={serverURL}
+              onDoneEditing={this.onToggleEdit}
+              onCloseModal={this.props.onCloseModal}
+            />
+          ) : (
+            <UserProfile
+              profile={profile}
+              keyQRCode
+              hideTitle
+              serverURL={serverURL}
+              onPressEdit={this.onToggleEdit}
+            />
+          )
+        }
       </Modal>
     )
   }
 }
+
+const mapDataToProps = ({data}: {data: SchoolsData}) => {
+  return {
+    editRequired: !data.viewer.profile.name,
+    profile: data.viewer.profile
+  }
+}
+
+const SelfProfileQuery = gql`
+  ${ProfileData}
+  query SelfProfileQuery {
+    viewer {
+      profile {
+        ...ProfileData
+      }
+    }
+  }
+`
+
+export const SelfUserProfileModal = graphql(
+  SelfProfileQuery,
+  { props: mapDataToProps },
+)(UserProfileModal)

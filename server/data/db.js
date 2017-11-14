@@ -17,6 +17,7 @@ export type Profile = {
   id: ID, // base64-encoded public key
   avatar?: ?string,
   name?: ?string,
+  bio?: ?string,
 }
 
 export type ActionState = 'PENDING' | 'DONE'
@@ -205,6 +206,8 @@ export const setAddress = (address: string = '') => {
 }
 
 export const getAddress = (): string => store.get('state.address')
+
+export const setProfileId = (id: ID) => store.set(`state.profile.${id}`, id)
 
 export const setProfile = (profile: Profile) => {
   store.set('state.profile', profile)

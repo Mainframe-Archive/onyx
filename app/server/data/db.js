@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setAction = exports.getAction = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
+exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setAction = exports.getAction = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.setProfileId = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -93,6 +93,8 @@ const setAddress = exports.setAddress = (address = '') => {
 
 const getAddress = exports.getAddress = () => store.get('state.address');
 
+const setProfileId = exports.setProfileId = id => store.set(`state.profile.${id}`, id);
+
 const setProfile = exports.setProfile = profile => {
   store.set('state.profile', profile);
 };
@@ -100,9 +102,7 @@ const setProfile = exports.setProfile = profile => {
 const getProfile = exports.getProfile = () => store.get('state.profile');
 
 const deleteContactRequest = exports.deleteContactRequest = id => {
-  log('deleting contact: ', store.has(`state.contactRequests.${id}`));
   store.delete(`state.contactRequests.${id}`);
-  log('deleted contact: ', store.has(`state.contactRequests.${id}`));
 };
 
 const getContactRequest = exports.getContactRequest = id => {

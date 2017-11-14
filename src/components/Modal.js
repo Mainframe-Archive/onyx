@@ -38,15 +38,19 @@ export default class Modal extends Component<Props> {
     const darkStyle = dark ? styles.dark : styles.light
     const titleStyle = dark ? [styles.title, styles.whiteText] : styles.title
 
+    const closeButton = onRequestClose ? (
+      <TouchableOpacity style={styles.closeIcon} onPress={onRequestClose}>
+        <Icon name="red-close" />
+      </TouchableOpacity>
+    ) : null
+
     return (
       <ReactModal isOpen={isOpen} onRequestClose={onRequestClose}>
         <View style={darkStyle}>
           <View style={styles.header}>
             <Text style={titleStyle}>{title}</Text>
             <ColoredLine />
-            <TouchableOpacity style={styles.closeIcon} onPress={onRequestClose}>
-              <Icon name="red-close" />
-            </TouchableOpacity>
+            {closeButton}
           </View>
           {subtitle && <Text style={styles.modalSubtitle}>{subtitle}</Text>}
           <View style={styles.content}>{children}</View>

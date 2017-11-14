@@ -16,6 +16,7 @@ import {
   getProfile,
   getViewer,
   updateConversationPointer,
+  setProfile,
 } from '../data/db'
 import pubsub from '../data/pubsub'
 import type Pss from '../lib/Pss'
@@ -99,6 +100,12 @@ type Action {
   text: String!
 }
 
+input ProfileInput {
+  avatar: String
+  name: String!
+  bio: String
+}
+
 input ChannelInput {
   subject: String!
   peers: [ID!]!
@@ -141,6 +148,7 @@ type Mutation {
   setActionDone(id: ID!): Conversation!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
+  updateProfile(input: ProfileInput!): Profile!
 }
 
 type Subscription {
@@ -250,6 +258,12 @@ export default (pss: Pss, port: number) => {
         return getConversation(input.convoID)
       },
       updatePointer: (root, { id }) => updateConversationPointer(id),
+      updateProfile: (root, { input }) => {
+        const profile = getProfile()
+        const updatedProfile = Object.assign(profile, input)
+        setProfile(updatedProfile)
+        return updatedProfile
+      }
     },
     Subscription: {
       channelsChanged: {

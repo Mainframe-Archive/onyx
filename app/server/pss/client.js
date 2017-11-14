@@ -77,7 +77,7 @@ const setupPss = exports.setupPss = async (url, serverURL) => {
   logClient(`connected to Swarm with public key ${id}`);
 
   (0, _db.setAddress)(address);
-  (0, _db.setProfile)({ id });
+  (0, _db.setProfileId)(id);
 
   return pss;
 };
