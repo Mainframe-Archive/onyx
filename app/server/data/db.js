@@ -94,15 +94,17 @@ const setAddress = exports.setAddress = (address = '') => {
 const getAddress = exports.getAddress = () => store.get('state.address');
 
 const setProfile = exports.setProfile = profile => {
+  const id = store.get('state.profile.id');
+  if (id != null && id !== profile.id) {
+    resetState();
+  }
   store.set('state.profile', profile);
 };
 
 const getProfile = exports.getProfile = () => store.get('state.profile');
 
 const deleteContactRequest = exports.deleteContactRequest = id => {
-  log('deleting contact: ', store.has(`state.contactRequests.${id}`));
   store.delete(`state.contactRequests.${id}`);
-  log('deleted contact: ', store.has(`state.contactRequests.${id}`));
 };
 
 const getContactRequest = exports.getContactRequest = id => {

@@ -1,11 +1,10 @@
 // @flow
 
 import debug from 'debug'
+import { base64ToHex, hexToBase64, encodeHex, type PSS } from 'erebos'
 import { Observable } from 'rxjs'
 import { AnonymousSubject } from 'rxjs/Subject'
 import { Subscriber } from 'rxjs/Subscriber'
-
-import { base64ToHex, hexToBase64, encodeHex, type Pss } from '../lib'
 
 import { decodeProtocol, encodeProtocol, type ProtocolEvent } from './protocol'
 import type { ByteArray, PublicKey } from './types'
@@ -18,7 +17,7 @@ export class TopicSubject extends AnonymousSubject<Object> {
   _pss: Pss
   _topic: ByteArray
 
-  constructor(pss: Pss, topic: ByteArray, subscription: string) {
+  constructor(pss: PSS, topic: ByteArray, subscription: string) {
     const topicHex = encodeHex(topic)
     const log = debug(`dcd:pss:topic:${topicHex}`)
     const peers = new Set()
@@ -34,9 +33,9 @@ export class TopicSubject extends AnonymousSubject<Object> {
     const observable = pss
       .createSubscription(subscription)
       // $FlowIgnore
-      .map(msg => {
-        const sender = hexToBase64(msg.keyID)
-        const data = decodeProtocol(msg.data)
+      .map(evt => {
+        const sender = hexToBase64(evt.Key)
+        const data = decodeProtocol(evt.Msg)
         if (sender && data) {
           return { sender, ...data }
         } else {

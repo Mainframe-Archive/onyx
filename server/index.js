@@ -2,7 +2,11 @@
 
 import ip from 'ip'
 
-import { setupPss, setupContactTopic, subscribeToStoredConvos } from './pss/client'
+import {
+  setupPss,
+  setupContactTopic,
+  subscribeToStoredConvos,
+} from './pss/client'
 import createServer from './server'
 
 const SWARM_WS_URL = process.env.SWARM_WS_URL || 'ws://localhost:8547'

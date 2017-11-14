@@ -8,18 +8,16 @@ var _debug = require('debug');
 
 var _debug2 = _interopRequireDefault(_debug);
 
+var _erebos = require('erebos');
+
 var _micro = require('micro');
 
 var _microrouter = require('microrouter');
 
-var _Bzz = require('./lib/Bzz');
-
-var _Bzz2 = _interopRequireDefault(_Bzz);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 exports.default = swarmHttpUrl => {
-  const bzz = new _Bzz2.default(swarmHttpUrl);
+  const bzz = new _erebos.BZZ(swarmHttpUrl);
   const log = (0, _debug2.default)('dcd:bzz');
 
   return [(0, _microrouter.get)('/files/:hash', async (req, res) => {
@@ -32,7 +30,6 @@ exports.default = swarmHttpUrl => {
   }), (0, _microrouter.post)('/files', async (req, res) => {
     const file = await (0, _micro.buffer)(req, { limit: '10mb' });
     const hash = await bzz.uploadRaw(file, {
-      'content-length': file.length,
       'content-type': req.headers['content-type']
     });
     log('uploaded file', hash);

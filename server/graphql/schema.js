@@ -1,6 +1,7 @@
 // @flow
 
 import debug from 'debug'
+import type { PSS } from 'erebos'
 import { withFilter } from 'graphql-subscriptions'
 import { makeExecutableSchema } from 'graphql-tools'
 import GraphQLJSON from 'graphql-type-json'
@@ -18,7 +19,6 @@ import {
   updateConversationPointer,
 } from '../data/db'
 import pubsub from '../data/pubsub'
-import type Pss from '../lib/Pss'
 import {
   acceptContact,
   createChannel,
@@ -154,7 +154,7 @@ type Subscription {
 }
 `
 
-export default (pss: Pss, port: number) => {
+export default (pss: PSS, port: number) => {
   const serverURL = `http://${ip.address()}:${port}/graphql`
 
   const resolvers = {

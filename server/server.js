@@ -1,15 +1,15 @@
 // @flow
 
 import debug from 'debug'
+import type { PSS } from 'erebos'
 import micro, { send } from 'micro'
 import cors from 'micro-cors'
 import { get, post, router } from 'microrouter'
 
 import createBzzRoutes from './bzz'
-import type Pss from './lib/Pss'
 import graphqlServer from './graphql/server'
 
-export default (pss: Pss, swarmHttpUrl: string, port: number) => {
+export default (pss: PSS, swarmHttpUrl: string, port: number) => {
   return new Promise((resolve, reject) => {
     const log = debug('dcd:server')
     const bzzRoutes = createBzzRoutes(swarmHttpUrl)

@@ -1,13 +1,16 @@
 // @flow
 
+import { randomBytes } from 'crypto'
+import { decodeMessage, encodeMessage } from 'erebos'
 import { isObject, isString } from 'lodash'
 
 import type { ActionState, ID, MessageBlock, Profile } from '../data/db'
-import { decodeMessage, encodeMessage, createKey } from '../lib'
 import type { ByteArray } from './types'
 
 const NONCE_SIZE = 8
 const receivedNonces: Set<string> = new Set()
+
+const createNonce = () => Buffer.from(randomBytes(NONCE_SIZE)).toString('hex')
 
 export type ProtocolType =
   | 'ACTION_STATE' // In channel or p2p topic
@@ -79,7 +82,7 @@ export type ReceivedEvent = ProtocolEvent<*, *> & {
 
 export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
   try {
-    const envelope = JSON.parse(msg)
+    const envelope = JSON.parse(decodeMessage(msg))
     if (
       isObject(envelope) &&
       envelope.nonce != null &&
@@ -102,7 +105,7 @@ export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
 
 export const encodeProtocol = (data: ProtocolEvent<*, *>) => {
   const envelope = {
-    nonce: createKey(NONCE_SIZE, true),
+    nonce: createNonce(),
     payload: data,
   }
   return encodeMessage(JSON.stringify(envelope))
