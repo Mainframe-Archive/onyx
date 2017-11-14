@@ -9,12 +9,10 @@ import WebSocket from 'ws'
 import {
   addMessage,
   deleteContactRequest,
-  getAction,
   getAddress,
   getContact,
   getProfile,
   getConversations,
-  setAction,
   setAddress,
   setContact,
   setContactRequest,
@@ -23,7 +21,6 @@ import {
   setProfile,
   setTyping as setTypingPeer,
   upsertContact,
-  type Action,
   type ContactRequest,
   type ConvoType,
   type ID,
@@ -31,12 +28,18 @@ import {
   type SendMessage,
 } from '../data/db'
 import pubsub from '../data/pubsub'
-import { Pss, RPC, base64ToArray, base64ToHex, encodeHex, hexToArray } from '../lib'
+import {
+  Pss,
+  RPC,
+  base64ToArray,
+  base64ToHex,
+  encodeHex,
+  hexToArray,
+} from '../lib'
 
 import {
   decodeProtocol,
   encodeProtocol,
-  actionState,
   channelInvite,
   contactRequest,
   profileRequest,
@@ -239,25 +242,6 @@ export const sendMessage = (
   return message
 }
 
-export const setActionDone = (action: Action) => {
-  const topic = topics.get(action.convoID)
-  if (topic == null) {
-    logClient('cannot set action to missing topic:', action.convoID)
-  } else {
-    action.data.state = 'DONE'
-    setAction(action.convoID, action.data)
-    addMessage(
-      action.convoID,
-      {
-        blocks: [{ action: action.data }],
-        source: 'SYSTEM',
-      },
-      true,
-    )
-    topic.next(actionState(action.data.id, 'DONE'))
-  }
-}
-
 export const setTyping = (topicHex: ID, typing: boolean) => {
   const topic = topics.get(topicHex)
   if (topic == null) {
@@ -287,19 +271,6 @@ const handleTopicJoined = (
 
 const handleTopicMessage = (topic: TopicSubject, msg: ReceivedEvent) => {
   switch (msg.type) {
-    case 'ACTION_STATE': {
-      const action = getAction(msg.payload.id)
-      if (action != null) {
-        action.data.state = msg.payload.state
-        setAction(action.convoID, action.data)
-        addMessage(action.convoID, {
-          blocks: [{ action: action.data }],
-          sender: msg.sender,
-          source: 'SYSTEM',
-        })
-      }
-      break
-    }
     case 'TOPIC_MESSAGE':
       logClient('received topic message', msg.sender, msg.payload)
       addMessage(topic.hex, { ...msg.payload, sender: msg.sender })
@@ -335,7 +306,6 @@ const createChannelTopicSubscription = (pss: Pss, topic: TopicSubject) => {
         // Always update latest profile provided by the user
         upsertContact({ profile: msg.payload.profile })
         break
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg)
@@ -362,7 +332,6 @@ const createP2PTopicSubscription = (pss: Pss, topic: TopicSubject) => {
           state: 'ACCEPTED',
         })
         break
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg)

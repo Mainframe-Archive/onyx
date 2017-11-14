@@ -23,11 +23,9 @@ import {
 import { MessageData, ProfileData } from '../graphql/fragments'
 import {
   SendMessageMutation,
-  SetActionDoneMutation,
   SetTypingMutation,
   UpdatePointerMutation,
   type SendMessageFunc,
-  type SetActionDoneFunc,
   type SetTypingFunc,
   type UpdatePointerFunc,
 } from '../graphql/mutations'
@@ -37,33 +35,17 @@ import Avatar from './Avatar'
 import Text from './Text'
 import UserProfileModal from './UserProfileModal'
 import Icon from './Icon'
-import Modal from './Modal'
-import Button from './Form/Button'
-
-import { Peer } from './CreateChannelModal'
 
 import FileSelector from './FileSelector'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
 
-type Action = {
-  id: string,
-  assignee: string,
-  sender: string,
-  state: 'PENDING' | 'DONE',
-  text: string,
-}
-
 type File = {
   hash: string,
   mimeType: string,
   name: string,
   size: number,
-}
-
-type ActionBlock = {
-  action: Action,
 }
 
 type FileBlock = {
@@ -85,12 +67,11 @@ type MessageProps = {
   hasPointer: boolean,
   isSender: boolean,
   message: {
-    blocks: Array<ActionBlock | FileBlock | TextBlock>,
+    blocks: Array<FileBlock | TextBlock>,
     timestamp: number,
   },
   profile: Profile,
   dark: boolean,
-  setActionDone: SetActionDoneFunc,
   ownProfileID: string,
   getPeer: (id: string) => ?{ profile: Profile },
   onPressProfile: (profile: Profile) => void,
@@ -98,10 +79,6 @@ type MessageProps = {
 
 const SUPPORTED_FILE_ICONS = {
   'application/pdf': 'pdf',
-}
-
-const getActionAssigneeName = (peer: ?Object, action: Action): string => {
-  return (peer && peer.profile.name) || action.assignee.slice(0, 8)
 }
 
 class MessageRow extends Component<MessageProps> {
@@ -116,20 +93,11 @@ class MessageRow extends Component<MessageProps> {
       onPressProfile,
       profile,
       dark,
-      setActionDone,
-      ownProfileID,
-      getPeer,
       hasPointer,
     } = this.props
     const sender = isSender ? 'You' : profile.name || profile.id.substr(0, 8)
     const time = Moment(message.timestamp)
     const blocks = groupBy(message.blocks, '__typename')
-
-    let actionBlock = null
-    const action =
-      blocks.MessageBlockAction &&
-      blocks.MessageBlockAction[0] && // $FlowFixMe
-      blocks.MessageBlockAction[0].action
 
     const textStyles = [styles.textStyles]
     if (dark) {
@@ -137,145 +105,79 @@ class MessageRow extends Component<MessageProps> {
     }
 
     let messageBody = null
+    const file =
+      blocks.MessageBlockFile &&
+      blocks.MessageBlockFile[0] && // $FlowFixMe
+      blocks.MessageBlockFile[0].file
 
-    if (message.source === 'SYSTEM') {
-      let messageText = 'System message not supported.'
-      if (action != null) {
-        const name = getActionAssigneeName(getPeer(action.assignee), action)
-        messageText = (
-          <Text style={styles.systemMessage}>
-            {`"${action.text}"`}
-            <Text
-              style={styles.systemMessageAction}
-            >{` action done by ${name}`}</Text>
-          </Text>
-        )
-      }
-      messageBody = (
-        <View style={styles.message}>
-          <View style={[styles.messageAvatar, styles.systemAvatar]}>
-            <Icon name="action-red" />
-          </View>
-          <View style={styles.messageBody}>
-            <Text style={textStyles}>
-              {messageText}
-              <Text style={styles.messageTime}>{time.calendar()}</Text>
-            </Text>
-          </View>
-        </View>
-      )
-    } else {
-      if (action != null) {
-        const actionTextStyles = [styles.actionText]
-        if (action.state !== 'PENDING') {
-          actionTextStyles.push(styles.actionTextDone)
+    const onPressFile = file
+      ? () => {
+          document.location.href = `http://localhost:${
+            this.context.serverPort
+          }/files/${file.hash}`
         }
+      : null
 
-        if (action.assignee === ownProfileID) {
-          actionBlock = (
-            <View style={styles.actionArea}>
-              <Icon name="checkmark-red" />
-              <Text style={actionTextStyles}>Action required for you</Text>
-              {action.state === 'PENDING' ? (
-                <TouchableOpacity
-                  onPress={() => {
-                    setActionDone(action.id)
-                  }}
-                >
-                  <Text style={styles.actionButton}>Done</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          )
-        } else {
-          const name = getActionAssigneeName(getPeer(action.assignee), action)
-          actionBlock = (
-            <View style={styles.actionArea}>
-              <Icon name="checkmark-red" />
-              <Text style={actionTextStyles}>Action required for {name}</Text>
-              {action.state === 'PENDING' ? (
-                <Text style={styles.actionButton}>Pending</Text>
-              ) : null}
-            </View>
-          )
-        }
-      }
+    const fileNameStyles = dark
+      ? [styles.fileDownloadName, styles.whiteText]
+      : styles.fileDownloadName
 
-      const file =
-        blocks.MessageBlockFile &&
-        blocks.MessageBlockFile[0] && // $FlowFixMe
-        blocks.MessageBlockFile[0].file
-
-      const onPressFile = file
-        ? () => {
-            document.location.href = `http://localhost:${this.context
-              .serverPort}/files/${file.hash}`
-          }
-        : null
-
-      const fileNameStyles = dark
-        ? [styles.fileDownloadName, styles.whiteText]
-        : styles.fileDownloadName
-
-      const fileBlock = file ? (
-        file.mimeType.substr(0, 5) === 'image' ? (
-          <TouchableOpacity onPress={onPressFile}>
-            <View style={styles.messageImage}>
-              <img
-                alt={file.name}
-                src={`http://localhost:${this.context
-                  .serverPort}/files/${file.hash}`}
-                className="message-image"
-              />
-            </View>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={onPressFile} style={styles.fileDownload}>
-            <Icon
-              name={SUPPORTED_FILE_ICONS[file.mimeType] || 'generic-file'}
+    const fileBlock = file ? (
+      file.mimeType.substr(0, 5) === 'image' ? (
+        <TouchableOpacity onPress={onPressFile}>
+          <View style={styles.messageImage}>
+            <img
+              alt={file.name}
+              src={`http://localhost:${this.context.serverPort}/files/${
+                file.hash
+              }`}
+              className="message-image"
             />
-            <View style={styles.fileDownloadText}>
-              <Text style={fileNameStyles} numberOfLines={1}>
-                {file.name}
-              </Text>
-              <Text style={styles.fileDownloadSize}>{bytes(file.size)}</Text>
-            </View>
-            <Icon name="download" />
-          </TouchableOpacity>
-        )
-      ) : null
-
-      let textBlock = null
-      const text =
-        blocks.MessageBlockText && // $FlowFixMe
-        blocks.MessageBlockText.map(b => b.text).join('\n')
-      if (text != null) {
-        textBlock = <Text style={textStyles}>{text}</Text>
-      }
-
-      const openProfile = () => {
-        onPressProfile(profile)
-      }
-
-      messageBody = (
-        <View style={styles.message}>
-          <TouchableOpacity onPress={openProfile} style={styles.messageAvatar}>
-            <Avatar profile={profile} size="large" />
-          </TouchableOpacity>
-          <View style={styles.messageBody}>
-            <View style={styles.messageProfile}>
-              <TouchableOpacity onPress={openProfile}>
-                <Text style={styles.messageSender}>{sender}</Text>
-              </TouchableOpacity>
-              <Text style={styles.messageTime}>{time.calendar()}</Text>
-            </View>
-            {textBlock}
-            {actionBlock}
-            {fileBlock}
           </View>
-        </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity onPress={onPressFile} style={styles.fileDownload}>
+          <Icon name={SUPPORTED_FILE_ICONS[file.mimeType] || 'generic-file'} />
+          <View style={styles.fileDownloadText}>
+            <Text style={fileNameStyles} numberOfLines={1}>
+              {file.name}
+            </Text>
+            <Text style={styles.fileDownloadSize}>{bytes(file.size)}</Text>
+          </View>
+          <Icon name="download" />
+        </TouchableOpacity>
       )
+    ) : null
+
+    let textBlock = null
+    const text =
+      blocks.MessageBlockText && // $FlowFixMe
+      blocks.MessageBlockText.map(b => b.text).join('\n')
+    if (text != null) {
+      textBlock = <Text style={textStyles}>{text}</Text>
     }
+
+    const openProfile = () => {
+      onPressProfile(profile)
+    }
+
+    messageBody = (
+      <View style={styles.message}>
+        <TouchableOpacity onPress={openProfile} style={styles.messageAvatar}>
+          <Avatar profile={profile} size="large" />
+        </TouchableOpacity>
+        <View style={styles.messageBody}>
+          <View style={styles.messageProfile}>
+            <TouchableOpacity onPress={openProfile}>
+              <Text style={styles.messageSender}>{sender}</Text>
+            </TouchableOpacity>
+            <Text style={styles.messageTime}>{time.calendar()}</Text>
+          </View>
+          {textBlock}
+          {fileBlock}
+        </View>
+      </View>
+    )
 
     const newMsgStyles = [styles.newMessagesText]
     if (dark) {
@@ -304,7 +206,6 @@ type Props = {
   data: Object,
   id: string,
   sendMessage: SendMessageFunc,
-  setActionDone: SetActionDoneFunc,
   setTyping: SetTypingFunc,
   updatePointer: UpdatePointerFunc,
   subscribeToMessageAdded: SubscribeFunc,
@@ -317,8 +218,6 @@ type Context = {
 }
 
 type State = {
-  actionAssignee: ?string,
-  actionModalOpen: boolean,
   editorState: EditorState,
   file: ?File,
   typingText: string,
@@ -348,8 +247,6 @@ class Conversation extends Component<Props, State> {
     super(props, context)
 
     this.state = {
-      actionAssignee: undefined,
-      actionModalOpen: false,
       editorState: EditorState.createEmpty(),
       file: undefined,
       typingText: '',
@@ -536,19 +433,11 @@ class Conversation extends Component<Props, State> {
   }
 
   sendMessage = () => {
-    const { actionAssignee, editorState, file } = this.state
+    const { editorState, file } = this.state
     const text = editorState.getCurrentContent().getPlainText()
     const blocks = []
     if (text.length > 0) {
       blocks.push({ text })
-      if (actionAssignee != null) {
-        blocks.push({
-          action: {
-            assignee: actionAssignee,
-            text,
-          },
-        })
-      }
     }
     if (file != null) {
       blocks.push({ file })
@@ -559,7 +448,6 @@ class Conversation extends Component<Props, State> {
       // Reset input
       this.setState(
         {
-          actionAssignee: undefined,
           editorState: EditorState.createEmpty(),
           file: undefined,
         },
@@ -616,12 +504,9 @@ class Conversation extends Component<Props, State> {
               dark={data.conversation.dark}
               hasPointer={index === this.firstPointer}
               isSender={peer.profile.id === data.viewer.profile.id}
-              ownProfileID={data.viewer.profile.id}
               message={message}
               profile={peer.profile}
               onPressProfile={this.showProfile}
-              setActionDone={this.props.setActionDone}
-              getPeer={this.getPeer}
             />
           </CellMeasurer>
         )
@@ -656,63 +541,6 @@ class Conversation extends Component<Props, State> {
     this.showProfile(this.props.data.viewer.profile)
   }
 
-  showActionModal = () => {
-    this.setState({ actionModalOpen: true })
-  }
-
-  setActionPeer = () => {
-    const peerProfile = this.props.data.conversation.peers[0].profile
-    this.setState({
-      actionAssignee:
-        this.state.actionAssignee === peerProfile.id
-          ? undefined
-          : peerProfile.id,
-    })
-    this.focusEditor()
-  }
-
-  hideActionModal = () => {
-    this.setState({ actionModalOpen: false })
-    this.focusEditor()
-  }
-
-  renderActionModal() {
-    const { actionAssignee, actionModalOpen } = this.state
-    const peers = (
-      <View style={styles.peers}>
-        {this.props.data.conversation.peers.map(c => {
-          const isSelected = c.profile.id === actionAssignee
-          return (
-            <Peer
-              key={c.profile.id}
-              profile={c.profile}
-              state="ACCEPTED"
-              selected={isSelected}
-              large
-              onSelectPeer={() => {
-                this.setState({
-                  actionAssignee: isSelected ? undefined : c.profile.id,
-                })
-              }}
-            />
-          )
-        })}
-      </View>
-    )
-
-    return (
-      <Modal
-        isOpen={actionModalOpen}
-        onRequestClose={this.hideActionModal}
-        title="Action"
-        subtitle="Who should be tagged?"
-      >
-        {peers}
-        <Button title="Confirm" onPress={this.hideActionModal} />
-      </Modal>
-    )
-  }
-
   onScroll = ({
     clientHeight,
     scrollHeight,
@@ -731,15 +559,13 @@ class Conversation extends Component<Props, State> {
 
   render() {
     const { data } = this.props
-    const { actionAssignee, editorState, typingText, file } = this.state
+    const { editorState, typingText, file } = this.state
 
     if (data == null || data.conversation == null) {
       return <Loader />
     }
 
     let subject = ''
-    let onPressAction = this.showActionModal
-
     if (data.conversation.type === 'CHANNEL') {
       subject = `#${data.conversation.subject}`
     } else {
@@ -750,9 +576,6 @@ class Conversation extends Component<Props, State> {
       subject = peerProfile.name || peerProfile.id.substr(0, 8)
     }
 
-    if (data.conversation.peers && data.conversation.peers.length === 1) {
-      onPressAction = this.setActionPeer
-    }
     const containerStyles = [styles.container]
     const titleStyles = [styles.title]
     const inputStyles = [styles.input]
@@ -762,9 +585,6 @@ class Conversation extends Component<Props, State> {
     const fileIcon = file
       ? 'file-red'
       : data.conversation.dark ? 'file-dark' : 'file'
-    const actionIcon = actionAssignee
-      ? 'action-red'
-      : data.conversation.dark ? 'action-dark' : 'action'
 
     if (data.conversation.dark) {
       containerStyles.push(styles.darkContainer)
@@ -780,7 +600,6 @@ class Conversation extends Component<Props, State> {
         onDrop={this.onDrop}
         style={containerStyles}
       >
-        {this.renderActionModal()}
         {this.renderProfileModal()}
         <View style={styles.header}>
           <View>
@@ -851,9 +670,6 @@ class Conversation extends Component<Props, State> {
           <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
             <Icon name={fileIcon} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={onPressAction} style={styles.inputButton}>
-            <Icon name={actionIcon} />
-          </TouchableOpacity>
           <View onClick={this.focusEditor} style={editorStyles}>
             <Editor
               editorState={editorState}
@@ -868,9 +684,9 @@ class Conversation extends Component<Props, State> {
         <View style={styles.typing}>
           <Text style={typingStyles} numberOfLines={1}>
             {file && (
-              <Text
-                style={styles.redText}
-              >{`Press “enter” to send: ${file.name} `}</Text>
+              <Text style={styles.redText}>{`Press “enter” to send: ${
+                file.name
+              } `}</Text>
             )}
             {typingText}
           </Text>
@@ -1009,7 +825,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
     justifyContent: 'center',
-    // backgroundColor: COLORS.GRAY_E6,
   },
   fileDownload: {
     width: 300,
@@ -1040,46 +855,6 @@ const styles = StyleSheet.create({
   peers: {
     marginBottom: 2 * BASIC_SPACING,
     maxWidth: 300,
-  },
-  actionArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontFamily: 'Muli',
-    fontSize: 12,
-    color: COLORS.PRIMARY_RED,
-    paddingHorizontal: BASIC_SPACING,
-  },
-  actionTextDone: {
-    textDecorationLine: 'line-through',
-  },
-  actionButton: {
-    fontSize: 12,
-    borderColor: COLORS.PRIMARY_RED,
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderRadius: 50,
-    color: COLORS.PRIMARY_RED,
-    paddingHorizontal: BASIC_SPACING,
-  },
-  actionDone: {
-    borderColor: COLORS.GRAY_D3,
-    backgroundColor: COLORS.GRAY_D3,
-    color: COLORS.WHITE,
-  },
-  actionDoneDark: {
-    color: COLORS.DARKEST_BLUE,
-  },
-  systemMessage: {
-    fontFamily: 'Muli',
-  },
-  systemMessageAction: {
-    fontFamily: 'Muli',
-    color: COLORS.PRIMARY_RED,
-  },
-  systemAvatar: {
-    justifyContent: 'center',
   },
   newMessages: {
     borderBottomWidth: 1,
@@ -1176,7 +951,6 @@ const ConvoQuery = graphql(
 // $FlowFixMe
 export default compose(
   SetTypingMutation,
-  SetActionDoneMutation,
   SetTypingMutation,
   SendMessageMutation,
   UpdatePointerMutation,

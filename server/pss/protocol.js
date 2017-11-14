@@ -2,7 +2,7 @@
 
 import { isObject, isString } from 'lodash'
 
-import type { ActionState, ID, MessageBlock, Profile } from '../data/db'
+import type { ID, MessageBlock, Profile } from '../data/db'
 import { decodeMessage, encodeMessage, createKey } from '../lib'
 import type { ByteArray } from './types'
 
@@ -10,7 +10,6 @@ const NONCE_SIZE = 8
 const receivedNonces: Set<string> = new Set()
 
 export type ProtocolType =
-  | 'ACTION_STATE' // In channel or p2p topic
   | 'CHANNEL_INVITE' // In p2p topic
   | 'CONTACT_REQUEST' // In contact topic
   | 'PROFILE_REQUEST' // In channel
@@ -18,11 +17,6 @@ export type ProtocolType =
   | 'TOPIC_JOINED' // In channel or p2p topic
   | 'TOPIC_MESSAGE' // In channel or p2p topic
   | 'TOPIC_TYPING' // In channel or p2p topic
-
-export type ActionStatePayload = {
-  id: ID,
-  state: ActionState,
-}
 
 export type PeerInfo = {
   address: string,
@@ -60,7 +54,6 @@ export type TopicTypingPayload = {
 }
 
 export type ProtocolPayload =
-  | ActionStatePayload
   | ChannelInvitePayload
   | ContactRequestPayload
   | ProfileResponsePayload
@@ -107,13 +100,6 @@ export const encodeProtocol = (data: ProtocolEvent<*, *>) => {
   }
   return encodeMessage(JSON.stringify(envelope))
 }
-
-export type ActionStateEvent = ProtocolEvent<'ACTION_STATE', ActionStatePayload>
-
-export const actionState = (id: ID, state: ActionState): ActionStateEvent => ({
-  type: 'ACTION_STATE',
-  payload: { id, state },
-})
 
 export type ChannelInviteEvent = ProtocolEvent<
   'CHANNEL_INVITE',
