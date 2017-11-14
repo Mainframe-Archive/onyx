@@ -17,6 +17,7 @@ export type Profile = {
   id: ID, // base64-encoded public key
   avatar?: ?string,
   name?: ?string,
+  bio?: ?string,
 }
 
 export type FileData = {
@@ -174,17 +175,18 @@ export const setTyping = (convoID: ID, peerID: ID, typing: boolean) => {
   }
 }
 
-export const setAddress = (address: string = '') => {
+export const setupStore = (address: string = '', id: string) => {
+  const storedId = store.get('state.profile.id')
+  if (storedId != null && storedId !== id) {
+    resetState()
+    store.set('state.profile.id', id)
+  }
   store.set('state.address', address)
 }
 
 export const getAddress = (): string => store.get('state.address')
 
 export const setProfile = (profile: Profile) => {
-  const id = store.get('state.profile.id')
-  if (id != null && id !== profile.id) {
-    resetState()
-  }
   store.set('state.profile', profile)
 }
 

@@ -93,6 +93,12 @@ type File {
   size: Int
 }
 
+input ProfileInput {
+  avatar: String
+  name: String!
+  bio: String
+}
+
 input ChannelInput {
   subject: String!
   peers: [ID!]!
@@ -134,6 +140,7 @@ type Mutation {
   sendMessage(input: MessageInput!): Message!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
+  updateProfile(input: ProfileInput!): Profile!
 }
 
 type Subscription {
@@ -215,7 +222,13 @@ exports.default = (pss, port) => {
         (0, _client.setTyping)(input.convoID, input.typing);
         return (0, _db.getConversation)(input.convoID);
       },
-      updatePointer: (root, { id }) => (0, _db.updateConversationPointer)(id)
+      updatePointer: (root, { id }) => (0, _db.updateConversationPointer)(id),
+      updateProfile: (root, { input }) => {
+        const profile = (0, _db.getProfile)();
+        const updatedProfile = Object.assign(profile, input);
+        (0, _db.setProfile)(updatedProfile);
+        return updatedProfile;
+      }
     },
     Subscription: {
       channelsChanged: {

@@ -129,3 +129,29 @@ export const UpdatePointerMutation = graphql(
     }),
   },
 )
+export type UpdateProfileFunc = (id: ID) => Promise<*>
+
+export const UpdateProfileMutation = graphql(
+  gql`
+    mutation UpdateProfileMutation($input: ProfileInput!) {
+      updateProfile(input: $input) {
+        name
+        bio
+      }
+    }
+  `,
+  {
+    props: ({ mutate }) => ({
+      updateProfile: (input: ProfileInput) => mutate({
+        variables: { input },
+        updateQueries: {
+          AppQuery: (state, { mutationResult }) => {
+            const profile = Object.assign(state.viewer.profile, mutationResult.data.updateProfile)
+            const nextViewer = Object.assign(state.viewer, { profile })
+            return {...state, viewer: nextViewer}
+          },
+        }
+      }),
+    }),
+  },
+)

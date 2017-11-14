@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     flex: 1,
     marginVertical: BASIC_SPACING,
+    paddingHorizontal: BASIC_SPACING * 3,
   },
   disabledContainer: {
     backgroundColor: COLORS.LIGHTEST_RED,
