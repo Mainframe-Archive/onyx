@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.setProfileId = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
+exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.getAddress = exports.setupStore = exports.setTyping = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -84,19 +84,16 @@ const setTyping = exports.setTyping = (convoID, peerID, typing) => {
   }
 };
 
-const setAddress = exports.setAddress = (address = '') => {
-  store.set('state.address', address);
-};
-
-const getAddress = exports.getAddress = () => store.get('state.address');
-
-const setProfileId = exports.setProfileId = id => {
+const setupStore = exports.setupStore = (address = '', id) => {
   const storedId = store.get('state.profile.id');
   if (storedId != null && storedId !== id) {
     resetState();
   }
+  store.set('state.address', address);
   store.set(`state.profile.id`, id);
 };
+
+const getAddress = exports.getAddress = () => store.get('state.address');
 
 const setProfile = exports.setProfile = profile => {
   store.set('state.profile', profile);

@@ -175,19 +175,16 @@ export const setTyping = (convoID: ID, peerID: ID, typing: boolean) => {
   }
 }
 
-export const setAddress = (address: string = '') => {
+export const setupStore = (address: string = '', id: string) => {
+  const storedId = store.get('state.profile.id')
+  if (storedId != null && storedId !== id) {
+    resetState()
+    store.set('state.profile.id', id)
+  }
   store.set('state.address', address)
 }
 
 export const getAddress = (): string => store.get('state.address')
-
-export const setProfileId = (id: ID) => {
-  const storedId = store.get('state.profile.id')
-  if (storedId != null && storedId !== id) {
-    resetState()
-  }
-  store.set(`state.profile.id`, id)
-}
 
 export const setProfile = (profile: Profile) => {
   store.set('state.profile', profile)

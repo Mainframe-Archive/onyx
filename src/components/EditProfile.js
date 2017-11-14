@@ -37,8 +37,6 @@ type State = {
 
 export class EditProfile extends Component<Props, State> {
 
-  state: State
-
   constructor (props: Props) {
     super(props)
     const { profile } = props

@@ -45,8 +45,7 @@ const setupPss = exports.setupPss = async (url, serverURL) => {
   const [id, address] = await Promise.all([pss.getPublicKey(), pss.getBaseAddr()]);
   logClient(`connected to Swarm with public key ${id}`);
 
-  (0, _db.setAddress)(address);
-  (0, _db.setProfileId)(id);
+  (0, _db.setupStore)(address, id);
 
   return pss;
 };

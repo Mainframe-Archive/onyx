@@ -18,12 +18,11 @@ import {
   getContact,
   getProfile,
   getConversations,
-  setAddress,
   setContact,
   setContactRequest,
   setConversation,
   hasConversation,
-  setProfileId,
+  setupStore,
   setTyping as setTypingPeer,
   upsertContact,
   type ContactRequest,
@@ -73,8 +72,7 @@ export const setupPss = async (url: string, serverURL: string) => {
   ])
   logClient(`connected to Swarm with public key ${id}`)
 
-  setAddress(address)
-  setProfileId(id)
+  setupStore(address, id)
 
   return pss
 }
