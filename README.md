@@ -22,3 +22,7 @@ These values can be changed using the environment variables `SWARM_WS_URL` and `
 
 Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
 Once ready, you can run `yarn electron` to start the electron app, connecting to Swarm and creating a GraphQL server for the frontend.
+
+## License
+
+[MIT](https://github.com/thusfresh/onyx/blob/master/LICENSE)

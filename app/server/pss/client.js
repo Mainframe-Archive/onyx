@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.setActionDone = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -15,21 +15,15 @@ var _debug = require('debug');
 
 var _debug2 = _interopRequireDefault(_debug);
 
-var _WebSocketSubject = require('rxjs/observable/dom/WebSocketSubject');
+var _erebos = require('erebos');
 
 var _Subscriber = require('rxjs/Subscriber');
-
-var _ws = require('ws');
-
-var _ws2 = _interopRequireDefault(_ws);
 
 var _db = require('../data/db');
 
 var _pubsub = require('../data/pubsub');
 
 var _pubsub2 = _interopRequireDefault(_pubsub);
-
-var _lib = require('../lib');
 
 var _protocol = require('./protocol');
 
@@ -42,36 +36,11 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const logClient = (0, _debug2.default)('dcd:pss:client');
 const topics = new Map();
 
-const staticProfiles = {
-  '1': {
-    id: 'BEsvPh4GgAb0q0yxvl7MUZicVoZk4wkdAzxht99bWqFA2vx+x/gKYOo8p9jQoBnnE323XJDyN4SyhW1qPCV/9dU=',
-    name: 'Shane Howley',
-    avatar: '/shane.png',
-    bio: 'VP Engineering - Mainframe'
-  },
-  '2': {
-    id: 'BPBoMDbiLf04b3sMKVzmL5+dRcoXu1TOMSXDzt9wrxLbpVHlb4dj3M01EmKyf2Cg1tt4aeBiStd3DGY9KDk0khw=',
-    name: 'Carl Youngblood',
-    avatar: '/carl.png',
-    bio: 'CTO - Mainframe'
-  },
-  '3': {
-    id: 'BJHMlYspghyCalSrtD6ysDE1bsRW0kkVpYJX5SV09bEn6Dbxl2BZxoHf8GE3e+CEBuBUy71p0zbFFRIBp3Cc23g=',
-    name: 'Adam Clarke',
-    avatar: '/adam.png',
-    bio: 'Front-end Engineer - Mainframe'
-  }
-};
-
-const setPeerPublicKey = exports.setPeerPublicKey = (pss, id, topic, address = '') => pss.setPeerPublicKey((0, _lib.base64ToArray)(id), topic, address);
+const setPeerPublicKey = exports.setPeerPublicKey = (pss, id, topic, address = '') => pss.setPeerPublicKey((0, _erebos.base64ToArray)(id), topic, address);
 
 const setupPss = exports.setupPss = async (url, serverURL) => {
   logClient(`connecting to Swarm ${url}`);
-  const ws = new _WebSocketSubject.WebSocketSubject({
-    url,
-    WebSocketCtor: _ws2.default
-  });
-  const pss = new _lib.Pss(new _lib.RPC(ws));
+  const pss = (0, _erebos.createPSSWebSocket)(url);
 
   const [id, address] = await Promise.all([pss.getPublicKey(), pss.getBaseAddr()]);
   logClient(`connected to Swarm with public key ${id}`);
@@ -88,7 +57,7 @@ const subscribeToStoredConvos = exports.subscribeToStoredConvos = async pss => {
     switch (c.type) {
       case 'DIRECT':
         const contact = c.peers[0];
-        const dmTopic = await joinDirectTopic(pss, (0, _lib.hexToArray)(c.id), {
+        const dmTopic = await joinDirectTopic(pss, (0, _erebos.hexToArray)(c.id), {
           address: contact.address,
           pubKey: contact.profile.id
         });
@@ -97,7 +66,7 @@ const subscribeToStoredConvos = exports.subscribeToStoredConvos = async pss => {
       case 'CHANNEL':
         const channel = {
           subject: c.subject,
-          topic: (0, _lib.hexToArray)(c.id)
+          topic: (0, _erebos.hexToArray)(c.id)
         };
         const peers = c.peers.reduce((acc, p) => {
           const profile = (0, _db.getProfile)();
@@ -185,21 +154,6 @@ const sendMessage = exports.sendMessage = (topicHex, blocks) => {
   return message;
 };
 
-const setActionDone = exports.setActionDone = action => {
-  const topic = topics.get(action.convoID);
-  if (topic == null) {
-    logClient('cannot set action to missing topic:', action.convoID);
-  } else {
-    action.data.state = 'DONE';
-    (0, _db.setAction)(action.convoID, action.data);
-    (0, _db.addMessage)(action.convoID, {
-      blocks: [{ action: action.data }],
-      source: 'SYSTEM'
-    }, true);
-    topic.next((0, _protocol.actionState)(action.data.id, 'DONE'));
-  }
-};
-
 const setTyping = exports.setTyping = (topicHex, typing) => {
   const topic = topics.get(topicHex);
   if (topic == null) {
@@ -222,20 +176,6 @@ const handleTopicJoined = (pss, topic, payload) => {
 
 const handleTopicMessage = (topic, msg) => {
   switch (msg.type) {
-    case 'ACTION_STATE':
-      {
-        const action = (0, _db.getAction)(msg.payload.id);
-        if (action != null) {
-          action.data.state = msg.payload.state;
-          (0, _db.setAction)(action.convoID, action.data);
-          (0, _db.addMessage)(action.convoID, {
-            blocks: [{ action: action.data }],
-            sender: msg.sender,
-            source: 'SYSTEM'
-          });
-        }
-        break;
-      }
     case 'TOPIC_MESSAGE':
       logClient('received topic message', msg.sender, msg.payload);
       (0, _db.addMessage)(topic.hex, _extends({}, msg.payload, { sender: msg.sender }));
@@ -272,7 +212,6 @@ const createChannelTopicSubscription = (pss, topic) => {
         // Always update latest profile provided by the user
         (0, _db.upsertContact)({ profile: msg.payload.profile });
         break;
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg);
@@ -299,7 +238,6 @@ const createP2PTopicSubscription = (pss, topic) => {
           state: 'ACCEPTED'
         });
         break;
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg);
@@ -420,7 +358,7 @@ const requestContact = exports.requestContact = async (pss, id) => {
 
   // Get topic for contact + create random new p2p topic
   const [contactTopic, newTopic] = await Promise.all([createContactTopic(pss, id), createRandomTopic(pss)]);
-  const log = (0, _debug2.default)(`dcd:pss:client:topic:p2p:${(0, _lib.encodeHex)(contactTopic)}`);
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:p2p:${(0, _erebos.encodeHex)(contactTopic)}`);
 
   // Create p2p topic and setup keys
   const [topic] = await Promise.all([joinDirectTopic(pss, newTopic, { pubKey: id, address: '' }), setPeerPublicKey(pss, id, contactTopic)]);
@@ -442,7 +380,7 @@ const requestContact = exports.requestContact = async (pss, id) => {
   });
   log('request contact', req);
   // Send message requesting contact
-  await pss.sendAsym((0, _lib.base64ToHex)(id), contactTopic, (0, _protocol.encodeProtocol)(req));
+  await pss.sendAsym((0, _erebos.base64ToHex)(id), contactTopic, (0, _protocol.encodeProtocol)(req));
 
   return {
     contact,
@@ -460,11 +398,11 @@ const setupContactTopic = exports.setupContactTopic = async pss => {
 
   const topic = await createContactTopic(pss, profile.id);
   const subscription = await pss.subscribeTopic(topic);
-  const log = (0, _debug2.default)(`dcd:pss:client:topic:contact:${(0, _lib.encodeHex)(topic)}`);
+  const log = (0, _debug2.default)(`dcd:pss:client:topic:contact:${(0, _erebos.encodeHex)(topic)}`);
 
-  return pss.createSubscription(subscription).subscribe(msg => {
-    log('received message', msg);
-    const data = (0, _protocol.decodeProtocol)(msg.data);
+  return pss.createSubscription(subscription).subscribe(evt => {
+    log('received message', evt);
+    const data = (0, _protocol.decodeProtocol)(evt.Msg);
     if (data && data.type === 'CONTACT_REQUEST') {
       addContactRequest(pss, data.payload);
     }

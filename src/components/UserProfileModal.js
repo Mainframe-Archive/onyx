@@ -74,7 +74,7 @@ export default class UserProfileModal extends Component<Props, State> {
   }
 }
 
-const mapDataToProps = ({data}: {data: SchoolsData}) => {
+const mapDataToProps = ({data}: {data: Object}) => {
   return {
     editRequired: !data.viewer.profile.name,
     profile: data.viewer.profile

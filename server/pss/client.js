@@ -2,19 +2,22 @@
 
 import crc32 from 'crc-32'
 import debug from 'debug'
-import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject'
+import {
+  base64ToArray,
+  base64ToHex,
+  createPSSWebSocket,
+  encodeHex,
+  hexToArray,
+} from 'erebos'
 import { Subscriber } from 'rxjs/Subscriber'
-import WebSocket from 'ws'
 
 import {
   addMessage,
   deleteContactRequest,
-  getAction,
   getAddress,
   getContact,
   getProfile,
   getConversations,
-  setAction,
   setAddress,
   setContact,
   setContactRequest,
@@ -23,7 +26,6 @@ import {
   setProfileId,
   setTyping as setTypingPeer,
   upsertContact,
-  type Action,
   type ContactRequest,
   type ConvoType,
   type ID,
@@ -31,12 +33,10 @@ import {
   type SendMessage,
 } from '../data/db'
 import pubsub from '../data/pubsub'
-import { Pss, RPC, base64ToArray, base64ToHex, encodeHex, hexToArray } from '../lib'
 
 import {
   decodeProtocol,
   encodeProtocol,
-  actionState,
   channelInvite,
   contactRequest,
   profileRequest,
@@ -56,32 +56,8 @@ import type { ByteArray } from './types'
 const logClient = debug('dcd:pss:client')
 const topics: Map<ID, TopicSubject> = new Map()
 
-const staticProfiles = {
-  '1': {
-    id:
-      'BEsvPh4GgAb0q0yxvl7MUZicVoZk4wkdAzxht99bWqFA2vx+x/gKYOo8p9jQoBnnE323XJDyN4SyhW1qPCV/9dU=',
-    name: 'Shane Howley',
-    avatar: '/shane.png',
-    bio: 'VP Engineering - Mainframe',
-  },
-  '2': {
-    id:
-      'BPBoMDbiLf04b3sMKVzmL5+dRcoXu1TOMSXDzt9wrxLbpVHlb4dj3M01EmKyf2Cg1tt4aeBiStd3DGY9KDk0khw=',
-    name: 'Carl Youngblood',
-    avatar: '/carl.png',
-    bio: 'CTO - Mainframe',
-  },
-  '3': {
-    id:
-      'BJHMlYspghyCalSrtD6ysDE1bsRW0kkVpYJX5SV09bEn6Dbxl2BZxoHf8GE3e+CEBuBUy71p0zbFFRIBp3Cc23g=',
-    name: 'Adam Clarke',
-    avatar: '/adam.png',
-    bio: 'Front-end Engineer - Mainframe',
-  },
-}
-
 export const setPeerPublicKey = (
-  pss: Pss,
+  pss: PSS,
   id: ID,
   topic: ByteArray,
   address: string = '',
@@ -89,11 +65,7 @@ export const setPeerPublicKey = (
 
 export const setupPss = async (url: string, serverURL: string) => {
   logClient(`connecting to Swarm ${url}`)
-  const ws = new WebSocketSubject({
-    url,
-    WebSocketCtor: WebSocket,
-  })
-  const pss = new Pss(new RPC(ws))
+  const pss = createPSSWebSocket(url)
 
   const [id, address] = await Promise.all([
     pss.getPublicKey(),
@@ -107,7 +79,7 @@ export const setupPss = async (url: string, serverURL: string) => {
   return pss
 }
 
-export const subscribeToStoredConvos = async (pss: Pss) => {
+export const subscribeToStoredConvos = async (pss: PSS) => {
   const convos = getConversations()
   convos.forEach(async c => {
     switch (c.type) {
@@ -142,11 +114,11 @@ export const subscribeToStoredConvos = async (pss: Pss) => {
 }
 
 export const createContactTopic = (
-  pss: Pss,
+  pss: PSS,
   publicKey: string,
 ): Promise<ByteArray> => pss.stringToTopic(`dcd:contact:${publicKey}`)
 
-export const createRandomTopic = (pss: Pss): Promise<ByteArray> =>
+export const createRandomTopic = (pss: PSS): Promise<ByteArray> =>
   pss.stringToTopic(
     Math.random()
       .toString(36)
@@ -177,7 +149,7 @@ const addTopic = (
 
 // Join new channel topic with peers identified by public key
 export const joinChannelTopic = async (
-  pss: Pss,
+  pss: PSS,
   channel: ChannelInvitePayload,
   otherPeers: Array<PeerInfo>,
 ): Promise<TopicSubject> => {
@@ -206,7 +178,7 @@ export const joinChannelTopic = async (
 
 // Join existing direct (p2p) topic with peer
 export const joinDirectTopic = async (
-  pss: Pss,
+  pss: PSS,
   topicID: ByteArray,
   peer: PeerInfo,
 ): Promise<TopicSubject> => {
@@ -239,25 +211,6 @@ export const sendMessage = (
   return message
 }
 
-export const setActionDone = (action: Action) => {
-  const topic = topics.get(action.convoID)
-  if (topic == null) {
-    logClient('cannot set action to missing topic:', action.convoID)
-  } else {
-    action.data.state = 'DONE'
-    setAction(action.convoID, action.data)
-    addMessage(
-      action.convoID,
-      {
-        blocks: [{ action: action.data }],
-        source: 'SYSTEM',
-      },
-      true,
-    )
-    topic.next(actionState(action.data.id, 'DONE'))
-  }
-}
-
 export const setTyping = (topicHex: ID, typing: boolean) => {
   const topic = topics.get(topicHex)
   if (topic == null) {
@@ -268,7 +221,7 @@ export const setTyping = (topicHex: ID, typing: boolean) => {
 }
 
 const handleTopicJoined = (
-  pss: Pss,
+  pss: PSS,
   topic: TopicSubject,
   payload: TopicJoinedPayload,
 ) => {
@@ -287,19 +240,6 @@ const handleTopicJoined = (
 
 const handleTopicMessage = (topic: TopicSubject, msg: ReceivedEvent) => {
   switch (msg.type) {
-    case 'ACTION_STATE': {
-      const action = getAction(msg.payload.id)
-      if (action != null) {
-        action.data.state = msg.payload.state
-        setAction(action.convoID, action.data)
-        addMessage(action.convoID, {
-          blocks: [{ action: action.data }],
-          sender: msg.sender,
-          source: 'SYSTEM',
-        })
-      }
-      break
-    }
     case 'TOPIC_MESSAGE':
       logClient('received topic message', msg.sender, msg.payload)
       addMessage(topic.hex, { ...msg.payload, sender: msg.sender })
@@ -312,7 +252,7 @@ const handleTopicMessage = (topic: TopicSubject, msg: ReceivedEvent) => {
   }
 }
 
-const createChannelTopicSubscription = (pss: Pss, topic: TopicSubject) => {
+const createChannelTopicSubscription = (pss: PSS, topic: TopicSubject) => {
   const log = debug(`dcd:pss:client:topic:channel:${topic.hex}`)
   log('create subscription')
   return topic.subscribe((msg: ReceivedEvent) => {
@@ -335,7 +275,6 @@ const createChannelTopicSubscription = (pss: Pss, topic: TopicSubject) => {
         // Always update latest profile provided by the user
         upsertContact({ profile: msg.payload.profile })
         break
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg)
@@ -346,7 +285,7 @@ const createChannelTopicSubscription = (pss: Pss, topic: TopicSubject) => {
   })
 }
 
-const createP2PTopicSubscription = (pss: Pss, topic: TopicSubject) => {
+const createP2PTopicSubscription = (pss: PSS, topic: TopicSubject) => {
   const log = debug(`dcd:pss:client:topic:p2p:${topic.hex}`)
   return topic.subscribe((msg: ReceivedEvent) => {
     log('received message', msg)
@@ -362,7 +301,6 @@ const createP2PTopicSubscription = (pss: Pss, topic: TopicSubject) => {
           state: 'ACCEPTED',
         })
         break
-      case 'ACTION_STATE':
       case 'TOPIC_MESSAGE':
       case 'TOPIC_TYPING':
         handleTopicMessage(topic, msg)
@@ -374,7 +312,7 @@ const createP2PTopicSubscription = (pss: Pss, topic: TopicSubject) => {
 }
 
 export const acceptContact = async (
-  pss: Pss,
+  pss: PSS,
   id: ID,
   request: ContactRequest,
 ) => {
@@ -403,7 +341,7 @@ export const acceptContact = async (
   return { topic, topicSubscription }
 }
 
-export const joinChannel = async (pss: Pss, channel: ChannelInvitePayload) => {
+export const joinChannel = async (pss: PSS, channel: ChannelInvitePayload) => {
   const profile = getProfile()
   if (profile == null) {
     throw new Error('Cannot join channel before profile is setup')
@@ -428,7 +366,7 @@ export const joinChannel = async (pss: Pss, channel: ChannelInvitePayload) => {
 }
 
 export const createChannel = async (
-  pss: Pss,
+  pss: PSS,
   subject: string,
   peers: Array<ID>,
   dark: boolean,
@@ -476,7 +414,7 @@ export const createChannel = async (
 }
 
 export const addContactRequest = async (
-  pss: Pss,
+  pss: PSS,
   payload: ContactRequestPayload,
 ) => {
   const contact = {
@@ -490,7 +428,7 @@ export const addContactRequest = async (
   return contact
 }
 
-export const requestContact = async (pss: Pss, id: string) => {
+export const requestContact = async (pss: PSS, id: string) => {
   const profile = getProfile()
   if (profile == null) {
     throw new Error('Cannot call requestContact() before profile is setup')
@@ -536,7 +474,7 @@ export const requestContact = async (pss: Pss, id: string) => {
 }
 
 // Setup own contact topic and start subscribing to it
-export const setupContactTopic = async (pss: Pss) => {
+export const setupContactTopic = async (pss: PSS) => {
   const profile = getProfile()
   if (profile == null || profile.id == null) {
     throw new Error('Cannot setup contact topic: profile is not setup')
@@ -546,9 +484,9 @@ export const setupContactTopic = async (pss: Pss) => {
   const subscription = await pss.subscribeTopic(topic)
   const log = debug(`dcd:pss:client:topic:contact:${encodeHex(topic)}`)
 
-  return pss.createSubscription(subscription).subscribe(msg => {
-    log('received message', msg)
-    const data = decodeProtocol(msg.data)
+  return pss.createSubscription(subscription).subscribe(evt => {
+    log('received message', evt)
+    const data = decodeProtocol(evt.Msg)
     if (data && data.type === 'CONTACT_REQUEST') {
       addContactRequest(pss, data.payload)
     }

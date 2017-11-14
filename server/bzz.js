@@ -1,13 +1,12 @@
 // @flow
 
 import debug from 'debug'
+import { BZZ } from 'erebos'
 import { buffer, send } from 'micro'
 import { get, post } from 'microrouter'
 
-import Bzz from './lib/Bzz'
-
 export default (swarmHttpUrl: string) => {
-  const bzz = new Bzz(swarmHttpUrl)
+  const bzz = new BZZ(swarmHttpUrl)
   const log = debug('dcd:bzz')
 
   return [
@@ -22,7 +21,6 @@ export default (swarmHttpUrl: string) => {
     post('/files', async (req, res) => {
       const file = await buffer(req, { limit: '10mb' })
       const hash = await bzz.uploadRaw(file, {
-        'content-length': file.length,
         'content-type': req.headers['content-type'],
       })
       log('uploaded file', hash)

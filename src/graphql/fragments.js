@@ -29,15 +29,6 @@ export const MessageData = gql`
           size
         }
       }
-      ... on MessageBlockAction {
-        action {
-          id
-          assignee
-          sender
-          state
-          text
-        }
-      }
     }
   }
 `

@@ -7,9 +7,14 @@ const StaticServer = require('static-server')
 const createGraphQLServer = require('./server').default
 
 const { config } = require(path.join(__dirname, 'package.json'))
-const SWARM_WS_URL = (config && config.swarmWsUrl) || 'ws://localhost:8501'
+const SWARM_WS_URL =
+  process.env.SWARM_WS_URL ||
+  (config && config.swarmWsUrl) ||
+  'ws://localhost:8501'
 const SWARM_HTTP_URL =
-  (config && config.swarmHttpUrl) || 'http://localhost:8500'
+  process.env.SWARM_HTTP_URL ||
+  (config && config.swarmHttpUrl) ||
+  'http://localhost:8500'
 
 const menu = Menu.buildFromTemplate([
   {

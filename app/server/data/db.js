@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setAction = exports.getAction = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.setProfileId = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
+exports.addMessage = exports.upsertContact = exports.updateConversationPointer = exports.setConversation = exports.hasConversation = exports.setContact = exports.getViewer = exports.getChannels = exports.getConversations = exports.getContacts = exports.getContact = exports.getConversation = exports.setContactRequest = exports.getContactRequest = exports.deleteContactRequest = exports.getProfile = exports.setProfile = exports.setProfileId = exports.getAddress = exports.setAddress = exports.setTyping = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -31,13 +31,10 @@ const store = new _electronStore2.default();
 
 const resetState = () => {
   store.set('state', {
-    actions: {},
     address: '',
     contactRequests: {},
     contacts: {},
     convos: {},
-    // TODO: store profiles mock as [address]: PeerProfile
-    // get own profile based on address
     profile: undefined
   });
 };
@@ -93,7 +90,13 @@ const setAddress = exports.setAddress = (address = '') => {
 
 const getAddress = exports.getAddress = () => store.get('state.address');
 
-const setProfileId = exports.setProfileId = id => store.set(`state.profile.${id}`, id);
+const setProfileId = exports.setProfileId = id => {
+  const storedId = store.get('state.profile.id');
+  if (storedId != null && storedId !== id) {
+    resetState();
+  }
+  store.set(`state.profile.id`, id);
+};
 
 const setProfile = exports.setProfile = profile => {
   store.set('state.profile', profile);
@@ -117,33 +120,11 @@ const setContactRequest = exports.setContactRequest = (contact, request) => {
   _pubsub2.default.publish('contactRequested', contact.profile);
 };
 
-const getAction = exports.getAction = id => store.get(`state.actions.${id}`);
-
-const setAction = exports.setAction = (convoID, data) => {
-  const action = { convoID, data };
-  store.set(`state.actions.${data.id}`, action);
-  return action;
-};
-
 const getConversation = exports.getConversation = (id, withContacts = false) => {
   const convo = store.get(`state.convos.${id}`);
   if (convo) {
-    const messages = convo.messages && convo.messages.length ? convo.messages.map(msg => {
-      msg.blocks = msg.blocks.map(b => {
-        if (b.action != null && typeof b.action.id === 'string') {
-          const action = store.get(`state.actions.${b.action.id}`);
-          if (action != null) {
-            // $FlowIgnore
-            b.action = action.data;
-          }
-        }
-        return b;
-      });
-      return msg;
-    }) : [];
     // $FlowFixMe
     return _extends({}, convo, {
-      messages,
       peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers
     });
   }
@@ -230,13 +211,6 @@ const addMessage = exports.addMessage = (id, msg, fromSelf = false) => {
     msg.source = 'USER';
   }
   msg.timestamp = convo.lastActiveTimestamp = Date.now();
-
-  // $FlowFixMe
-  const actionBlock = msg.blocks.find(b => b.action != null);
-  if (actionBlock != null) {
-    // $FlowFixMe
-    setAction(id, actionBlock.action);
-  }
 
   const messages = convo.messages || [];
   // $FlowFixMe

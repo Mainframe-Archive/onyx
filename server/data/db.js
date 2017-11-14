@@ -20,20 +20,6 @@ export type Profile = {
   bio?: ?string,
 }
 
-export type ActionState = 'PENDING' | 'DONE'
-
-export type ActionData = {
-  id: ID, // UUID for the action
-  assignee: ID, // public key
-  sender: ID, // public key
-  state: ActionState,
-  text: string,
-}
-
-export type MessageBlockAction = {
-  action: ActionData,
-}
-
 export type FileData = {
   name: string,
   url: string,
@@ -49,10 +35,7 @@ export type MessageBlockText = {
   text: string,
 }
 
-export type MessageBlock =
-  | MessageBlockAction
-  | MessageBlockFile
-  | MessageBlockText
+export type MessageBlock = MessageBlockFile | MessageBlockText
 
 export type MessageSource = 'SYSTEM' | 'USER'
 
@@ -124,16 +107,10 @@ type Viewer = {
   profile: ?Profile,
 }
 
-export type Action = {
-  convoID: ID,
-  data: ActionData,
-}
-
 type Timer = number
-type ConvoTypings = { [ID]: Timer } // keyed by peer ID
+type ConvoTypings = Map<ID, Timer> // keyed by peer ID
 
 type State = {
-  actions: { [ID]: Action },
   address: string,
   contactRequests: { [ID]: ContactRequest },
   contacts: { [ID]: Contact },
@@ -145,13 +122,10 @@ const store = new Store()
 
 const resetState = () => {
   store.set('state', {
-    actions: {},
     address: '',
     contactRequests: {},
     contacts: {},
     convos: {},
-    // TODO: store profiles mock as [address]: PeerProfile
-    // get own profile based on address
     profile: undefined,
   })
 }
@@ -207,7 +181,13 @@ export const setAddress = (address: string = '') => {
 
 export const getAddress = (): string => store.get('state.address')
 
-export const setProfileId = (id: ID) => store.set(`state.profile.${id}`, id)
+export const setProfileId = (id: ID) => {
+  const storedId = store.get('state.profile.id')
+  if (storedId != null && storedId !== id) {
+    resetState()
+  }
+  store.set(`state.profile.id`, id)
+}
 
 export const setProfile = (profile: Profile) => {
   store.set('state.profile', profile)
@@ -234,40 +214,15 @@ export const setContactRequest = (
   pubsub.publish('contactRequested', contact.profile)
 }
 
-export const getAction = (id: ID): ?Action => store.get(`state.actions.${id}`)
-
-export const setAction = (convoID: ID, data: ActionData): Action => {
-  const action = { convoID, data }
-  store.set(`state.actions.${data.id}`, action)
-  return action
-}
-
 export const getConversation = (
   id: ID,
   withContacts: boolean = false,
 ): ?(Conversation | ConversationData) => {
   const convo = store.get(`state.convos.${id}`)
   if (convo) {
-    const messages =
-      convo.messages && convo.messages.length
-        ? convo.messages.map(msg => {
-            msg.blocks = msg.blocks.map(b => {
-              if (b.action != null && typeof b.action.id === 'string') {
-                const action = store.get(`state.actions.${b.action.id}`)
-                if (action != null) {
-                  // $FlowIgnore
-                  b.action = action.data
-                }
-              }
-              return b
-            })
-            return msg
-          })
-        : []
     // $FlowFixMe
     return {
       ...convo,
-      messages,
       peers: withContacts ? convo.peers.map(id => getContact(id)) : convo.peers,
     }
   }
@@ -288,16 +243,14 @@ export const getContact = (
   }
 }
 
-export const getContacts = (withConvo: boolean = false) =>{
+export const getContacts = (withConvo: boolean = false) => {
   const storedContacts = store.get('state.contacts')
   return Object.keys(storedContacts).map(id => getContact(id, withConvo))
 }
 
 export const getConversations = (filterType?: ConvoType) => {
   const storedConvos = store.get('state.convos')
-  const convos = Object.keys(storedConvos).map(id =>
-    getConversation(id, true),
-  )
+  const convos = Object.keys(storedConvos).map(id => getConversation(id, true))
   return filterType ? convos.filter(c => c && c.type === filterType) : convos
 }
 
@@ -368,13 +321,6 @@ export const addMessage = (
     msg.source = 'USER'
   }
   msg.timestamp = convo.lastActiveTimestamp = Date.now()
-
-  // $FlowFixMe
-  const actionBlock = msg.blocks.find(b => b.action != null)
-  if (actionBlock != null) {
-    // $FlowFixMe
-    setAction(id, actionBlock.action)
-  }
 
   const messages = convo.messages || []
   // $FlowFixMe

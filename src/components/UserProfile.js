@@ -185,14 +185,4 @@ const styles = StyleSheet.create({
     marginLeft: BASIC_SPACING,
     color: COLORS.PRIMARY_RED,
   },
-  editButton: {
-    borderRadius: 40,
-    marginBottom: BASIC_SPACING,
-    paddingVertical: BASIC_SPACING,
-    paddingHorizontal: BASIC_SPACING * 2,
-    backgroundColor: COLORS.PRIMARY_RED,
-  },
-  editButtonText: {
-    color: COLORS.WHITE,
-  },
 })
