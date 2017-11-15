@@ -129,7 +129,8 @@ export const UpdatePointerMutation = graphql(
     }),
   },
 )
-export type UpdateProfileFunc = (id: ID) => Promise<*>
+
+export type UpdateProfileFunc = (input: ProfileInput) => Promise<*>
 
 export const UpdateProfileMutation = graphql(
   gql`
@@ -154,4 +155,21 @@ export const UpdateProfileMutation = graphql(
       }),
     }),
   },
+)
+
+export type resendInvites = (id: ID) => Promise<*>
+
+export const ResendInvitesMutation = graphql(
+  gql`
+    mutation ResendInvitesMutation($id: ID!) {
+      resendInvites(id: $id) {
+        id
+      }
+    }
+  `,
+  {
+    props: ({ mutate }) => ({
+      resendInvites: (id: ID) => mutate({ variables: { id } }),
+    }),
+  }
 )

@@ -411,6 +411,34 @@ export const createChannel = async (
   }
 }
 
+export const resendInvites = async (
+  pss: PSS,
+  channelId: string,
+  dark: boolean,
+  subject: string,
+  channelPeers: Array<ID>
+) => {
+  const filteredPeers = channelPeers.map(id => getContact(id)).filter(Boolean)
+  const peers = filteredPeers.map(c => ({
+    address: (!dark && c.address) || '',
+    pubKey: c.profile.id,
+  }))
+  logClient('peers:', peers)
+  const channel = {
+    topic: hexToArray(channelId),
+    peers,
+    dark,
+    subject,
+  }
+  filteredPeers.forEach(c => {
+    const peerTopic = c.convoID && topics.get(c.convoID)
+    if (peerTopic) {
+      logClient('resending invite', peerTopic)
+      peerTopic.next(channelInvite(channel))
+    }
+  })
+}
+
 export const addContactRequest = async (
   pss: PSS,
   payload: ContactRequestPayload,

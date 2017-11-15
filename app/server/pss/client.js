@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.resendInvites = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -335,6 +335,28 @@ const createChannel = exports.createChannel = async (pss, subject, peers, dark) 
     topic,
     topicSubscription
   };
+};
+
+const resendInvites = exports.resendInvites = async (pss, channelId, dark, subject, channelPeers) => {
+  const filteredPeers = channelPeers.map(id => (0, _db.getContact)(id)).filter(Boolean);
+  const peers = filteredPeers.map(c => ({
+    address: !dark && c.address || '',
+    pubKey: c.profile.id
+  }));
+  logClient('peers:', peers);
+  const channel = {
+    topic: (0, _erebos.hexToArray)(channelId),
+    peers,
+    dark,
+    subject
+  };
+  filteredPeers.forEach(c => {
+    const peerTopic = c.convoID && topics.get(c.convoID);
+    if (peerTopic) {
+      logClient('resending invite', peerTopic);
+      peerTopic.next((0, _protocol.channelInvite)(channel));
+    }
+  });
 };
 
 const addContactRequest = exports.addContactRequest = async (pss, payload) => {

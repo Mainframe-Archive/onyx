@@ -22,6 +22,7 @@ import pubsub from '../data/pubsub'
 import {
   acceptContact,
   createChannel,
+  resendInvites,
   requestContact,
   sendMessage,
   setTyping,
@@ -133,6 +134,7 @@ type Mutation {
   sendMessage(input: MessageInput!): Message!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
+  resendInvites(id: ID!): Conversation!
   updateProfile(input: ProfileInput!): Profile!
 }
 
@@ -226,6 +228,21 @@ export default (pss: PSS, port: number) => {
         const updatedProfile = Object.assign(profile, input)
         setProfile(updatedProfile)
         return updatedProfile
+      },
+      resendInvites: async (root, {id}) => {
+        const convo = getConversation(id)
+        if (convo === null) {
+          throw new Error('Invalid convo id')
+        }
+        resendInvites(
+          pss,
+          convo.id,
+          convo.dark,
+          convo.subject,
+          convo.peers,
+        )
+        console.log('conversation: ', conversation)
+        return conversation
       }
     },
     Subscription: {
