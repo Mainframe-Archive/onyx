@@ -179,8 +179,8 @@ export const setupStore = (address: string = '', id: string) => {
   const storedId = store.get('state.profile.id')
   if (storedId != null && storedId !== id) {
     resetState()
-    store.set('state.profile.id', id)
   }
+  store.set('state.profile.id', id)
   store.set('state.address', address)
 }
 

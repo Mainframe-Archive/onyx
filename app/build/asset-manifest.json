@@ -1,8 +1,13 @@
 {
   "main.css": "static/css/main.754dcb7b.css",
   "main.css.map": "static/css/main.754dcb7b.css.map",
+<<<<<<< HEAD
   "main.js": "static/js/main.338a0867.js",
   "main.js.map": "static/js/main.338a0867.js.map",
+=======
+  "main.js": "static/js/main.8687e81e.js",
+  "main.js.map": "static/js/main.8687e81e.js.map",
+>>>>>>> master
   "static/media/Muli-Bold.woff2": "static/media/Muli-Bold.03c3ebc1.woff2",
   "static/media/Muli-Regular.woff2": "static/media/Muli-Regular.f0e1ee92.woff2",
   "static/media/Muli-SemiBold.woff2": "static/media/Muli-SemiBold.d0c20b36.woff2",

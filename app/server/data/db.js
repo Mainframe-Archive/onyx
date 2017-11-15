@@ -90,6 +90,7 @@ const setupStore = exports.setupStore = (address = '', id) => {
     resetState();
     store.set('state.profile.id', id);
   }
+  store.set('state.profile.id', id);
   store.set('state.address', address);
 };
 
