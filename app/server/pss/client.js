@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
+exports.setupContactTopic = exports.requestContact = exports.addContactRequest = exports.resendInvites = exports.createChannel = exports.joinChannel = exports.acceptContact = exports.setTyping = exports.sendMessage = exports.joinDirectTopic = exports.joinChannelTopic = exports.createRandomTopic = exports.createContactTopic = exports.subscribeToStoredConvos = exports.setupPss = exports.setPeerPublicKey = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -302,32 +302,23 @@ const createChannel = exports.createChannel = async (pss, subject, peers, dark) 
   if (profile == null) {
     throw new Error('Cannot create channel before profile is setup');
   }
-
-  const filteredPeers = peers.map(id => (0, _db.getContact)(id)).filter(Boolean);
-  const otherPeers = filteredPeers.map(c => ({
-    address: !dark && c.address || '',
-    pubKey: c.profile.id
-  }));
-
   // Create and join the topic for this channel
   const topicID = await createRandomTopic(pss);
+  const peerContacts = peers.map(id => (0, _db.getContact)(id)).filter(Boolean);
+  const pssPeers = formatPSSPeers(peerContacts, dark);
+
   const channel = {
     dark,
     topic: topicID,
     subject,
-    peers: [{ pubKey: profile.id, address: dark ? '' : (0, _db.getAddress)() }, ...otherPeers]
+    peers: [{ pubKey: profile.id, address: dark ? '' : (0, _db.getAddress)() }, ...pssPeers]
   };
 
-  const topic = await joinChannelTopic(pss, channel, otherPeers);
+  const topic = await joinChannelTopic(pss, channel, pssPeers);
   const topicSubscription = createChannelTopicSubscription(pss, topic);
 
   // Invite peers to the newly created topic
-  filteredPeers.forEach(c => {
-    const peerTopic = c.convoID && topics.get(c.convoID);
-    if (peerTopic) {
-      peerTopic.next((0, _protocol.channelInvite)(channel));
-    }
-  });
+  invitePeersToChannel(channel, peerContacts);
 
   topic.next((0, _protocol.topicJoined)((0, _db.getProfile)()));
 
@@ -335,6 +326,40 @@ const createChannel = exports.createChannel = async (pss, subject, peers, dark) 
     topic,
     topicSubscription
   };
+};
+
+const resendInvites = exports.resendInvites = async (channelId, dark, subject, channelPeers) => {
+  const profile = (0, _db.getProfile)();
+  if (profile == null) {
+    throw new Error('Cannot create channel before profile is setup');
+  }
+  logClient('channelPeers', channelPeers);
+  const peerContacts = channelPeers.map(id => (0, _db.getContact)(id)).filter(Boolean);
+  const channel = {
+    topic: (0, _erebos.hexToArray)(channelId),
+    peers: [{ pubKey: profile.id, address: dark ? '' : (0, _db.getAddress)() }, ...formatPSSPeers(peerContacts, dark)],
+    dark,
+    subject
+  };
+  invitePeersToChannel(channel, peerContacts);
+};
+
+const formatPSSPeers = (contactPeers, dark) => {
+  return contactPeers.map(c => ({
+    address: !dark && c.address || '',
+    pubKey: c.profile.id
+  }));
+};
+
+const invitePeersToChannel = (channel, contacts) => {
+  contacts.forEach(c => {
+    logClient('invite contact', c);
+    const peerTopic = c.convoID && topics.get(c.convoID);
+    logClient('peer topic', peerTopic, channel);
+    if (peerTopic) {
+      peerTopic.next((0, _protocol.channelInvite)(channel));
+    }
+  });
 };
 
 const addContactRequest = exports.addContactRequest = async (pss, payload) => {

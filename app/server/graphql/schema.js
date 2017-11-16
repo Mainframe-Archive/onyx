@@ -140,6 +140,7 @@ type Mutation {
   sendMessage(input: MessageInput!): Message!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
+  resendInvites(id: ID!): Conversation!
   updateProfile(input: ProfileInput!): Profile!
 }
 
@@ -228,6 +229,15 @@ exports.default = (pss, port) => {
         const updatedProfile = Object.assign(profile, input);
         (0, _db.setProfile)(updatedProfile);
         return updatedProfile;
+      },
+      resendInvites: async (root, { id }) => {
+        const convo = (0, _db.getConversation)(id);
+        if (convo === null) {
+          throw new Error('Invalid convo id');
+        }
+        (0, _client.resendInvites)(convo.id, convo.dark, convo.subject, convo.peers);
+        console.log('conversation: ', conversation);
+        return conversation;
       }
     },
     Subscription: {
