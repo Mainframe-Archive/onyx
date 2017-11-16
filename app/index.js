@@ -10,7 +10,7 @@ const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL =
   process.env.SWARM_WS_URL ||
   (config && config.swarmWsUrl) ||
-  'ws://localhost:8501'
+  'ws://localhost:8546'
 const SWARM_HTTP_URL =
   process.env.SWARM_HTTP_URL ||
   (config && config.swarmHttpUrl) ||
