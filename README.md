@@ -4,15 +4,21 @@ Decentralized messaging application based on PSS.
 
 ## Introduction
 
-TODO: what is PSS + links to Devcon blog posts and video.
+Onyx is a proof of concept for our next phase of development on a fully-decentralized messaging platform. It relies on a secure messaging protocol in the Ethereum core called [PSS](https://gist.github.com/zelig/d52dab6a4509125f842bbd0dce1e9440).
+
+## Installing
+
+To install onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/thusfresh/onyx/releases).
 
 ## Know issues
 
-This application is only a proof of concept, it is only meant for demonstration purposes. As such, there is no guaranty of:
+This application is only a proof of concept. It is meant for demonstration purposes. As such, there is no guarantee of:
 
 - Security: our codebase is not fully tested.
-- Reliability: PSS does not provide deliverability guaranties.
-- Performance: this POC is only meant for demonstration between a few users, it is not designed for wider scale or frequent usage.
+- Reliability: PSS does not provide deliverability guarantees.
+- Performance: this POC is only meant for demonstration between a few users. It is not designed for wide-scale or frequent usage.
+
+If you become aware of a bug or important missing feature, please submit an issue on our [issues page](https://github.com/thusfresh/onyx/issues).
 
 ## Architecture
 
@@ -39,7 +45,7 @@ Once ready, you can run `yarn electron` to start the electron app, connecting to
 
 ## Contributing
 
-(TODO) See [CONTRIBUTING](CONTRIBUTING.md) file.
+Thanks for your interest in our project! Feel free to examine our list of potential enhancements on our [issues page](https://github.com/thusfresh/onyx/issues) and help us implement them. Feel free to submit an feature request or bug report yourself as well.
 
 ## License
 
