@@ -3,18 +3,23 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.topicTyping = exports.topicMessage = exports.topicJoined = exports.profileResponse = exports.profileRequest = exports.contactRequest = exports.channelInvite = exports.actionState = exports.encodeProtocol = exports.decodeProtocol = undefined;
+exports.topicTyping = exports.topicMessage = exports.topicJoined = exports.profileResponse = exports.profileRequest = exports.contactRequest = exports.channelInvite = exports.encodeProtocol = exports.decodeProtocol = undefined;
+
+var _crypto = require('crypto');
+
+var _erebos = require('erebos');
 
 var _lodash = require('lodash');
 
-var _lib = require('../lib');
-
 const NONCE_SIZE = 8;
-const receivedNonces = new Set(); // In channel or p2p topic
+
+const receivedNonces = new Set();
+
+const createNonce = () => Buffer.from((0, _crypto.randomBytes)(NONCE_SIZE)).toString('hex'); // In channel or p2p topic
 
 const decodeProtocol = exports.decodeProtocol = msg => {
   try {
-    const envelope = JSON.parse(msg);
+    const envelope = JSON.parse((0, _erebos.decodeMessage)(msg));
     if ((0, _lodash.isObject)(envelope) && envelope.nonce != null && (0, _lodash.isObject)(envelope.payload) && (0, _lodash.isString)(envelope.payload.type)) {
       if (receivedNonces.has(envelope.nonce)) {
         console.warn('Duplicate message:', envelope);
@@ -32,16 +37,11 @@ const decodeProtocol = exports.decodeProtocol = msg => {
 
 const encodeProtocol = exports.encodeProtocol = data => {
   const envelope = {
-    nonce: (0, _lib.createKey)(NONCE_SIZE, true),
+    nonce: createNonce(),
     payload: data
   };
-  return (0, _lib.encodeMessage)(JSON.stringify(envelope));
+  return (0, _erebos.encodeMessage)(JSON.stringify(envelope));
 };
-
-const actionState = exports.actionState = (id, state) => ({
-  type: 'ACTION_STATE',
-  payload: { id, state }
-});
 
 const channelInvite = exports.channelInvite = payload => ({
   type: 'CHANNEL_INVITE',

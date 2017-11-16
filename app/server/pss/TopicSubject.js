@@ -11,13 +11,13 @@ var _debug = require('debug');
 
 var _debug2 = _interopRequireDefault(_debug);
 
+var _erebos = require('erebos');
+
 var _rxjs = require('rxjs');
 
 var _Subject = require('rxjs/Subject');
 
 var _Subscriber = require('rxjs/Subscriber');
-
-var _lib = require('../lib');
 
 var _protocol = require('./protocol');
 
@@ -26,7 +26,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 class TopicSubject extends _Subject.AnonymousSubject {
 
   constructor(pss, topic, subscription) {
-    const topicHex = (0, _lib.encodeHex)(topic);
+    const topicHex = (0, _erebos.encodeHex)(topic);
     const log = (0, _debug2.default)(`dcd:pss:topic:${topicHex}`);
     const peers = new Set();
 
@@ -34,15 +34,15 @@ class TopicSubject extends _Subject.AnonymousSubject {
       log('send to all', data);
       const msg = (0, _protocol.encodeProtocol)(data);
       peers.forEach(key => {
-        pss.sendAsym((0, _lib.base64ToHex)(key), topic, msg);
+        pss.sendAsym((0, _erebos.base64ToHex)(key), topic, msg);
       });
     });
 
     const observable = pss.createSubscription(subscription)
     // $FlowIgnore
-    .map(msg => {
-      const sender = (0, _lib.hexToBase64)(msg.keyID);
-      const data = (0, _protocol.decodeProtocol)(msg.data);
+    .map(evt => {
+      const sender = (0, _erebos.hexToBase64)(evt.Key);
+      const data = (0, _protocol.decodeProtocol)(evt.Msg);
       if (sender && data) {
         return _extends({ sender }, data);
       } else {
@@ -72,7 +72,7 @@ class TopicSubject extends _Subject.AnonymousSubject {
 
   toPeer(key, data) {
     this._log('send to peer', key, data);
-    this._pss.sendAsym((0, _lib.base64ToHex)(key), this._topic, (0, _protocol.encodeProtocol)(data));
+    this._pss.sendAsym((0, _erebos.base64ToHex)(key), this._topic, (0, _protocol.encodeProtocol)(data));
   }
 }
 

@@ -76,7 +76,7 @@ type Message {
   blocks: [MessageBlock!]!
 }
 
-union MessageBlock = MessageBlockText | MessageBlockFile | MessageBlockAction
+union MessageBlock = MessageBlockText | MessageBlockFile
 
 type MessageBlockText {
   text: String!
@@ -86,10 +86,6 @@ type MessageBlockFile {
   file: File!
 }
 
-type MessageBlockAction {
-  action: Action!
-}
-
 type File {
   name: String!
   hash: String!
@@ -97,12 +93,10 @@ type File {
   size: Int
 }
 
-type Action {
-  id: ID!
-  assignee: ID!
-  sender: ID!
-  state: String!
-  text: String!
+input ProfileInput {
+  avatar: String
+  name: String!
+  bio: String
 }
 
 input ChannelInput {
@@ -144,13 +138,12 @@ type Mutation {
   createChannel(input: ChannelInput!): Conversation!
   requestContact(id: ID!): Contact!
   sendMessage(input: MessageInput!): Message!
-  setActionDone(id: ID!): Conversation!
   setTyping(input: TypingInput!): Conversation!
   updatePointer(id: ID!): Conversation!
+  updateProfile(input: ProfileInput!): Profile!
 }
 
 type Subscription {
-  actionChanged(id: ID!): Action!
   channelsChanged: Viewer!
   connectionClosed: Boolean
   contactChanged(id: ID!): Contact!
@@ -173,9 +166,6 @@ exports.default = (pss, port) => {
     JSON: _graphqlTypeJson2.default,
     MessageBlock: {
       __resolveType(obj) {
-        if (obj.action) {
-          return 'MessageBlockAction';
-        }
         if (obj.file) {
           return 'MessageBlockFile';
         }
@@ -228,35 +218,23 @@ exports.default = (pss, port) => {
         if (input.blocks == null || input.blocks.length === 0) {
           throw new Error('Invalid block');
         }
-
-        // TODO: better blocks validation (sent as JSON - need to check the types)
-        const blocks = input.blocks.map(b => {
-          if (b.action) {
-            b.action.id = (0, _v2.default)();
-            b.action.sender = profile.id;
-            b.action.state = 'PENDING';
-          }
-          return b;
-        });
-        const msg = await (0, _client.sendMessage)(input.convoID, blocks);
+        const msg = await (0, _client.sendMessage)(input.convoID, input.blocks);
         if (msg == null) {
           throw new Error('Error creating message');
         }
         return msg;
       },
-      setActionDone: (root, { id }) => {
-        const action = (0, _db.getAction)(id);
-        if (action == null) {
-          throw new Error('Action not found');
-        }
-        (0, _client.setActionDone)(action);
-        return (0, _db.getConversation)(action.convoID);
-      },
       setTyping: (root, { input }) => {
         (0, _client.setTyping)(input.convoID, input.typing);
         return (0, _db.getConversation)(input.convoID);
       },
-      updatePointer: (root, { id }) => (0, _db.updateConversationPointer)(id)
+      updatePointer: (root, { id }) => (0, _db.updateConversationPointer)(id),
+      updateProfile: (root, { input }) => {
+        const profile = (0, _db.getProfile)();
+        const updatedProfile = Object.assign(profile, input);
+        (0, _db.setProfile)(updatedProfile);
+        return updatedProfile;
+      }
     },
     Subscription: {
       channelsChanged: {

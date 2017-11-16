@@ -1,16 +1,18 @@
 // @flow
 
+import { randomBytes } from 'crypto'
+import { decodeMessage, encodeMessage } from 'erebos'
 import { isObject, isString } from 'lodash'
 
-import type { ActionState, ID, MessageBlock, Profile } from '../data/db'
-import { decodeMessage, encodeMessage, createKey } from '../lib'
+import type { ID, MessageBlock, Profile } from '../data/db'
 import type { ByteArray } from './types'
 
 const NONCE_SIZE = 8
 const receivedNonces: Set<string> = new Set()
 
+const createNonce = () => Buffer.from(randomBytes(NONCE_SIZE)).toString('hex')
+
 export type ProtocolType =
-  | 'ACTION_STATE' // In channel or p2p topic
   | 'CHANNEL_INVITE' // In p2p topic
   | 'CONTACT_REQUEST' // In contact topic
   | 'PROFILE_REQUEST' // In channel
@@ -18,11 +20,6 @@ export type ProtocolType =
   | 'TOPIC_JOINED' // In channel or p2p topic
   | 'TOPIC_MESSAGE' // In channel or p2p topic
   | 'TOPIC_TYPING' // In channel or p2p topic
-
-export type ActionStatePayload = {
-  id: ID,
-  state: ActionState,
-}
 
 export type PeerInfo = {
   address: string,
@@ -60,7 +57,6 @@ export type TopicTypingPayload = {
 }
 
 export type ProtocolPayload =
-  | ActionStatePayload
   | ChannelInvitePayload
   | ContactRequestPayload
   | ProfileResponsePayload
@@ -79,7 +75,7 @@ export type ReceivedEvent = ProtocolEvent<*, *> & {
 
 export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
   try {
-    const envelope = JSON.parse(msg)
+    const envelope = JSON.parse(decodeMessage(msg))
     if (
       isObject(envelope) &&
       envelope.nonce != null &&
@@ -102,18 +98,11 @@ export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
 
 export const encodeProtocol = (data: ProtocolEvent<*, *>) => {
   const envelope = {
-    nonce: createKey(NONCE_SIZE, true),
+    nonce: createNonce(),
     payload: data,
   }
   return encodeMessage(JSON.stringify(envelope))
 }
-
-export type ActionStateEvent = ProtocolEvent<'ACTION_STATE', ActionStatePayload>
-
-export const actionState = (id: ID, state: ActionState): ActionStateEvent => ({
-  type: 'ACTION_STATE',
-  payload: { id, state },
-})
 
 export type ChannelInviteEvent = ProtocolEvent<
   'CHANNEL_INVITE',

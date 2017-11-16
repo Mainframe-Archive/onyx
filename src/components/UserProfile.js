@@ -7,6 +7,7 @@ import QRCode from 'qrcode.react'
 import Text from './Text'
 import Avatar from './Avatar'
 import Icon from './Icon'
+import Button from './Form/Button'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -21,6 +22,7 @@ type Props = {
   serverURL?: ?string,
   keyQRCode?: boolean,
   hideTitle?: boolean,
+  onPressEdit: () => void,
 }
 
 type State = {
@@ -60,6 +62,7 @@ export default class UserProfile extends Component<Props, State> {
               <Text style={styles.bio}>{profile.bio}</Text>
             </View>
           )}
+          <Button title="Edit Profile" onPress={this.props.onPressEdit} />
         </View>
         {!connectedQROpen && (
           <View>

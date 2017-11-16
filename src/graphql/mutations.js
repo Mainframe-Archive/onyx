@@ -91,23 +91,6 @@ export const SendMessageMutation = graphql(
   },
 )
 
-export type SetActionDoneFunc = (id: ID) => Promise<*>
-
-export const SetActionDoneMutation = graphql(
-  gql`
-    mutation SetActionDoneMutation($id: ID!) {
-      setActionDone(id: $id) {
-        lastActiveTimestamp
-      }
-    }
-  `,
-  {
-    props: ({ mutate }) => ({
-      setActionDone: (id: ID) => mutate({ variables: { id } }),
-    }),
-  },
-)
-
 export type TypingInput = {
   convoID: ID,
   typing: boolean,
@@ -143,6 +126,32 @@ export const UpdatePointerMutation = graphql(
   {
     props: ({ mutate }) => ({
       updatePointer: (id: ID) => mutate({ variables: { id } }),
+    }),
+  },
+)
+export type UpdateProfileFunc = (id: ID) => Promise<*>
+
+export const UpdateProfileMutation = graphql(
+  gql`
+    mutation UpdateProfileMutation($input: ProfileInput!) {
+      updateProfile(input: $input) {
+        name
+        bio
+      }
+    }
+  `,
+  {
+    props: ({ mutate }) => ({
+      updateProfile: (input: ProfileInput) => mutate({
+        variables: { input },
+        updateQueries: {
+          AppQuery: (state, { mutationResult }) => {
+            const profile = Object.assign(state.viewer.profile, mutationResult.data.updateProfile)
+            const nextViewer = Object.assign(state.viewer, { profile })
+            return {...state, viewer: nextViewer}
+          },
+        }
+      }),
     }),
   },
 )

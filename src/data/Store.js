@@ -26,6 +26,11 @@ const EMPTY_STATE = {
 }
 
 export default async (apolloClient: ApolloClient): Promise<Store> => {
+  const middlewares = [apolloClient.middleware()]
+  if (process.env.NODE_ENV !== 'production') {
+    middlewares.push(createLogger())
+  }
+
   // $FlowFixMe
   const store = createStore(
     combineReducers({
@@ -33,7 +38,7 @@ export default async (apolloClient: ApolloClient): Promise<Store> => {
       navigation: navigationReducer,
     }),
     EMPTY_STATE,
-    applyMiddleware(apolloClient.middleware(), createLogger()),
+    applyMiddleware(...middlewares),
   )
   return Promise.resolve(store)
 }
