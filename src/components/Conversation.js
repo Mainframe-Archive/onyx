@@ -567,7 +567,6 @@ class Conversation extends Component<Props, State> {
 
   render() {
     const { data } = this.props
-    console.log('data: ', this.props)
     const { editorState, typingText, file } = this.state
 
     if (data == null || data.conversation == null) {

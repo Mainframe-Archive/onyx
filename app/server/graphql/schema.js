@@ -235,7 +235,7 @@ exports.default = (pss, port) => {
         if (convo === null) {
           throw new Error('Invalid convo id');
         }
-        (0, _client.resendInvites)(pss, convo.id, convo.dark, convo.subject, convo.peers);
+        (0, _client.resendInvites)(convo.id, convo.dark, convo.subject, convo.peers);
         console.log('conversation: ', conversation);
         return conversation;
       }

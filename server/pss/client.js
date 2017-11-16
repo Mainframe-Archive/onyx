@@ -30,6 +30,7 @@ import {
   type ID,
   type MessageBlock,
   type SendMessage,
+  type Contact,
 } from '../data/db'
 import pubsub from '../data/pubsub'
 
@@ -373,35 +374,26 @@ export const createChannel = async (
   if (profile == null) {
     throw new Error('Cannot create channel before profile is setup')
   }
-
-  const filteredPeers = peers.map(id => getContact(id)).filter(Boolean)
-  const otherPeers = filteredPeers.map(c => ({
-    address: (!dark && c.address) || '',
-    pubKey: c.profile.id,
-  }))
-
   // Create and join the topic for this channel
   const topicID = await createRandomTopic(pss)
+  const peerContacts = peers.map(id => getContact(id)).filter(Boolean)
+  const pssPeers = formatPSSPeers(peerContacts, dark)
+
   const channel = {
     dark,
     topic: topicID,
     subject,
     peers: [
       { pubKey: profile.id, address: dark ? '' : getAddress() },
-      ...otherPeers,
+      ...pssPeers,
     ],
   }
 
-  const topic = await joinChannelTopic(pss, channel, otherPeers)
+  const topic = await joinChannelTopic(pss, channel, pssPeers)
   const topicSubscription = createChannelTopicSubscription(pss, topic)
 
   // Invite peers to the newly created topic
-  filteredPeers.forEach(c => {
-    const peerTopic = c.convoID && topics.get(c.convoID)
-    if (peerTopic) {
-      peerTopic.next(channelInvite(channel))
-    }
-  })
+  invitePeersToChannel(channel, peerContacts)
 
   topic.next(topicJoined(getProfile()))
 
@@ -412,28 +404,39 @@ export const createChannel = async (
 }
 
 export const resendInvites = async (
-  pss: PSS,
   channelId: string,
   dark: boolean,
   subject: string,
   channelPeers: Array<ID>
 ) => {
-  const filteredPeers = channelPeers.map(id => getContact(id)).filter(Boolean)
-  const peers = filteredPeers.map(c => ({
-    address: (!dark && c.address) || '',
-    pubKey: c.profile.id,
-  }))
-  logClient('peers:', peers)
-  const channel = {
+  const profile = getProfile()
+  if (profile == null) {
+    throw new Error('Cannot create channel before profile is setup')
+  }
+  const peerContacts = channelPeers.map(id => getContact(id)).filter(Boolean)
+  const channel: Channel = {
     topic: hexToArray(channelId),
-    peers,
+    peers: [
+      { pubKey: profile.id, address: dark ? '' : getAddress() },
+      ...formatPSSPeers(peerContacts, dark),
+    ],
     dark,
     subject,
   }
-  filteredPeers.forEach(c => {
+  invitePeersToChannel(channel, peerContacts)
+}
+
+const formatPSSPeers = (contactPeers: Array<Contact>, dark: boolean): Array<> => {
+  return contactPeers.map(c => ({
+    address: (!dark && c.address) || '',
+    pubKey: c.profile.id,
+  }))
+}
+
+const invitePeersToChannel = (channel: ChannelInvitePayload, contacts: Array<Contact>) => {
+  contacts.forEach(c => {
     const peerTopic = c.convoID && topics.get(c.convoID)
     if (peerTopic) {
-      logClient('resending invite', peerTopic)
       peerTopic.next(channelInvite(channel))
     }
   })

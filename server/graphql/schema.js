@@ -235,13 +235,11 @@ export default (pss: PSS, port: number) => {
           throw new Error('Invalid convo id')
         }
         resendInvites(
-          pss,
           convo.id,
           convo.dark,
           convo.subject,
           convo.peers,
         )
-        console.log('conversation: ', conversation)
         return conversation
       }
     },
