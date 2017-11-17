@@ -9,6 +9,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build && mv build app/build",
+    "builder": "electron-builder",
     "clean": "del app/build",
     "dist": "yarn clean && yarn build && electron-builder",
     "electron": "electron app",

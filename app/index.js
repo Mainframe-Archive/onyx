@@ -1,10 +1,43 @@
 const { app, BrowserWindow, Menu } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
+const execa = require('execa')
+const { mkdirSync, writeFileSync } = require('fs')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
 const path = require('path')
 const StaticServer = require('static-server')
+
+const setupGeth = async () => {
+  // Note: always use `path.join()` to make sure delimiters work cross-platform
+  // Some platform-specific logic may be needed here, ex using geth.exe on Windows, for this you can use electron-util: https://github.com/sindresorhus/electron-util/blob/master/index.js#L17-L19
+  const gethPath = path.join(process.resourcesPath, 'bin', 'geth')
+  const pwdPath = path.join(app.getPath('userData'), 'pwd')
+  const dataDir = path.join(app.getPath('userData'), 'data')
+
+  // Could be made async, shouldn't be an issue though
+  writeFileSync(pwdPath, 'secret')
+  try {
+    mkdirSync(dataDir)
+  } catch (err) {
+    // Likely directory already exists, better check though
+    // See https://nodejs.org/api/fs.html#fs_fs_mkdir_path_mode_callback
+  }
+
+  // Create the account - other commands should work the same way
+  const res = await execa(gethPath, [
+    '--datadir',
+    dataDir,
+    'account',
+    'new',
+    '--password',
+    pwdPath,
+  ])
+  console.log(res)
+}
+
+// Only call this when needed
+setupGeth()
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL =
