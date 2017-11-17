@@ -25,13 +25,15 @@ import {
   SendMessageMutation,
   SetTypingMutation,
   UpdatePointerMutation,
+  ResendInvitesMutation,
   type SendMessageFunc,
   type SetTypingFunc,
   type UpdatePointerFunc,
+  type ResendInvitesFunc,
 } from '../graphql/mutations'
 
 import Loader from './Loader'
-import Avatar from './Avatar'
+import Avatar, { AVATAR_SIZE } from './Avatar'
 import Text from './Text'
 import UserProfileModal from './UserProfileModal'
 import Icon from './Icon'
@@ -208,6 +210,7 @@ type Props = {
   sendMessage: SendMessageFunc,
   setTyping: SetTypingFunc,
   updatePointer: UpdatePointerFunc,
+  resendInvites: ResendInvitesFunc,
   subscribeToMessageAdded: SubscribeFunc,
   subscribeToTypingsChanged: SubscribeFunc,
 }
@@ -469,6 +472,10 @@ class Conversation extends Component<Props, State> {
     }
   }
 
+  onPressResendInvites = () => {
+    this.props.resendInvites(this.props.id)
+  }
+
   // TODO: better way to retrieve peers, they could be stored in a Map
   getPeer = (id: string): Object => {
     const { data } = this.props
@@ -641,6 +648,12 @@ class Conversation extends Component<Props, State> {
                 </TouchableOpacity>
               )
             })}
+            <TouchableOpacity
+              style={styles.resendButton}
+              onPress={this.onPressResendInvites}
+            >
+              <Text style={styles.resendText}>Resend Invites</Text>
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.messages}>
@@ -875,6 +888,19 @@ const styles = StyleSheet.create({
   newMessagesTextDark: {
     backgroundColor: COLORS.DARKEST_BLUE,
   },
+  resendButton: {
+    backgroundColor: COLORS.LIGHT_GRAY,
+    height: AVATAR_SIZE.small,
+    borderRadius: AVATAR_SIZE.small / 2,
+    paddingHorizontal: BASIC_SPACING * 2,
+    marginLeft: BASIC_SPACING,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resendText: {
+    color: COLORS.PRIMARY_RED,
+    fontSize: 12,
+  },
 })
 
 const ConvoQuery = graphql(
@@ -954,5 +980,6 @@ export default compose(
   SetTypingMutation,
   SendMessageMutation,
   UpdatePointerMutation,
+  ResendInvitesMutation,
   ConvoQuery,
 )(Conversation)

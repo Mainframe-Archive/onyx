@@ -13,7 +13,7 @@ type Props = {
   blocky?: boolean,
 }
 
-const AVATAR_SIZE = {
+export const AVATAR_SIZE = {
   'xx-large': 160,
   'x-large': 80,
   large: 48,
