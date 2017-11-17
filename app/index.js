@@ -1,10 +1,10 @@
 const { app, BrowserWindow, Menu } = require('electron')
 const isDev = require('electron-is-dev')
+const Store = require('electron-store')
 const getPort = require('get-port')
+const createOnyxServer = require('onyx-server').default
 const path = require('path')
 const StaticServer = require('static-server')
-
-const createGraphQLServer = require('./server').default
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL =
@@ -72,6 +72,8 @@ const menu = Menu.buildFromTemplate([
   },
 ])
 
+const store = new Store({ name: isDev ? 'onyx-dev' : 'onyx' })
+
 let mainWindow
 
 const createWindow = url => {
@@ -103,16 +105,21 @@ const startAppServer = async () => {
   })
 }
 
-const startGraphQLServer = async appPort => {
-  const graphqlPort = await getPort()
-  await createGraphQLServer(SWARM_WS_URL, SWARM_HTTP_URL, graphqlPort, appPort)
-  return graphqlPort
+const startOnyxServer = async () => {
+  const port = await getPort()
+  await createOnyxServer({
+    wsUrl: SWARM_WS_URL,
+    httpUrl: SWARM_HTTP_URL,
+    port,
+    store,
+  })
+  return port
 }
 
 const start = async () => {
   const appPort = isDev ? 3000 : await startAppServer()
-  const graphqlPort = await startGraphQLServer(appPort)
-  const url = `http://localhost:${appPort}/?port=${graphqlPort}`
+  const serverPort = await startOnyxServer(appPort)
+  const url = `http://localhost:${appPort}/?port=${serverPort}`
 
   if (app.isReady()) {
     createWindow(url)

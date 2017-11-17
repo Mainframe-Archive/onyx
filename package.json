@@ -9,9 +9,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build && mv build app/build",
-    "clean": "del app/build && del app/server",
-    "compile": "babel server --out-dir app/server",
-    "dist": "yarn clean && yarn build && yarn compile && electron-builder",
+    "clean": "del app/build",
+    "dist": "yarn clean && yarn build && electron-builder",
     "electron": "electron app",
     "flow": "flow check",
     "postinstall": "electron-builder install-app-deps"
@@ -31,7 +30,7 @@
     "react-blockies": "^1.2.2",
     "react-dom": "^16.1.1",
     "react-modal": "^3.1.0",
-    "react-native-web": "^0.1.13",
+    "react-native-web": "^0.1.14",
     "react-redux": "^5.0.6",
     "react-scripts": "^1.0.16",
     "react-virtualized": "^9.12.0",
@@ -41,19 +40,10 @@
     "subscriptions-transport-ws": "^0.8.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-plugin-syntax-class-properties": "^6.13.0",
-    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
     "del-cli": "^1.1.0",
-    "electron-builder": "~19.28.4",
-    "electron-prebuilt-compile": "^1.7.9",
+    "electron": "~1.7.9",
+    "electron-builder": "^19.45.5",
     "flow-bin": "^0.59.0",
-    "flow-copy-source": "^1.2.1",
     "prettier": "^1.8.2"
   }
 }
