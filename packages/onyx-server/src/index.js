@@ -2,7 +2,7 @@
 
 import type Conf from 'conf'
 
-import DB from './DB'
+import DB from './db'
 import {
   setupPss,
   setupContactTopic,

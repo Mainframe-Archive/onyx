@@ -34,15 +34,18 @@ import Conf from 'conf'
 import startServer from 'onyx-server'
 
 startServer({
-  httpUrl: 'http://localhost:8500'
+  httpUrl: 'http://localhost:8500',
   wsUrl: 'ws://localhost:8546',
   port: 5000,
   store: new Conf(),
-}).then(() => {
-  console.log('server started')
-}, (err) => {
-  console.log('failed to start server', err)
-})
+}).then(
+  () => {
+    console.log('server started')
+  },
+  err => {
+    console.log('failed to start server', err)
+  },
+)
 ```
 
 All parameters are optional, fallback values will be used for the parameters not
