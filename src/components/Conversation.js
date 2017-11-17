@@ -35,7 +35,6 @@ import {
 import Loader from './Loader'
 import Avatar, { AVATAR_SIZE } from './Avatar'
 import Text from './Text'
-import Button from './Form/Button'
 import UserProfileModal from './UserProfileModal'
 import Icon from './Icon'
 
@@ -652,7 +651,7 @@ class Conversation extends Component<Props, State> {
             <TouchableOpacity
               style={styles.resendButton}
               onPress={this.onPressResendInvites}
-              >
+            >
               <Text style={styles.resendText}>Resend Invites</Text>
             </TouchableOpacity>
           </View>
