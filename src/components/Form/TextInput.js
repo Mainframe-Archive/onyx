@@ -4,9 +4,10 @@ import React, { Component } from 'react'
 import { View, TextInput, StyleSheet } from 'react-native-web'
 
 import COLORS from '../../colors'
-import { BASIC_SPACING } from '../../styles'
+import { BASIC_SPACING, INPUT_HEIGHT } from '../../styles'
 
 type Props = {
+  white: boolean,
   onBlur?: () => void,
   onFocus?: () => void,
 }
@@ -39,8 +40,18 @@ export default class Input extends Component<Props, State> {
     const fieldContainerStyles = [styles.fieldContainer]
 
     if (this.state.active) {
-      fieldStyles.push(styles.active)
       fieldContainerStyles.push(styles.activeFieldContainer)
+    }
+
+    if (this.props.white) {
+      fieldContainerStyles.push({ backgroundColor: COLORS.WHITE })
+      fieldStyles.push({ backgroundColor: COLORS.WHITE })
+    }
+    
+    if (this.props.multiline) {
+      fieldStyles.push(styles.multiline)
+    } else {
+      fieldStyles.push(styles.singleLine)
     }
 
     return (
@@ -60,6 +71,7 @@ const styles = StyleSheet.create({
   fieldContainer: {
     backgroundColor: COLORS.LIGHT_GRAY,
     paddingHorizontal: 3 * BASIC_SPACING,
+    paddingVertical: 5,
     borderRadius: 30,
     flexDirection: 'row',
     alignItems: 'center',
@@ -68,10 +80,9 @@ const styles = StyleSheet.create({
   },
   field: {
     flex: 1,
-    fontSize: 18,
+    fontSize: 16,
     color: COLORS.DARK_GRAY,
     backgroundColor: COLORS.LIGHT_GRAY,
-    paddingVertical: 1.5 * BASIC_SPACING,
     outline: 'none',
     width: '100%',
     maxWidth: '100%',
@@ -82,7 +93,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3 * BASIC_SPACING - 1,
     borderColor: COLORS.MEDIUM_GRAY,
   },
-  active: {
-    paddingVertical: 1.5 * BASIC_SPACING - 1,
+  singleLine: {
+    height: INPUT_HEIGHT,
+  },
+  multiline: {
+    paddingVertical: BASIC_SPACING * 2
   },
 })

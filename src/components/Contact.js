@@ -3,7 +3,7 @@
 import React, { Component } from 'react'
 import { compose, gql, graphql } from 'react-apollo'
 import { StyleSheet, View } from 'react-native-web'
-import Button from './Form/Button'
+import PropTypes from 'prop-types'
 
 import { ProfileData } from '../graphql/fragments'
 import {
@@ -16,6 +16,7 @@ import {
 import Conversation from './Conversation'
 import Loader from './Loader'
 import UserProfile from './UserProfile'
+import Button from './Form/Button'
 
 import { BASIC_SPACING } from '../styles'
 
@@ -31,6 +32,10 @@ type Props = {
 }
 
 class Contact extends Component<Props> {
+  static contextTypes = {
+    wsConnected$: PropTypes.object.isRequired,
+  }
+  
   unsubscribeContactChanged: UnsubscribeFunc
 
   componentDidMount() {
@@ -40,7 +45,9 @@ class Contact extends Component<Props> {
   }
 
   componentWillUnmount() {
-    this.unsubscribeContactChanged()
+    if (this.context.wsConnected$.value) {
+      this.unsubscribeContactChanged()
+    }
   }
 
   onPressAccept = () => {

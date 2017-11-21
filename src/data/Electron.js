@@ -3,6 +3,6 @@
 const electron = window.require('electron')
 const ipc = electron.ipcRenderer
 
-export const restart = () => {
-  ipc.send('restart')
+export const onSetServerUrl = (url) => {
+  ipc.send('onSetServerUrl', url)
 }

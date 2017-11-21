@@ -85,7 +85,7 @@ const SUPPORTED_FILE_ICONS = {
 
 class MessageRow extends Component<MessageProps> {
   static contextTypes = {
-    serverPort: PropTypes.number.isRequired,
+    httpServerUrl: PropTypes.string.isRequired,
   }
 
   render() {
@@ -114,9 +114,7 @@ class MessageRow extends Component<MessageProps> {
 
     const onPressFile = file
       ? () => {
-          document.location.href = `http://localhost:${
-            this.context.serverPort
-          }/files/${file.hash}`
+          document.location.href = `${this.context.httpServerUrl}/files/${file.hash}`
         }
       : null
 
@@ -130,9 +128,7 @@ class MessageRow extends Component<MessageProps> {
           <View style={styles.messageImage}>
             <img
               alt={file.name}
-              src={`http://localhost:${this.context.serverPort}/files/${
-                file.hash
-              }`}
+              src={`${this.context.httpServerUrl}/files/${file.hash}`}
               className="message-image"
             />
           </View>
@@ -217,7 +213,7 @@ type Props = {
 
 type Context = {
   client: ApolloClient,
-  serverPort: number,
+  wsConnected$: Object,
 }
 
 type State = {
@@ -230,7 +226,7 @@ type State = {
 class Conversation extends Component<Props, State> {
   static contextTypes = {
     client: PropTypes.object.isRequired,
-    serverPort: PropTypes.number.isRequired,
+    wsConnected$: PropTypes.object.isRequired,
   }
 
   firstPointer: ?number
@@ -323,8 +319,10 @@ class Conversation extends Component<Props, State> {
     if (this.typingTimer != null) {
       clearTimeout(this.typingTimer)
     }
-    this.unsubscribeMessageAdded()
-    this.unsubscribeTypingsChanged()
+    if (this.context.wsConnected$.value) {
+      this.unsubscribeMessageAdded()
+      this.unsubscribeTypingsChanged()
+    }
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -378,7 +376,7 @@ class Conversation extends Component<Props, State> {
     const reader = new FileReader()
     reader.onload = async e => {
       const res = await fetch(
-        `http://localhost:${this.context.serverPort}/files`,
+        `${this.context.httpServerUrl}/files`,
         {
           body: e.currentTarget.result,
           headers: {
@@ -563,6 +561,17 @@ class Conversation extends Component<Props, State> {
   onRowsRendered = () => {
     this.notRendered = false
   }
+  
+  renderResendInvites = () => {
+    return this.props.data.conversation.type === 'CHANNEL' ? (
+      <TouchableOpacity
+        style={styles.resendButton}
+        onPress={this.onPressResendInvites}
+      >
+        <Text style={styles.resendText}>Resend Invites</Text>
+      </TouchableOpacity>
+    ) : null
+  }
 
   render() {
     const { data } = this.props
@@ -648,12 +657,7 @@ class Conversation extends Component<Props, State> {
                 </TouchableOpacity>
               )
             })}
-            <TouchableOpacity
-              style={styles.resendButton}
-              onPress={this.onPressResendInvites}
-            >
-              <Text style={styles.resendText}>Resend Invites</Text>
-            </TouchableOpacity>
+            {this.renderResendInvites()}
           </View>
         </View>
         <View style={styles.messages}>
