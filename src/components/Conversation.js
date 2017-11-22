@@ -227,6 +227,7 @@ class Conversation extends Component<Props, State> {
   static contextTypes = {
     client: PropTypes.object.isRequired,
     wsConnected$: PropTypes.object.isRequired,
+    httpServerUrl: PropTypes.string.isRequired,
   }
 
   firstPointer: ?number
