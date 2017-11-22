@@ -5,19 +5,26 @@ import { TouchableOpacity, StyleSheet } from 'react-native-web'
 import Text from '../Text'
 
 import COLORS from '../../colors'
-import { BASIC_SPACING } from '../../styles'
+import { BASIC_SPACING, INPUT_HEIGHT } from '../../styles'
 
 type Props = {
   title: string,
   disabled?: boolean,
+  outlineStyle?: boolean,
   onPress?: Function,
 }
 
 export default class Button extends Component<Props> {
   render() {
-    const { disabled, onPress, title } = this.props
+    const { disabled, onPress, title, outlineStyle} = this.props
 
     const containerStyles = [styles.container]
+    const textStyles = [styles.text]
+
+    if (outlineStyle) {
+      containerStyles.push(styles.outlineContainer)
+      textStyles.push(styles.redText)
+    }
 
     if (disabled) {
       containerStyles.push(styles.disabledContainer)
@@ -29,7 +36,7 @@ export default class Button extends Component<Props> {
         onPress={onPress}
         style={containerStyles}
       >
-        <Text style={styles.text}>{title}</Text>
+        <Text style={textStyles}>{title}</Text>
       </TouchableOpacity>
     )
   }
@@ -37,20 +44,30 @@ export default class Button extends Component<Props> {
 
 const styles = StyleSheet.create({
   container: {
+    height: INPUT_HEIGHT,
     backgroundColor: COLORS.PRIMARY_RED,
-    borderRadius: 30,
+    borderRadius: INPUT_HEIGHT / 2,
     flex: 1,
     marginVertical: BASIC_SPACING,
     paddingHorizontal: BASIC_SPACING * 3,
+    justifyContent: 'center',
+  },
+  outlineContainer: {
+    borderWidth: 2,
+    borderColor: COLORS.PRIMARY_RED,
+    backgroundColor: 'rgba(0,0,0,0)',
+    height: INPUT_HEIGHT + 4,
+    borderRadius: (INPUT_HEIGHT + 3) / 2,
   },
   disabledContainer: {
     backgroundColor: COLORS.LIGHTEST_RED,
   },
   text: {
-    flex: 1,
     fontSize: 18,
     color: COLORS.WHITE,
-    paddingVertical: 1.5 * BASIC_SPACING,
     textAlign: 'center',
+  },
+  redText: {
+    color: COLORS.PRIMARY_RED,
   },
 })

@@ -5,6 +5,7 @@ import { compose, gql, graphql } from 'react-apollo'
 import { connect } from 'react-redux'
 import { StyleSheet, View } from 'react-native-web'
 import { groupBy } from 'lodash'
+import PropTypes from 'prop-types'
 
 import {
   getOpenChannel,
@@ -62,12 +63,18 @@ type State = {
 }
 
 class App extends Component<Props, State> {
+  static contextTypes = {
+    client: PropTypes.object.isRequired,
+    wsConnected$: PropTypes.object.isRequired,
+  }
+
   state = {
     openModal: undefined,
     openProfile: undefined,
   }
 
   unsubscribeChannelsChanged: UnsubscribeFunc
+  unsubscribeConnectionClosed: UnsubscribeFunc
   unsubscribeContactsChanged: UnsubscribeFunc
 
   componentWillReceiveProps(nextProps) {
@@ -81,11 +88,30 @@ class App extends Component<Props, State> {
   componentDidMount() {
     this.unsubscribeChannelsChanged = this.props.subscribeToChannelsChanged()
     this.unsubscribeContactsChanged = this.props.subscribeToContactsChanged()
+
+    this.unsubscribeConnectionClosed = this.context.client
+      .subscribe({
+        query: gql`
+          subscription ConnectionClosed {
+            connectionClosed
+          }
+        `,
+      })
+      .subscribe({
+        next: () => {
+          console.log('connection closed')
+          // TODO: Investigate broken sub since server separation
+          // may no longer be required with updated connection handling
+        },
+      })
   }
 
   componentWillUnmount() {
-    this.unsubscribeChannelsChanged()
-    this.unsubscribeContactsChanged()
+    if (this.context.wsConnected$.value) {
+      this.unsubscribeChannelsChanged()
+      this.unsubscribeContactsChanged()
+      this.unsubscribeConnectionClosed()
+    }
   }
 
   onCloseModal = () => {
@@ -187,7 +213,7 @@ class App extends Component<Props, State> {
     if (data == null || data.viewer == null) {
       return <Loader />
     }
-
+  
     const channelsList = data.viewer.channels.map(c => (
       <ConversationTitle
         conversation={c}

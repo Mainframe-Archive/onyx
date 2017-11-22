@@ -1,6 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 
+import ArrowRight from './icons/arrow-right.svg'
 import PlusIcon from './icons/plus.svg'
 import RedCloseIcon from './icons/red-close.svg'
 import Checkmark from './icons/checkmark.svg'
@@ -11,6 +12,7 @@ import FlashGray from './icons/flash-gray.svg'
 import FlashRed from './icons/flash-red.svg'
 import FlashBlue from './icons/flash-blue.svg'
 import MainframeLogo from './icons/mainframe-logo.svg'
+import MainframeIcon from './icons/mainframe-icon.svg'
 import SeeQR from './icons/see-qr.svg'
 import CircledCross from './icons/circled-cross.svg'
 import File from './icons/file.svg'
@@ -22,6 +24,7 @@ import Download from './icons/download.svg'
 
 const ICONS = {
   plus: PlusIcon,
+  'arrow-right': ArrowRight,
   'red-close': RedCloseIcon,
   checkmark: Checkmark,
   'flash-red': FlashRed,
@@ -31,6 +34,7 @@ const ICONS = {
   'mask-gray': MaskGray,
   'mask-blue': MaskBlue,
   'mainframe-logo': MainframeLogo,
+  'mainframe-icon': MainframeIcon,
   'see-qr': SeeQR,
   'circled-cross': CircledCross,
   file: File,

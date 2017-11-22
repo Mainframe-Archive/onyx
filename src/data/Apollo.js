@@ -27,10 +27,19 @@ const fragmentMatcher = new IntrospectionFragmentMatcher({
   },
 })
 
-export default (url: string) =>
-  new ApolloClient({
-    fragmentMatcher,
-    networkInterface: new SubscriptionClient(url, {
-      reconnect: true,
-    }),
+export default (
+  url: string,
+  onDisconnected: () => void,
+  onConnected: () => void,
+) => {
+  const subClient = new SubscriptionClient(url, {
+    reconnect: true,
   })
+  subClient.onDisconnected(() => onDisconnected())
+  subClient.onConnected(() => onConnected())    
+  return  new ApolloClient({
+    fragmentMatcher,
+    networkInterface: subClient,
+  })
+}
+

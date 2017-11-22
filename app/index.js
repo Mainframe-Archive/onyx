@@ -1,10 +1,11 @@
-const { app, BrowserWindow, Menu } = require('electron')
-const isDev = require('electron-is-dev')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { appReady, is } = require('electron-util')
 const Store = require('electron-store')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
 const path = require('path')
 const StaticServer = require('static-server')
+const url = require('url')
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL =
@@ -18,11 +19,23 @@ const SWARM_HTTP_URL =
 
 const menu = Menu.buildFromTemplate([
   {
-    label: 'Application',
+    label: is.macos ? 'Onyx' : 'File',
     submenu: [
       {
+        label: 'Reset',
+        click: () => {
+          store.delete('serverUrl')
+          if (mainWindow != null) {
+            clearEventListeners()
+            mainWindow.close()
+            mainWindow = null
+          }
+          start()
+        },
+      },
+      {
         label: 'Quit',
-        accelerator: 'Command+Q',
+        accelerator: 'CmdOrCtrl+Q',
         click: () => {
           app.quit()
         },
@@ -57,8 +70,7 @@ const menu = Menu.buildFromTemplate([
       },
       {
         label: 'Toggle Developer Tools',
-        accelerator:
-          process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        accelerator: is.macos ? 'Alt+Command+I' : 'Ctrl+Shift+I',
         click: (item, focusedWindow) => {
           if (focusedWindow) focusedWindow.toggleDevTools()
         },
@@ -72,20 +84,29 @@ const menu = Menu.buildFromTemplate([
   },
 ])
 
-const store = new Store({ name: isDev ? 'onyx-dev' : 'onyx' })
+let appServer, loadingWindow, mainWindow, connectionError
 
-let mainWindow
+const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
-const createWindow = url => {
+const createMainWindow = async url => {
+  await appReady
+
   Menu.setApplicationMenu(menu)
 
-  mainWindow = new BrowserWindow({ width: 800, height: 600 })
+  mainWindow = new BrowserWindow({ width: 800, height: 600, show: false })
 
   mainWindow.loadURL(url)
-
-  mainWindow.on('closed', () => {
+  
+  showFunc = () => {
+    mainWindow.show()
+  }
+  
+  closedFunc = () => {
     mainWindow = null
-  })
+  }
+
+  mainWindow.on('ready-to-show', showFunc)
+  mainWindow.on('closed', closedFunc)
 }
 
 const startAppServer = async () => {
@@ -100,12 +121,12 @@ const startAppServer = async () => {
       app.on('quit', () => {
         appServer.stop()
       })
-      resolve(appPort)
+      resolve(appServer)
     })
   })
 }
 
-const startOnyxServer = async () => {
+const startLocalOnyxServer = async () => {
   const port = await getPort()
   await createOnyxServer({
     wsUrl: SWARM_WS_URL,
@@ -117,23 +138,63 @@ const startOnyxServer = async () => {
 }
 
 const start = async () => {
-  const appPort = isDev ? 3000 : await startAppServer()
-  const serverPort = await startOnyxServer(appPort)
-  const url = `http://localhost:${appPort}/?port=${serverPort}`
-
-  if (app.isReady()) {
-    createWindow(url)
+  let appPort
+  if (is.development) {
+    appPort = 3000
   } else {
-    app.on('ready', () => {
-      createWindow(url)
-    })
+    if (appServer == null) {
+      appServer = await startAppServer()
+    }
+    appPort = appServer.port
+  }
+
+  let appUrl = `http://localhost:${appPort}`
+
+  const storedServerUrl = store.get('serverUrl')
+
+  if (storedServerUrl) {
+    if (storedServerUrl === 'local') {
+      // Setup a local Graphql server
+      try {
+        const serverPort = await startLocalOnyxServer(appPort)
+        const serverUrl = `localhost:${serverPort}`
+        appUrl = appUrl + `/?serverUrl=${serverUrl}`
+      } catch (err) {
+        const errorMsg = 'There was an issue starting local GraphQL server'
+        appUrl = appUrl + `/?serverUrl=${storedServerUrl}&connectionError=${errorMsg}`
+        if (appServer != null) {
+          appServer.stop()
+        }
+      }
+    } else {
+      // Use stored remote server url
+      appUrl = appUrl + `/?serverUrl=${storedServerUrl}`
+    }
+  }
+
+  if (mainWindow == null) {
+    createMainWindow(appUrl)
+  } else {
+    mainWindow.loadURL(appUrl)
   }
 
   app.on('activate', () => {
-    if (mainWindow === null) {
-      createWindow(url)
+    if (mainWindow == null) {
+      createMainWindow(appUrl)
     }
   })
 }
+
+const clearEventListeners = () => {
+  if (mainWindow) {
+    mainWindow.removeListener('ready-to-show', showFunc)
+    mainWindow.removeListener('closed', closedFunc)
+  }
+}
+
+ipcMain.on('onSetServerUrl', (e, url) => {
+  store.set('serverUrl', url)
+  start()
+})
 
 start()
