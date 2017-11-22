@@ -31,7 +31,6 @@ import Conversation from './Conversation'
 import Loader from './Loader'
 import Icon from './Icon'
 import Text from './Text'
-import Modal from './Modal'
 
 import ConversationTitle from './LeftNav/ConversationTitle'
 import Profile from './LeftNav/Profile'
@@ -56,7 +55,7 @@ type Props = {
   subscribeToContactsChanged: SubscribeFunc,
 }
 
-type ModalName = 'channel' | 'connection' | 'contact' | 'profile'
+type ModalName = 'channel' | 'contact' | 'profile'
 
 type State = {
   openModal: ?ModalName,
