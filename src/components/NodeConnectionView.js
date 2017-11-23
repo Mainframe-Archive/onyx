@@ -7,6 +7,8 @@ import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
+import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
+
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
 
@@ -21,21 +23,20 @@ type State = {
 }
 
 export default class NodeConnectionView extends Component {
-  
   state: State = {
     url: '',
   }
-  
+
   constructor(props) {
     super(props)
     this.state = {
       url: props.storedServerUrl,
     }
   }
-  
+
   onChangeUrl = (value: string) => {
     this.setState({
-      url: value
+      url: value,
     })
   }
 
@@ -50,14 +51,13 @@ export default class NodeConnectionView extends Component {
     onSetServerUrl('local')
   }
 
-  render () {
-    const connectionErrorMessage = (this.props.connectionError) ? (
+  render() {
+    const connectionErrorMessage = this.props.connectionError ? (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{this.props.connectionError}</Text>
       </View>
     ) : null
-    
-    
+
     return (
       <View style={styles.container}>
         {connectionErrorMessage}
@@ -70,8 +70,12 @@ export default class NodeConnectionView extends Component {
             style={styles.defaultNodeButton}
           >
             <View style={styles.buttonText}>
-              <Text style={styles.defaultNodeButtonTitle}>Connect on localhost</Text>
-              <Text style={styles.defaultNodeButtonSubtitle}>{this.props.defaultLocalhostUrl}</Text>
+              <Text style={styles.defaultNodeButtonTitle}>
+                Connect on localhost
+              </Text>
+              <Text style={styles.defaultNodeButtonSubtitle}>
+                {this.props.defaultLocalhostUrl}
+              </Text>
             </View>
             <Icon name="arrow-right" />
           </TouchableOpacity>
@@ -85,9 +89,10 @@ export default class NodeConnectionView extends Component {
             value={this.state.url}
             placeholder="Graphql Server Url"
             onChangeText={this.onChangeUrl}
-            />
+          />
           <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
         </View>
+        <MainframeBar footer />
       </View>
     )
   }
@@ -99,6 +104,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.LIGHT_GRAY,
+    paddingBottom: FOOTER_SIZE,
   },
   innerContainer: {
     width: 320,
@@ -146,7 +152,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   lineLeft: {
-    marginLeft: 50
+    marginLeft: 50,
   },
   lineRight: {
     marginRight: 50,
