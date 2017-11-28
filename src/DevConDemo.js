@@ -21,7 +21,7 @@ type State = {
 export default class DevConDemo extends Component<{}, State> {
   static childContextTypes = {
     httpServerUrl: PropTypes.string.isRequired,
-    wsConnected$: PropTypes.object.isRequired
+    wsConnected$: PropTypes.object.isRequired,
   }
 
   httpServerUrl: string
@@ -32,12 +32,13 @@ export default class DevConDemo extends Component<{}, State> {
       wsConnected$: this.wsConnected$,
     }
   }
-  
-  constructor (props) {
+
+  constructor(props) {
     super(props)
-    
+
     const params = parse(document.location.search)
     let state = {}
+
     if (params.serverUrl && params.serverUrl !== 'undefined') {
       let serverLocation = params.serverUrl
       if (serverLocation.indexOf('://') > -1) {
@@ -47,14 +48,14 @@ export default class DevConDemo extends Component<{}, State> {
       }
       this.wsServerUrl = `wss://${serverLocation}/graphql`
       this.httpServerUrl = `http://${serverLocation}`
-      
+
       state.serverLocation = serverLocation
       if (params.connectionError) {
         state.connectionError = params.connectionError
       }
     }
     this.state = state
-    
+
     this.wsConnected$ = new BehaviorSubject(false)
   }
 
@@ -63,17 +64,17 @@ export default class DevConDemo extends Component<{}, State> {
       this.loadStore()
     }
   }
-  
+
   onConnected = () => {
     this.wsConnected$.next(true)
   }
-  
+
   onDisconnected = () => {
     if (!this.state.connectionError) {
       const message = this.wsConnected$.value
-      ? 'Lost connection to server, please reconnect'
-      : 'Error connecting to websocket, please check you entered a valid URL'
-      
+        ? 'Lost connection to server, please reconnect'
+        : 'Error connecting to websocket, please check you entered a valid URL'
+
       this.wsConnected$.next(false)
 
       this.setState({
@@ -92,9 +93,9 @@ export default class DevConDemo extends Component<{}, State> {
       const store = await createStore(client)
       this.setState({ client, store })
     } catch (err) {
-      console.log('err: ', err)
       this.setState({
-        connectionError: 'Error connecting to server, please check you entered a valid URL',
+        connectionError:
+          'Error connecting to server, please check you entered a valid URL',
       })
     }
   }
@@ -110,7 +111,7 @@ export default class DevConDemo extends Component<{}, State> {
         defaultLocalhostUrl="http://localhost:5002/graphql"
         storedServerUrl={this.state.serverLocation}
         connectionError={connectionError}
-        />
+      />
     )
   }
 }

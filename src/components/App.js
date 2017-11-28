@@ -36,6 +36,7 @@ import ConversationTitle from './LeftNav/ConversationTitle'
 import Profile from './LeftNav/Profile'
 import SectionTitle from './LeftNav/SectionTitle'
 import ContactListLabel from './LeftNav/ContactListLabel'
+import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -78,7 +79,11 @@ class App extends Component<Props, State> {
   unsubscribeContactsChanged: UnsubscribeFunc
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.data && nextProps.data.viewer && !nextProps.data.viewer.profile.name) {
+    if (
+      nextProps.data &&
+      nextProps.data.viewer &&
+      !nextProps.data.viewer.profile.name
+    ) {
       this.setState({
         openProfile: nextProps.data.viewer.profile,
       })
@@ -211,9 +216,14 @@ class App extends Component<Props, State> {
     const { data, openChannel, openContact, setOpenChannel } = this.props
 
     if (data == null || data.viewer == null) {
-      return <Loader />
+      return (
+        <View style={styles.loaderContainer}>
+          <Loader />
+          <MainframeBar footer />
+        </View>
+      )
     }
-  
+
     const channelsList = data.viewer.channels.map(c => (
       <ConversationTitle
         conversation={c}
@@ -278,10 +288,7 @@ class App extends Component<Props, State> {
               ) : null}
             </View>
           </View>
-          <View style={styles.mainframe}>
-            <Text style={styles.poweredText}>Powered by </Text>
-            <Icon name="mainframe-logo" />
-          </View>
+          <MainframeBar />
         </View>
         <View style={styles.main}>{main}</View>
       </View>
@@ -290,6 +297,14 @@ class App extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: FOOTER_SIZE,
+    backgroundColor: COLORS.LIGHT_GRAY,
+  },
   layout: {
     flex: 1,
     flexDirection: 'row',
@@ -318,21 +333,6 @@ const styles = StyleSheet.create({
   leftNavContent: {
     flex: 1,
     overflowX: 'auto',
-  },
-  mainframe: {
-    backgroundColor: COLORS.DARK_BLUE,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    padding: 2 * BASIC_SPACING,
-  },
-  poweredText: {
-    color: COLORS.WHITE,
-    fontSize: 9,
-  },
-  profile: {
-    height: 88,
-    justifyContent: 'center',
-    paddingLeft: BASIC_SPACING + 2 - BASIC_SPACING / 2,
   },
   list: {
     paddingLeft: BASIC_SPACING + 4,

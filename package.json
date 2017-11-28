@@ -21,6 +21,7 @@
     "draft-js": "^0.10.4",
     "fs": "^0.0.1-security",
     "graphql": "^0.10.5",
+    "gsap": "^1.20.3",
     "lodash": "^4.17.4",
     "moment": "^2.19.2",
     "prop-types": "^15.6.0",

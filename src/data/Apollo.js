@@ -2,12 +2,11 @@
 
 import { ApolloClient, IntrospectionFragmentMatcher } from 'react-apollo'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
+import path from 'path'
 
 const WebSocket = window.require('ws')
 const fs = window.require('fs')
 const { app } = window.require('electron').remote
-
-const path = require('path')
 
 const fragmentMatcher = new IntrospectionFragmentMatcher({
   introspectionQueryResultData: {
@@ -67,7 +66,6 @@ export default (
     },
     WebSocket,
   )
-  console.log('sub client: ', subClient)
     
   subClient.onDisconnected(() => onDisconnected())
   subClient.onConnected(() => onConnected())    
