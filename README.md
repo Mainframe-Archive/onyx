@@ -31,6 +31,8 @@ These values can be changed using the environment variables `SWARM_WS_URL` and `
 
 After you pull this repository, run `yarn` to install all the dependencies.
 
+You'll need the [`go-ethereum`](https://github.com/nolash/go-ethereum/) cloned (note the nolash fork)
+
 To run the swarm node onyx is going to connect to, run `$ ./start_node.sh <go ethereum directory> <your desired account data directory>`
 
 Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
