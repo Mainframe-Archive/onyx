@@ -36,6 +36,8 @@ To run the swarm node onyx is going to connect to, run `$ ./start_node.sh <go et
 Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
 Once ready, you can run `yarn electron` to start the electron app, connecting to Swarm and creating a GraphQL server for the frontend.
 
+If `yarn electron` doesn't work for you, try running `yarn dist` and run the built app which is `dist/mac/Onyx`.
+
 ### Project structure
 
 - `app`: electron app
