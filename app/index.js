@@ -183,6 +183,10 @@ const start = async () => {
       createMainWindow(appUrl)
     }
   })
+  
+  app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    console.warn('cert error: ', error)
+  })
 }
 
 const clearEventListeners = () => {

@@ -26,7 +26,7 @@ export default class NodeConnectionView extends Component {
     url: '',
   }
   
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
     this.state = {
       url: props.storedServerUrl,
@@ -41,8 +41,8 @@ export default class NodeConnectionView extends Component {
 
   onPressConnect = () => {
     const { url } = this.state
-    if (this.state.url && this.state.url.length) {
-      onSetServerUrl(this.state.url)
+    if (url && url.length) {
+      onSetServerUrl(url)
     }
   }
 

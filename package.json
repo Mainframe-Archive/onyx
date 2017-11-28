@@ -19,6 +19,7 @@
     "buffer": "^5.0.7",
     "bytes": "^3.0.0",
     "draft-js": "^0.10.4",
+    "fs": "^0.0.1-security",
     "graphql": "^0.10.5",
     "lodash": "^4.17.4",
     "moment": "^2.19.2",
@@ -37,7 +38,8 @@
     "redux": "^3.7.2",
     "redux-logger": "^3.0.6",
     "rxjs": "^5.5.1",
-    "subscriptions-transport-ws": "^0.8.3"
+    "subscriptions-transport-ws": "git://github.com/thusfresh/subscriptions-transport-ws.git#wss-options",
+    "ws": "^3.3.2"
   },
   "devDependencies": {
     "del-cli": "^1.1.0",

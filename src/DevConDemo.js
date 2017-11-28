@@ -38,7 +38,6 @@ export default class DevConDemo extends Component<{}, State> {
     
     const params = parse(document.location.search)
     let state = {}
-    
     if (params.serverUrl && params.serverUrl !== 'undefined') {
       let serverLocation = params.serverUrl
       if (serverLocation.indexOf('://') > -1) {
@@ -46,7 +45,7 @@ export default class DevConDemo extends Component<{}, State> {
       } else if (serverLocation.indexOf('/') !== -1) {
         serverLocation = serverLocation.split('/')[0]
       }
-      this.wsServerUrl = `ws://${serverLocation}/graphql`
+      this.wsServerUrl = `wss://${serverLocation}/graphql`
       this.httpServerUrl = `http://${serverLocation}`
       
       state.serverLocation = serverLocation
@@ -93,6 +92,7 @@ export default class DevConDemo extends Component<{}, State> {
       const store = await createStore(client)
       this.setState({ client, store })
     } catch (err) {
+      console.log('err: ', err)
       this.setState({
         connectionError: 'Error connecting to server, please check you entered a valid URL',
       })
