@@ -31,6 +31,8 @@ These values can be changed using the environment variables `SWARM_WS_URL` and `
 
 After you pull this repository, run `yarn` to install all the dependencies.
 
+To run the swarm node onyx is going to connect to, run `$ ./start_node.sh <go ethereum directory> <your desired account data directory>`
+
 Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
 Once ready, you can run `yarn electron` to start the electron app, connecting to Swarm and creating a GraphQL server for the frontend.
 
