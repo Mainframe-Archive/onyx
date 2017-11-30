@@ -24,6 +24,18 @@ If you become aware of a bug or important missing feature, please submit an issu
 
 TODO: use slide from demo?
 
+## Running
+
+If you want to run a local geth node (as opposed to a remote one) you'll need 
+the [`go-ethereum`](https://github.com/nolash/go-ethereum/) cloned 
+(note the nolash fork)
+
+To run the swarm node onyx is going to connect to, run 
+`$ ./start_node.sh <go ethereum directory> <your desired account data directory>`.
+You'll need to have `jq` installed.
+
+To run the built app run `yarn dist` and run the built app which is `dist/mac/Onyx`.
+
 ## Development
 
 You need a running Swarm node serving a WebSocket server on `localhost:8546` for PSS and a HTTP server on `localhost:8500`.  
@@ -31,14 +43,8 @@ These values can be changed using the environment variables `SWARM_WS_URL` and `
 
 After you pull this repository, run `yarn` to install all the dependencies.
 
-You'll need the [`go-ethereum`](https://github.com/nolash/go-ethereum/) cloned (note the nolash fork)
-
-To run the swarm node onyx is going to connect to, run `$ ./start_node.sh <go ethereum directory> <your desired account data directory>`
-
 Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
 Once ready, you can run `yarn electron` to start the electron app, connecting to Swarm and creating a GraphQL server for the frontend.
-
-If `yarn electron` doesn't work for you, try running `yarn dist` and run the built app which is `dist/mac/Onyx`.
 
 ### Project structure
 
