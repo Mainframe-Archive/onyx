@@ -29,8 +29,6 @@ import AddContactModal from './AddContactModal'
 import UserProfileModal, { SelfUserProfileModal } from './UserProfileModal'
 import Conversation from './Conversation'
 import Loader from './Loader'
-import Icon from './Icon'
-import Text from './Text'
 
 import ConversationTitle from './LeftNav/ConversationTitle'
 import Profile from './LeftNav/Profile'

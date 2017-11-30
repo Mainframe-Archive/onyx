@@ -2,11 +2,13 @@
 
 import { ApolloClient, IntrospectionFragmentMatcher } from 'react-apollo'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
-import path from 'path'
 
 const WebSocket = window.require('ws')
+const Store = window.require('electron-store')
+const { is } = window.require('electron-util')
 const fs = window.require('fs')
-const { app } = window.require('electron').remote
+
+const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
 const fragmentMatcher = new IntrospectionFragmentMatcher({
   introspectionQueryResultData: {
@@ -37,12 +39,13 @@ export default (
   onDisconnected: () => void,
   onConnected: () => void,
 ) => {
-  const userDataPath = app.getPath('userData')
-  const creds = {}
+  const certPaths = store.get('cert-file-paths')
+  const certFiles = {}
   try {
-    creds.key = fs.readFileSync(path.join(userDataPath, `/certs/client-key.pem`))
-    creds.cert = fs.readFileSync(path.join(userDataPath, `/certs/client-crt.pem`))
-    creds.ca = fs.readFileSync(path.join(userDataPath, `/certs/ca-crt.pem`))
+    if (!certPaths) throw new Error('missing tls creds')
+    certFiles.key = fs.readFileSync(certPaths.key)
+    certFiles.cert = fs.readFileSync(certPaths.cert)
+    certFiles.ca = fs.readFileSync(certPaths.ca)
   } catch (err) {
     console.warn(
       `Error reading SSL certs, please make sure you've generated client 
@@ -58,18 +61,21 @@ export default (
   // Also using fork of subscriptions-transport-ws
   // to enable forwarding the cert options to ws
   
+  // TODO: - extend WebSocket to avoid forking 
+  // subscriptions-transport-ws
+  
   const subClient = new SubscriptionClient(
     url, 
     {
       reconnect: true,
-      connectionParams: creds
+      connectionParams: certFiles,
     },
     WebSocket,
   )
     
   subClient.onDisconnected(() => onDisconnected())
   subClient.onConnected(() => onConnected())    
-  return  new ApolloClient({
+  return new ApolloClient({
     fragmentMatcher,
     networkInterface: subClient,
   })

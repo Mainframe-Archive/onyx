@@ -1,12 +1,13 @@
 // @flow
 import React, { Component } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
-import { onSetServerUrl } from '../data/Electron'
+import { onSetWsUrl } from '../data/Electron'
 
 import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
+import CertSelectionModal from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
@@ -20,6 +21,7 @@ type Props = {
 
 type State = {
   url: ?string,
+  showCertsSelectModal?: boolean,
 }
 
 export default class NodeConnectionView extends Component {
@@ -43,12 +45,29 @@ export default class NodeConnectionView extends Component {
   onPressConnect = () => {
     const { url } = this.state
     if (url && url.length) {
-      onSetServerUrl(url)
+      const secure = url.split('://')[0] === 'wss'
+      if (secure) {
+        this.setState({
+          showCertsSelectModal: true,
+        })
+      } else {
+        onSetWsUrl(url)
+      }
     }
   }
 
   onPressConnectDefault = () => {
-    onSetServerUrl('local')
+    onSetWsUrl('local')
+  }
+  
+  onCopiedCerts = () => {
+    onSetWsUrl(this.state.url)
+  }
+  
+  onRequestClose = () => {
+    this.setState({
+      showCertsSelectModal: false,
+    })
   }
 
   render() {
@@ -57,48 +76,62 @@ export default class NodeConnectionView extends Component {
         <Text style={styles.errorText}>{this.props.connectionError}</Text>
       </View>
     ) : null
+    
+    const certSelectionModal = this.state.showCertsSelectModal ? (
+      <CertSelectionModal
+        onRequestClose={this.onRequestClose}
+        onCopiedCerts={this.onCopiedCerts}
+      />
+    ) : null
 
     return (
-      <View style={styles.container}>
+      <View style={styles.outer}>
         {connectionErrorMessage}
-        <View style={styles.innerContainer}>
-          <View style={styles.icon}>
-            <Icon name="mainframe-icon" />
-          </View>
-          <TouchableOpacity
-            onPress={this.onPressConnectDefault}
-            style={styles.defaultNodeButton}
-          >
-            <View style={styles.buttonText}>
-              <Text style={styles.defaultNodeButtonTitle}>
-                Connect on localhost
-              </Text>
-              <Text style={styles.defaultNodeButtonSubtitle}>
-                {this.props.defaultLocalhostUrl}
-              </Text>
+        <View style={styles.container}>
+          {certSelectionModal}
+          <View style={styles.innerContainer}>
+            <View style={styles.icon}>
+              <Icon name="mainframe-icon" />
             </View>
-            <Icon name="arrow-right" />
-          </TouchableOpacity>
-          <View style={styles.separator}>
-            <View style={[styles.separatorLine, styles.lineLeft]} />
-            <Text style={styles.separatorLabel}>OR</Text>
-            <View style={[styles.separatorLine, styles.lineRight]} />
+            <TouchableOpacity
+              onPress={this.onPressConnectDefault}
+              style={styles.defaultNodeButton}
+            >
+              <View style={styles.buttonText}>
+                <Text style={styles.defaultNodeButtonTitle}>
+                  Connect on localhost
+                </Text>
+                <Text style={styles.defaultNodeButtonSubtitle}>
+                  {this.props.defaultLocalhostUrl}
+                </Text>
+              </View>
+              <Icon name="arrow-right" />
+            </TouchableOpacity>
+            <View style={styles.separator}>
+              <View style={[styles.separatorLine, styles.lineLeft]} />
+              <Text style={styles.separatorLabel}>OR</Text>
+              <View style={[styles.separatorLine, styles.lineRight]} />
+            </View>
+            <TextInput
+              white
+              value={this.state.url}
+              placeholder="Graphql wss url"
+              onChangeText={this.onChangeUrl}
+            />
+            <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
           </View>
-          <TextInput
-            white
-            value={this.state.url}
-            placeholder="Graphql Server Url"
-            onChangeText={this.onChangeUrl}
-          />
-          <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
+          <MainframeBar footer />
         </View>
-        <MainframeBar footer />
       </View>
     )
   }
 }
 
 const styles = StyleSheet.create({
+  outer: {
+    flex: 1,
+    backgroundColor: COLORS.LIGHT_GRAY,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -158,15 +191,12 @@ const styles = StyleSheet.create({
     marginRight: 50,
   },
   errorContainer: {
-    position: 'absolute',
-    top: BASIC_SPACING * 2,
-    left: BASIC_SPACING * 2,
-    right: BASIC_SPACING * 2,
+    margin: BASIC_SPACING,
     padding: BASIC_SPACING,
     backgroundColor: COLORS.GRAY_E6,
-    textAlign: 'center',
   },
   errorText: {
     fontSize: 13,
+    textAlign: 'center',
   },
 })
