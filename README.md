@@ -24,6 +24,16 @@ If you become aware of a bug or important missing feature, please submit an issu
 
 TODO: use slide from demo?
 
+## Running
+
+To run the swarm node onyx is going to connect to, run 
+`$ ./start_node.sh <your desired account data directory>`.
+The script will clone and build the right version of go-ethereum on your
+machine.
+You'll need to have `jq` installed for the script to work.
+
+To run the built app run `yarn dist` and run the built app which is `dist/mac/Onyx`.
+
 ## Development
 
 You need a running Swarm node serving a WebSocket server on `localhost:8546` for PSS and a HTTP server on `localhost:8500`.  
