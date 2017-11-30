@@ -14,9 +14,8 @@ mkdir $TMP_DIR -p
 if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
     echo "cloning the go-ethereum repo"
-    git clone git@github.com:thusfresh/go-ethereum.git
+    git clone --depth 1 git@github.com:thusfresh/go-ethereum.git -b mainframe
     cd go-ethereum
-    git checkout mainframe
 fi
 
 cd $TMP_DIR/go-ethereum
