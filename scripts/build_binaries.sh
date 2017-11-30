@@ -15,10 +15,12 @@ if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
     echo "cloning the go-ethereum repo"
     git clone --depth 1 git@github.com:thusfresh/go-ethereum.git -b mainframe
-    cd go-ethereum
 fi
 
 cd $TMP_DIR/go-ethereum
+
+git fetch
+git checkout 5c8bb8adb87d2977976efc05c9a44bfccafc3188
 
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/geth
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/swarm
