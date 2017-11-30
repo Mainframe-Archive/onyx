@@ -5,9 +5,18 @@
   "directories": {
     "buildResources": "assets"
   },
-  "extraResources": {
-    "from": "./bin/${os}",
-    "to": "bin"
+  "extraResources": [
+    {
+      "from": "./bin/geth-${os}",
+      "to": "bin/geth"
+    },
+    {
+      "from": "./bin/swarm-${os}",
+      "to": "bin/swarm"
+    }
+  ],
+  "appImage": {
+    "systemIntegration": "doNotAsk"
   },
   "linux": {
     "category": "Network",
