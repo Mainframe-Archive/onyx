@@ -15,7 +15,7 @@ import createStore, { type Store } from './data/Store'
 type State = {
   client?: ApolloClient,
   store?: Store,
-  serverLocation?: string,
+  wsUrl?: string,
 }
 
 export default class Onyx extends Component<{}, State> {
@@ -38,21 +38,18 @@ export default class Onyx extends Component<{}, State> {
 
     const params = parse(document.location.search)
     let state = {}
+    
+    if (
+      params.wsUrl && params.wsUrl !== 'undefined' &&
+      params.httpUrl && params.httpUrl !== 'undefined'
+    ) {
+      this.wsServerUrl = params.wsUrl
+      this.httpServerUrl = params.httpUrl
 
-    if (params.serverUrl && params.serverUrl !== 'undefined') {
-      let serverLocation = params.serverUrl
-      if (serverLocation.indexOf('://') > -1) {
-        serverLocation = serverLocation.split('/')[2]
-      } else if (serverLocation.indexOf('/') !== -1) {
-        serverLocation = serverLocation.split('/')[0]
-      }
-      this.wsServerUrl = `wss://${serverLocation}/graphql`
-      this.httpServerUrl = `http://${serverLocation}`
-
-      state.serverLocation = serverLocation
-      if (params.connectionError) {
-        state.connectionError = params.connectionError
-      }
+      state.wsUrl = params.wsUrl
+    }
+    if (params.connectionError) {
+      state.connectionError = params.connectionError
     }
     this.state = state
 
@@ -108,8 +105,8 @@ export default class Onyx extends Component<{}, State> {
       </ApolloProvider>
     ) : (
       <NodeConnectionView
-        defaultLocalhostUrl="http://localhost:5002/graphql"
-        storedServerUrl={this.state.serverLocation}
+        defaultLocalhostUrl="ws://localhost:5002/graphql"
+        storedServerUrl={this.state.wsUrl}
         connectionError={connectionError}
       />
     )

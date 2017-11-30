@@ -1,7 +1,7 @@
 // @flow
 import React, { Component } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
-import { onSetServerUrl } from '../data/Electron'
+import { onSetWsUrl } from '../data/Electron'
 
 import Icon from './Icon'
 import Text from './Text'
@@ -45,19 +45,23 @@ export default class NodeConnectionView extends Component {
   onPressConnect = () => {
     const { url } = this.state
     if (url && url.length) {
-      this.setState({
-        showCertsSelectModal: true,
-      })
+      const secure = url.split('://')[0] === 'wss'
+      if (secure) {
+        this.setState({
+          showCertsSelectModal: true,
+        })
+      } else {
+        onSetWsUrl(url)
+      }
     }
   }
 
   onPressConnectDefault = () => {
-    onSetServerUrl('local')
+    onSetWsUrl('local')
   }
   
   onCopiedCerts = () => {
-    console.log('done!')
-    onSetServerUrl(this.state.url)
+    onSetWsUrl(this.state.url)
   }
   
   onRequestClose = () => {
@@ -81,47 +85,53 @@ export default class NodeConnectionView extends Component {
     ) : null
 
     return (
-      <View style={styles.container}>
-        {certSelectionModal}
+      <View style={styles.outer}>
         {connectionErrorMessage}
-        <View style={styles.innerContainer}>
-          <View style={styles.icon}>
-            <Icon name="mainframe-icon" />
-          </View>
-          <TouchableOpacity
-            onPress={this.onPressConnectDefault}
-            style={styles.defaultNodeButton}
-          >
-            <View style={styles.buttonText}>
-              <Text style={styles.defaultNodeButtonTitle}>
-                Connect on localhost
-              </Text>
-              <Text style={styles.defaultNodeButtonSubtitle}>
-                {this.props.defaultLocalhostUrl}
-              </Text>
+        <View style={styles.container}>
+          {certSelectionModal}
+          <View style={styles.innerContainer}>
+            <View style={styles.icon}>
+              <Icon name="mainframe-icon" />
             </View>
-            <Icon name="arrow-right" />
-          </TouchableOpacity>
-          <View style={styles.separator}>
-            <View style={[styles.separatorLine, styles.lineLeft]} />
-            <Text style={styles.separatorLabel}>OR</Text>
-            <View style={[styles.separatorLine, styles.lineRight]} />
+            <TouchableOpacity
+              onPress={this.onPressConnectDefault}
+              style={styles.defaultNodeButton}
+            >
+              <View style={styles.buttonText}>
+                <Text style={styles.defaultNodeButtonTitle}>
+                  Connect on localhost
+                </Text>
+                <Text style={styles.defaultNodeButtonSubtitle}>
+                  {this.props.defaultLocalhostUrl}
+                </Text>
+              </View>
+              <Icon name="arrow-right" />
+            </TouchableOpacity>
+            <View style={styles.separator}>
+              <View style={[styles.separatorLine, styles.lineLeft]} />
+              <Text style={styles.separatorLabel}>OR</Text>
+              <View style={[styles.separatorLine, styles.lineRight]} />
+            </View>
+            <TextInput
+              white
+              value={this.state.url}
+              placeholder="Graphql wss url"
+              onChangeText={this.onChangeUrl}
+            />
+            <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
           </View>
-          <TextInput
-            white
-            value={this.state.url}
-            placeholder="Graphql Server Url"
-            onChangeText={this.onChangeUrl}
-          />
-          <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
+          <MainframeBar footer />
         </View>
-        <MainframeBar footer />
       </View>
     )
   }
 }
 
 const styles = StyleSheet.create({
+  outer: {
+    flex: 1,
+    backgroundColor: COLORS.LIGHT_GRAY,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -181,10 +191,7 @@ const styles = StyleSheet.create({
     marginRight: 50,
   },
   errorContainer: {
-    position: 'absolute',
-    top: BASIC_SPACING * 2,
-    left: BASIC_SPACING * 2,
-    right: BASIC_SPACING * 2,
+    margin: BASIC_SPACING,
     padding: BASIC_SPACING,
     backgroundColor: COLORS.GRAY_E6,
   },
