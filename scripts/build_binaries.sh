@@ -2,6 +2,7 @@
 
 set -x
 
+COMMIT_HASH=5c8bb8adb87d2977976efc05c9a44bfccafc3188
 ROOT_DIR=$(pwd)
 BIN_DIR=$ROOT_DIR/bin
 TMP_DIR=$ROOT_DIR/tmp
@@ -19,8 +20,8 @@ fi
 
 cd $TMP_DIR/go-ethereum
 
-git fetch
-git checkout 5c8bb8adb87d2977976efc05c9a44bfccafc3188
+git fetch --depth 1 origin $COMMIT_HASH
+git checkout $COMMIT_HASH
 
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/geth
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/swarm
