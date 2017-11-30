@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const execa = require('execa')
-const { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } = require('fs')
+const { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, createWriteStream } = require('fs')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
@@ -10,16 +10,15 @@ const path = require('path')
 // Note: always use `path.join()` to make sure delimiters work cross-platform
 // Some platform-specific logic may be needed here, ex using geth.exe on Windows,
 // for this you can use electron-util: https://github.com/sindresorhus/electron-util/blob/master/index.js#L17-L19
-const pwdPath = path.join(app.getPath('userData'), 'pwd')
 const dataDir = path.join(app.getPath('userData'), 'data')
-const keystorePath = path.join(app.getPath('userData'), 'data', 'keystore')
+const pwdPath = path.join(dataDir, 'pwd')
+const keystorePath = path.join(dataDir, 'keystore')
+const logPath = path.join(dataDir, 'node.log')
 
 const setupGeth = async () => {
   console.log("setupGeth() called")
   const gethPath = path.join(process.resourcesPath, 'bin', 'geth')
 
-  // Could be made async, shouldn't be an issue though
-  writeFileSync(pwdPath, 'secret')
   try {
     mkdirSync(dataDir)
   } catch (err) {
@@ -27,14 +26,14 @@ const setupGeth = async () => {
     // See https://nodejs.org/api/fs.html#fs_fs_mkdir_path_mode_callback
   }
 
+  // Could be made async, shouldn't be an issue though
+  writeFileSync(pwdPath, 'secret')
+
   // Create the account - other commands should work the same way
   const res = await execa(gethPath, [
-    '--datadir',
-    dataDir,
-    'account',
-    'new',
-    '--password',
-    pwdPath,
+    '--datadir', dataDir,
+    '--password', pwdPath,
+    'account',  'new',
   ])
   console.log(res)
 }
@@ -47,21 +46,51 @@ const setupSwarm = async () => {
   const keyFilePath = path.join(keystorePath, keyFileName)
   const keystore = JSON.parse(readFileSync(keyFilePath, 'utf8'))
 
-  const res = await execa(swarmPath, [
-    '--datadir',
-    dataDir,
-    '--password',
-    pwdPath,
-    '--bzzaccount',
-    keystore.address,
-    '--pss',
-    // '--verbosity 4',
-    // '--bzznetworkid 922',
-    // '--bootnodes enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@54.171.164.15:30399',
-    // '--ws',
-    // '--wsorigins "*"'
-  ])
-  console.log("\n setupSwarm res", res)
+  return await new Promise((resolve, reject) => {
+    const proc = execa(swarmPath, [
+      '--datadir', dataDir,
+      '--password', pwdPath,
+      '--bzzaccount', keystore.address,
+      '--pss',
+      '--verbosity', '4',
+      '--bzznetworkid', '922',
+      '--bootnodes', 'enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@54.171.164.15:30399',
+      '--ws',
+      '--wsorigins', '"*"',
+    ])
+
+    proc.once('error', (error) => {
+      console.log('Failed to start node', error)
+      reject(error)
+    })
+
+    proc.stderr.pipe(createWriteStream(logPath, { flags: 'a' }))
+
+    proc.stdout.on('data', (data) => {
+      const dataStr = data.toString().toLowerCase()
+      if (dataStr.indexOf('fatal:') >= 0) {
+        const error = new Error(`swarm error: ${data.toString()}`)
+        console.log(error)
+        reject(error)
+      }
+    })
+
+    proc.stderr.on('data', (data) => {
+      const dataStr = data.toString().toLowerCase()
+      if (dataStr.indexOf('websocket endpoint opened') >= 0) {
+        console.log('Node started')
+        resolve()
+      }
+    })
+
+    // proc.stderr.on('data', (data) => {
+    //   console.log('stderr', data.toString())
+    // })
+
+    // proc.stdout.on('data', (data) => {
+    //   console.log('stdout', data.toString())
+    // })
+  })
 }
 
 const { config } = require(path.join(__dirname, 'package.json'))
@@ -179,7 +208,8 @@ const start = async () => {
   if (!existsSync(keystorePath)) {
     await setupGeth()
   }
-  const swarmTemp = await setupSwarm()
+  await setupSwarm()
+  console.log('Starting GraphQL server')
   const appPort = isDev ? 3000 : await startAppServer()
   const serverPort = await startOnyxServer(appPort)
   const url = `http://localhost:${appPort}/?port=${serverPort}`
