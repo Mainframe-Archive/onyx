@@ -2,18 +2,21 @@ const { app, BrowserWindow, Menu } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const execa = require('execa')
-const { mkdirSync, writeFileSync } = require('fs')
+const { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } = require('fs')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
-const path = require('path')
 const StaticServer = require('static-server')
+const path = require('path')
+// Note: always use `path.join()` to make sure delimiters work cross-platform
+// Some platform-specific logic may be needed here, ex using geth.exe on Windows,
+// for this you can use electron-util: https://github.com/sindresorhus/electron-util/blob/master/index.js#L17-L19
+const pwdPath = path.join(app.getPath('userData'), 'pwd')
+const dataDir = path.join(app.getPath('userData'), 'data')
+const keystorePath = path.join(app.getPath('userData'), 'data', 'keystore')
 
 const setupGeth = async () => {
-  // Note: always use `path.join()` to make sure delimiters work cross-platform
-  // Some platform-specific logic may be needed here, ex using geth.exe on Windows, for this you can use electron-util: https://github.com/sindresorhus/electron-util/blob/master/index.js#L17-L19
+  console.log("setupGeth() called")
   const gethPath = path.join(process.resourcesPath, 'bin', 'geth')
-  const pwdPath = path.join(app.getPath('userData'), 'pwd')
-  const dataDir = path.join(app.getPath('userData'), 'data')
 
   // Could be made async, shouldn't be an issue though
   writeFileSync(pwdPath, 'secret')
@@ -36,8 +39,30 @@ const setupGeth = async () => {
   console.log(res)
 }
 
-// Only call this when needed
-setupGeth()
+const setupSwarm = async () => {
+  console.log("setupSwarm() called")
+  const swarmPath = path.join(process.resourcesPath, 'bin', 'swarm')
+  const keystoreFiles = readdirSync(keystorePath)
+  const keyFileName = keystoreFiles[0]
+  const keyFilePath = path.join(keystorePath, keyFileName)
+  const keystore = JSON.parse(readFileSync(keyFilePath, 'utf8'))
+
+  const res = await execa(swarmPath, [
+    '--datadir',
+    dataDir,
+    '--password',
+    pwdPath,
+    '--bzzaccount',
+    keystore.address,
+    '--pss',
+    // '--verbosity 4',
+    // '--bzznetworkid 922',
+    // '--bootnodes enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@54.171.164.15:30399',
+    // '--ws',
+    // '--wsorigins "*"'
+  ])
+  console.log("\n setupSwarm res", res)
+}
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const SWARM_WS_URL =
@@ -150,6 +175,11 @@ const startOnyxServer = async () => {
 }
 
 const start = async () => {
+  console.log("\n start() called")
+  if (!existsSync(keystorePath)) {
+    await setupGeth()
+  }
+  const swarmTemp = await setupSwarm()
   const appPort = isDev ? 3000 : await startAppServer()
   const serverPort = await startOnyxServer(appPort)
   const url = `http://localhost:${appPort}/?port=${serverPort}`
@@ -168,5 +198,11 @@ const start = async () => {
     }
   })
 }
+
+// TODO: remove this
+process.on('unhandledRejection', (reason, p) => {
+  console.log('\n Unhandled Rejection at: Promise', p, 'reason:', reason)
+  // application specific logging, throwing an error, or other logic here
+})
 
 start()
