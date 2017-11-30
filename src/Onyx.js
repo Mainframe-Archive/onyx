@@ -18,7 +18,7 @@ type State = {
   serverLocation?: string,
 }
 
-export default class DevConDemo extends Component<{}, State> {
+export default class Onyx extends Component<{}, State> {
   static childContextTypes = {
     httpServerUrl: PropTypes.string.isRequired,
     wsConnected$: PropTypes.object.isRequired,

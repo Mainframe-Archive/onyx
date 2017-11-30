@@ -7,6 +7,7 @@ import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
+import CertSelectionModal from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
@@ -20,6 +21,7 @@ type Props = {
 
 type State = {
   url: ?string,
+  showCertsSelectModal?: boolean,
 }
 
 export default class NodeConnectionView extends Component {
@@ -43,12 +45,25 @@ export default class NodeConnectionView extends Component {
   onPressConnect = () => {
     const { url } = this.state
     if (url && url.length) {
-      onSetServerUrl(url)
+      this.setState({
+        showCertsSelectModal: true,
+      })
     }
   }
 
   onPressConnectDefault = () => {
     onSetServerUrl('local')
+  }
+  
+  onCopiedCerts = () => {
+    console.log('done!')
+    onSetServerUrl(this.state.url)
+  }
+  
+  onRequestClose = () => {
+    this.setState({
+      showCertsSelectModal: false,
+    })
   }
 
   render() {
@@ -57,9 +72,17 @@ export default class NodeConnectionView extends Component {
         <Text style={styles.errorText}>{this.props.connectionError}</Text>
       </View>
     ) : null
+    
+    const certSelectionModal = this.state.showCertsSelectModal ? (
+      <CertSelectionModal
+        onRequestClose={this.onRequestClose}
+        onCopiedCerts={this.onCopiedCerts}
+      />
+    ) : null
 
     return (
       <View style={styles.container}>
+        {certSelectionModal}
         {connectionErrorMessage}
         <View style={styles.innerContainer}>
           <View style={styles.icon}>
@@ -164,9 +187,9 @@ const styles = StyleSheet.create({
     right: BASIC_SPACING * 2,
     padding: BASIC_SPACING,
     backgroundColor: COLORS.GRAY_E6,
-    textAlign: 'center',
   },
   errorText: {
     fontSize: 13,
+    textAlign: 'center',
   },
 })

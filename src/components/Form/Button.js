@@ -11,12 +11,21 @@ type Props = {
   title: string,
   disabled?: boolean,
   outlineStyle?: boolean,
+  style?: number | Array<number | Object> | Object,
+  textStyle?: number | Array<number | Object> | Object,
   onPress?: Function,
 }
 
 export default class Button extends Component<Props> {
   render() {
-    const { disabled, onPress, title, outlineStyle} = this.props
+    const {
+      disabled,
+      onPress,
+      title,
+      outlineStyle,
+      style,
+      textStyle
+    } = this.props
 
     const containerStyles = [styles.container]
     const textStyles = [styles.text]
@@ -28,6 +37,14 @@ export default class Button extends Component<Props> {
 
     if (disabled) {
       containerStyles.push(styles.disabledContainer)
+    }
+    
+    if (style) {
+      containerStyles.push(style)
+    }
+    
+    if (textStyle) {
+      textStyles.push(textStyle)
     }
 
     return (

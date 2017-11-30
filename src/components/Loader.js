@@ -1,7 +1,6 @@
 // @flow
 
 import React, { Component } from 'react'
-import { StyleSheet, View } from 'react-native-web'
 import { TimelineMax, Linear } from 'gsap'
 
 const FRAMERATE = 0.022
