@@ -1,18 +1,27 @@
 #!/usr/bin/env bash
 
-if [[ $# -ne 2 ]]; then
-  echo "Usage: $0 <go-ethereum-directory> <data-directory>"
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <data-directory>"
   exit 1
 fi
 
-GODIR="$1"
-DATADIR="$2"
+DATADIR="$1"
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+GODIR="$SCRIPTPATH/build/go-ethereum"
 
-pushd "$GODIR"
+if [[ ! -e $SCRIPTPATH/build/go-ethereum ]]; then
+    echo "cloning the go-ethereum repo"
+    cd "$SCRIPTPATH/build"
+    git clone https://github.com/nolash/go-ethereum.git
+fi
+
+cd "$GODIR"
+# doing the fetch here and now makes sure that we can change the chosen
+# commit hash without the risk of breaking the script
+git fetch
 git checkout 8bdcd40bc2e04533862be901b604cea886cca383
 make geth
 make swarm
-popd
 
 if [[ ! -e $DATADIR/keystore ]]; then
   mkdir -p $DATADIR
@@ -25,11 +34,9 @@ if [ $? -eq 0 ]
 then
     KEY=$(jq --raw-output '.address' $DATADIR/keystore/*)
 else
-    echo "ERROR: jq is required to run the startup script"
+    printf "\n\nERROR: jq is required to run the startup script\n\n"
     exit 1
 fi
-
-
 
 $GODIR/build/bin/swarm \
     --datadir $DATADIR \

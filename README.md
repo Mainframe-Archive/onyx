@@ -26,13 +26,11 @@ TODO: use slide from demo?
 
 ## Running
 
-If you want to run a local geth node (as opposed to a remote one) you'll need 
-the [`go-ethereum`](https://github.com/nolash/go-ethereum/) cloned 
-(note the nolash fork)
-
 To run the swarm node onyx is going to connect to, run 
-`$ ./start_node.sh <go ethereum directory> <your desired account data directory>`.
-You'll need to have `jq` installed.
+`$ ./start_node.sh <your desired account data directory>`.
+The script will clone and build the right version of go-ethereum on your
+machine.
+You'll need to have `jq` installed for the script to work.
 
 To run the built app run `yarn dist` and run the built app which is `dist/mac/Onyx`.
 
