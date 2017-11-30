@@ -14,11 +14,11 @@
     "target": "AppImage"
   },
   "mac": {
-    "icon": "icon.icns",
+    "icon": "assets/icon.icns",
     "target": "dir"
   },
   "win": {
-    "icon": "icon.ico",
+    "icon": "assets/icon.ico",
     "target": "nsis"
   }
 }
