@@ -24,7 +24,7 @@ const menu = Menu.buildFromTemplate([
       {
         label: 'Reset',
         click: () => {
-          store.delete('serverUrl')
+          store.delete('wsUrl')
           if (mainWindow != null) {
             clearEventListeners()
             mainWindow.close()
@@ -147,28 +147,40 @@ const start = async () => {
     }
     appPort = appServer.port
   }
-
   let appUrl = `http://localhost:${appPort}`
 
-  const storedServerUrl = store.get('serverUrl')
-
-  if (storedServerUrl) {
-    if (storedServerUrl === 'local') {
+  const storedWsUrl = store.get('wsUrl')
+  if (storedWsUrl) {
+    if (storedWsUrl === 'local') {
       // Setup a local Graphql server
       try {
         const serverPort = await startLocalOnyxServer(appPort)
-        const serverUrl = `localhost:${serverPort}`
-        appUrl = appUrl + `/?serverUrl=${serverUrl}`
+        const wsUrl = `ws://localhost:${serverPort}/graphql`
+        const httpUrl = `http://localhost:${serverPort}`
+        appUrl = appUrl + `/?wsUrl=${wsUrl}&httpUrl=${httpUrl}`
       } catch (err) {
-        const errorMsg = 'There was an issue starting local GraphQL server'
-        appUrl = appUrl + `/?serverUrl=${storedServerUrl}&connectionError=${errorMsg}`
+        console.warn('err: ', err)
+        const errorMsg = 'There was an issue starting local GraphQL server, you may want to check you have a swarm node running on default port 8546, or that you specified the correct port if not using default'
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
         if (appServer != null) {
           appServer.stop()
         }
       }
     } else {
       // Use stored remote server url
-      appUrl = appUrl + `/?serverUrl=${storedServerUrl}`
+      let domain
+      if (storedWsUrl.indexOf('://') > -1) {
+        domain = storedWsUrl.split('/')[2]
+      } else if (storedWsUrl.indexOf('/') !== -1) {
+        domain = storedWsUrl.split('/')[0]
+      }
+      if (!domain) {
+        const errorMsg = 'Invalid ws url'
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
+      } else {
+        const httpUrl = `http://${domain}`
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&httpUrl=${httpUrl}`
+      }
     }
   }
 
@@ -183,6 +195,10 @@ const start = async () => {
       createMainWindow(appUrl)
     }
   })
+  
+  app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    console.warn('cert error: ', error)
+  })
 }
 
 const clearEventListeners = () => {
@@ -192,8 +208,8 @@ const clearEventListeners = () => {
   }
 }
 
-ipcMain.on('onSetServerUrl', (e, url) => {
-  store.set('serverUrl', url)
+ipcMain.on('onSetWsUrl', (e, url) => {
+  store.set('wsUrl', url)
   start()
 })
 

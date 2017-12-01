@@ -34,9 +34,10 @@ export default class Modal extends Component<Props> {
       isOpen,
       dark,
     } = this.props
-
+    
     const darkStyle = dark ? styles.dark : styles.light
     const titleStyle = dark ? [styles.title, styles.whiteText] : styles.title
+    const containerStyles = [styles.container, darkStyle]
 
     const closeButton = onRequestClose ? (
       <TouchableOpacity style={styles.closeIcon} onPress={onRequestClose}>
@@ -46,7 +47,7 @@ export default class Modal extends Component<Props> {
 
     return (
       <ReactModal isOpen={isOpen} onRequestClose={onRequestClose}>
-        <View style={darkStyle}>
+        <View style={containerStyles}>
           <View style={styles.header}>
             <Text style={titleStyle}>{title}</Text>
             <ColoredLine />
@@ -61,6 +62,9 @@ export default class Modal extends Component<Props> {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    maxWidth: 520,
+  },
   light: {
     backgroundColor: COLORS.WHITE,
   },
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.DARKEST_BLUE,
   },
   header: {
-    minWidth: 500,
+    minWidth: 480,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -79,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: COLORS.PRIMARY_BLUE,
     fontWeight: '600',
-    padding: BASIC_SPACING,
+    paddingVertical: BASIC_SPACING,
   },
   closeIcon: {
     marginLeft: 2 * BASIC_SPACING,
