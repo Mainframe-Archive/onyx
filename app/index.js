@@ -8,6 +8,7 @@ const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
 const url = require('url')
 const path = require('path')
+const os = require('os')
 
 // Note: always use `path.join()` to make sure delimiters work cross-platform
 // Some platform-specific logic may be needed here, ex using geth.exe on Windows,
@@ -17,10 +18,27 @@ const pwdPath = path.join(dataDir, 'pwd')
 const keystorePath = path.join(dataDir, 'keystore')
 const logPath = path.join(dataDir, 'node.log')
 
+const getBinPath = (binaryName) => {
+  let platform
+  switch (os.platform()) {
+    case 'linux':
+      platform = 'linux'
+      break
+    case 'win32':
+      platform = 'win'
+      break
+    default:
+      platform = 'mac'
+  }
+  const pathStart = is.development ? app.getAppPath() : process.resourcesPath
+  const name = is.development ? `${binaryName}-${platform}` : binaryName
+  const bin = is.development ? '../bin' : 'bin'
+  return path.join(pathStart, bin, name)
+}
+
 const setupGeth = async () => {
   console.log("setupGeth() called")
-  const gethPath = path.join(process.resourcesPath, 'bin', 'geth')
-
+  const gethPath = getBinPath('geth')
   try {
     mkdirSync(dataDir)
   } catch (err) {
@@ -42,7 +60,7 @@ const setupGeth = async () => {
 
 const setupSwarm = async () => {
   console.log("setupSwarm() called")
-  const swarmPath = path.join(process.resourcesPath, 'bin', 'swarm')
+  const swarmPath = getBinPath('swarm')
   const keystoreFiles = readdirSync(keystorePath)
   const keyFileName = keystoreFiles[0]
   const keyFilePath = path.join(keystorePath, keyFileName)
