@@ -5,6 +5,7 @@ import { compose, gql, graphql } from 'react-apollo'
 import { connect } from 'react-redux'
 import { StyleSheet, View } from 'react-native-web'
 import { groupBy } from 'lodash'
+import PropTypes from 'prop-types'
 
 import {
   getOpenChannel,
@@ -28,13 +29,12 @@ import AddContactModal from './AddContactModal'
 import UserProfileModal, { SelfUserProfileModal } from './UserProfileModal'
 import Conversation from './Conversation'
 import Loader from './Loader'
-import Icon from './Icon'
-import Text from './Text'
 
 import ConversationTitle from './LeftNav/ConversationTitle'
 import Profile from './LeftNav/Profile'
 import SectionTitle from './LeftNav/SectionTitle'
 import ContactListLabel from './LeftNav/ContactListLabel'
+import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -62,16 +62,26 @@ type State = {
 }
 
 class App extends Component<Props, State> {
+  static contextTypes = {
+    client: PropTypes.object.isRequired,
+    wsConnected$: PropTypes.object.isRequired,
+  }
+
   state = {
     openModal: undefined,
     openProfile: undefined,
   }
 
   unsubscribeChannelsChanged: UnsubscribeFunc
+  unsubscribeConnectionClosed: UnsubscribeFunc
   unsubscribeContactsChanged: UnsubscribeFunc
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.data && nextProps.data.viewer && !nextProps.data.viewer.profile.name) {
+    if (
+      nextProps.data &&
+      nextProps.data.viewer &&
+      !nextProps.data.viewer.profile.name
+    ) {
       this.setState({
         openProfile: nextProps.data.viewer.profile,
       })
@@ -81,11 +91,30 @@ class App extends Component<Props, State> {
   componentDidMount() {
     this.unsubscribeChannelsChanged = this.props.subscribeToChannelsChanged()
     this.unsubscribeContactsChanged = this.props.subscribeToContactsChanged()
+
+    this.unsubscribeConnectionClosed = this.context.client
+      .subscribe({
+        query: gql`
+          subscription ConnectionClosed {
+            connectionClosed
+          }
+        `,
+      })
+      .subscribe({
+        next: () => {
+          console.log('connection closed')
+          // TODO: Investigate broken sub since server separation
+          // may no longer be required with updated connection handling
+        },
+      })
   }
 
   componentWillUnmount() {
-    this.unsubscribeChannelsChanged()
-    this.unsubscribeContactsChanged()
+    if (this.context.wsConnected$.value) {
+      this.unsubscribeChannelsChanged()
+      this.unsubscribeContactsChanged()
+      this.unsubscribeConnectionClosed()
+    }
   }
 
   onCloseModal = () => {
@@ -185,7 +214,12 @@ class App extends Component<Props, State> {
     const { data, openChannel, openContact, setOpenChannel } = this.props
 
     if (data == null || data.viewer == null) {
-      return <Loader />
+      return (
+        <View style={styles.loaderContainer}>
+          <Loader />
+          <MainframeBar footer />
+        </View>
+      )
     }
 
     const channelsList = data.viewer.channels.map(c => (
@@ -252,10 +286,7 @@ class App extends Component<Props, State> {
               ) : null}
             </View>
           </View>
-          <View style={styles.mainframe}>
-            <Text style={styles.poweredText}>Powered by </Text>
-            <Icon name="mainframe-logo" />
-          </View>
+          <MainframeBar />
         </View>
         <View style={styles.main}>{main}</View>
       </View>
@@ -264,6 +295,14 @@ class App extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: FOOTER_SIZE,
+    backgroundColor: COLORS.LIGHT_GRAY,
+  },
   layout: {
     flex: 1,
     flexDirection: 'row',
@@ -292,21 +331,6 @@ const styles = StyleSheet.create({
   leftNavContent: {
     flex: 1,
     overflowX: 'auto',
-  },
-  mainframe: {
-    backgroundColor: COLORS.DARK_BLUE,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    padding: 2 * BASIC_SPACING,
-  },
-  poweredText: {
-    color: COLORS.WHITE,
-    fontSize: 9,
-  },
-  profile: {
-    height: 88,
-    justifyContent: 'center',
-    paddingLeft: BASIC_SPACING + 2 - BASIC_SPACING / 2,
   },
   list: {
     paddingLeft: BASIC_SPACING + 4,

@@ -1,12 +1,14 @@
-const { app, BrowserWindow, Menu } = require('electron')
-const isDev = require('electron-is-dev')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { appReady, is } = require('electron-util')
 const Store = require('electron-store')
 const execa = require('execa')
 const { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync, createWriteStream } = require('fs')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
+const url = require('url')
 const path = require('path')
+
 // Note: always use `path.join()` to make sure delimiters work cross-platform
 // Some platform-specific logic may be needed here, ex using geth.exe on Windows,
 // for this you can use electron-util: https://github.com/sindresorhus/electron-util/blob/master/index.js#L17-L19
@@ -97,11 +99,23 @@ const SWARM_HTTP_URL =
 
 const menu = Menu.buildFromTemplate([
   {
-    label: 'Application',
+    label: is.macos ? 'Onyx' : 'File',
     submenu: [
       {
+        label: 'Reset',
+        click: () => {
+          store.delete('wsUrl')
+          if (mainWindow != null) {
+            clearEventListeners()
+            mainWindow.close()
+            mainWindow = null
+          }
+          start()
+        },
+      },
+      {
         label: 'Quit',
-        accelerator: 'Command+Q',
+        accelerator: 'CmdOrCtrl+Q',
         click: () => {
           app.quit()
         },
@@ -136,8 +150,7 @@ const menu = Menu.buildFromTemplate([
       },
       {
         label: 'Toggle Developer Tools',
-        accelerator:
-          process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+        accelerator: is.macos ? 'Alt+Command+I' : 'Ctrl+Shift+I',
         click: (item, focusedWindow) => {
           if (focusedWindow) focusedWindow.toggleDevTools()
         },
@@ -151,20 +164,29 @@ const menu = Menu.buildFromTemplate([
   },
 ])
 
-const store = new Store({ name: isDev ? 'onyx-dev' : 'onyx' })
+let appServer, loadingWindow, mainWindow, connectionError
 
-let mainWindow
+const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
-const createWindow = url => {
+const createMainWindow = async url => {
+  await appReady
+
   Menu.setApplicationMenu(menu)
 
-  mainWindow = new BrowserWindow({ width: 800, height: 600 })
+  mainWindow = new BrowserWindow({ width: 800, height: 600, show: false })
 
   mainWindow.loadURL(url)
 
-  mainWindow.on('closed', () => {
+  showFunc = () => {
+    mainWindow.show()
+  }
+
+  closedFunc = () => {
     mainWindow = null
-  })
+  }
+
+  mainWindow.on('ready-to-show', showFunc)
+  mainWindow.on('closed', closedFunc)
 }
 
 const startAppServer = async () => {
@@ -179,12 +201,12 @@ const startAppServer = async () => {
       app.on('quit', () => {
         appServer.stop()
       })
-      resolve(appPort)
+      resolve(appServer)
     })
   })
 }
 
-const startOnyxServer = async () => {
+const startLocalOnyxServer = async () => {
   const port = await getPort()
   await createOnyxServer({
     wsUrl: SWARM_WS_URL,
@@ -196,35 +218,83 @@ const startOnyxServer = async () => {
 }
 
 const start = async () => {
-  console.log("\n start() called")
-  if (!existsSync(keystorePath)) {
-    await setupGeth()
-  }
-  const { swarmProc } = await setupSwarm()
-  console.log('Starting GraphQL server')
-  const appPort = isDev ? 3000 : await startAppServer()
-  const serverPort = await startOnyxServer(appPort)
-  const url = `http://localhost:${appPort}/?port=${serverPort}`
-
-  if (app.isReady()) {
-    createWindow(url)
+  let appPort
+  if (is.development) {
+    appPort = 3000
   } else {
-    app.on('ready', () => {
-      createWindow(url)
-    })
+    if (appServer == null) {
+      appServer = await startAppServer()
+    }
+    appPort = appServer.port
+  }
+  let appUrl = `http://localhost:${appPort}`
+
+  const storedWsUrl = store.get('wsUrl')
+  if (storedWsUrl) {
+    if (storedWsUrl === 'local') {
+      // Setup a local Graphql server
+      try {
+        if (!existsSync(keystorePath)) {
+          await setupGeth()
+        }
+        const { swarmProc } = await setupSwarm()
+        const serverPort = await startLocalOnyxServer(appPort)
+        const wsUrl = `ws://localhost:${serverPort}/graphql`
+        const httpUrl = `http://localhost:${serverPort}`
+        appUrl = appUrl + `/?wsUrl=${wsUrl}&httpUrl=${httpUrl}`
+      } catch (err) {
+        console.warn('err: ', err)
+        const errorMsg = 'There was an issue starting local GraphQL server, you may want to check you have a swarm node running on default port 8546, or that you specified the correct port if not using default'
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
+        if (appServer != null) {
+          appServer.stop()
+        }
+      }
+    } else {
+      // Use stored remote server url
+      let domain
+      if (storedWsUrl.indexOf('://') > -1) {
+        domain = storedWsUrl.split('/')[2]
+      } else if (storedWsUrl.indexOf('/') !== -1) {
+        domain = storedWsUrl.split('/')[0]
+      }
+      if (!domain) {
+        const errorMsg = 'Invalid ws url'
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
+      } else {
+        const httpUrl = `http://${domain}`
+        appUrl = appUrl + `/?wsUrl=${storedWsUrl}&httpUrl=${httpUrl}`
+      }
+    }
+  }
+
+  if (mainWindow == null) {
+    createMainWindow(appUrl)
+  } else {
+    mainWindow.loadURL(appUrl)
   }
 
   app.on('activate', () => {
-    if (mainWindow === null) {
-      createWindow(url)
+    if (mainWindow == null) {
+      createMainWindow(appUrl)
     }
+  })
+
+  app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+    console.warn('cert error: ', error)
   })
 }
 
-// TODO: remove this
-process.on('unhandledRejection', (reason, p) => {
-  console.log('\n Unhandled Rejection at: Promise', p, 'reason:', reason)
-  // application specific logging, throwing an error, or other logic here
+const clearEventListeners = () => {
+  if (mainWindow) {
+    mainWindow.removeListener('ready-to-show', showFunc)
+    mainWindow.removeListener('closed', closedFunc)
+  }
+}
+
+ipcMain.on('onSetWsUrl', (e, url) => {
+  store.set('wsUrl', url)
+  start()
 })
 
 start()
