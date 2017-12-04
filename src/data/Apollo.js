@@ -58,12 +58,6 @@ export default (
   // as the default subscriptions-transport-ws
   // WebSocket impl doesn't support using tls certs
 
-  // Also using fork of subscriptions-transport-ws
-  // to enable forwarding the cert options to ws
-
-  // TODO: - extend WebSocket to avoid forking
-  // subscriptions-transport-ws
-
   class OnyxWebSocket extends WebSocket {
 
     constructor (url, protocol) {
@@ -75,7 +69,6 @@ export default (
     url,
     {
       reconnect: true,
-      connectionParams: certFiles,
     },
     OnyxWebSocket,
   )
