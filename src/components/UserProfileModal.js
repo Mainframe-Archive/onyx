@@ -16,7 +16,8 @@ type Props = {
     name: ?string,
     bio?: ?string,
   },
-  editRequired?: booleam,
+  isSelf?: boolean,
+  editRequired?: boolean,
   serverURL?: ?string,
   onCloseModal: () => void,
 }
@@ -25,7 +26,7 @@ type State = {
   editMode: boolean,
 }
 
-export default class UserProfileModal extends Component<Props, State> {
+export class UserProfileModal extends Component<Props, State> {
 
   state: State = {
     editMode: false,
@@ -38,7 +39,13 @@ export default class UserProfileModal extends Component<Props, State> {
   }
 
   render() {
-    const { profile, onCloseModal, serverURL, editRequired } = this.props
+    const {
+      profile,
+      onCloseModal,
+      serverURL,
+      editRequired,
+      isSelf,
+    } = this.props
 
     if (profile == null) {
       return null
@@ -64,6 +71,7 @@ export default class UserProfileModal extends Component<Props, State> {
               profile={profile}
               keyQRCode
               hideTitle
+              canEdit={isSelf}
               serverURL={serverURL}
               onPressEdit={this.onToggleEdit}
             />
@@ -74,10 +82,13 @@ export default class UserProfileModal extends Component<Props, State> {
   }
 }
 
-const mapDataToProps = ({data}: {data: Object}) => {
-  return {
-    editRequired: !data.viewer.profile.name,
-    profile: data.viewer.profile
+const mapDataToProps = ({data, ownProps}: Object) => {
+  if (ownProps.profile.id === data.viewer.profile.id) {
+    return {
+      isSelf: true,
+      editRequired: !data.viewer.profile.name,
+      profile: data.viewer.profile
+    }
   }
 }
 
@@ -92,7 +103,7 @@ const SelfProfileQuery = gql`
   }
 `
 
-export const SelfUserProfileModal = graphql(
+export default graphql(
   SelfProfileQuery,
   { props: mapDataToProps },
 )(UserProfileModal)

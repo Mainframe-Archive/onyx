@@ -537,9 +537,10 @@ class Conversation extends Component<Props, State> {
 
   renderProfileModal() {
     const { openProfile } = this.state
-    return (
+
+    return openProfile ? (
       <UserProfileModal profile={openProfile} onCloseModal={this.hideProfile} />
-    )
+    ) : null
   }
 
   showMyProfile = () => {
