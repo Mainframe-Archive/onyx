@@ -18,22 +18,15 @@ const pwdPath = path.join(dataDir, 'pwd')
 const keystorePath = path.join(dataDir, 'keystore')
 const logPath = path.join(dataDir, 'node.log')
 
-const getBinPath = (binaryName) => {
-  let platform
-  switch (os.platform()) {
-    case 'linux':
-      platform = 'linux'
-      break
-    case 'win32':
-      platform = 'win'
-      break
-    default:
-      platform = 'mac'
-  }
-  const pathStart = is.development ? app.getAppPath() : process.resourcesPath
-  const name = is.development ? `${binaryName}-${platform}` : binaryName
-  const bin = is.development ? '../bin' : 'bin'
-  return path.join(pathStart, bin, name)
+const getBinPath = (name) => {
+  const platform = {
+    darwin: 'mac',
+    linux: 'linux',
+    win32: 'win',
+  }[os.platform()]
+  return is.development
+  ? path.join(app.getAppPath(), '..', 'bin', `${name}-${platform}`)
+  : path.join(process.resourcesPath, 'bin', name)
 }
 
 const setupGeth = async () => {
