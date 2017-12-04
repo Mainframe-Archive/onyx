@@ -38,7 +38,7 @@ export default class Onyx extends Component<{}, State> {
 
     const params = parse(document.location.search)
     let state = {}
-    
+
     if (
       params.wsUrl && params.wsUrl !== 'undefined' &&
       params.httpUrl && params.httpUrl !== 'undefined'
@@ -90,6 +90,7 @@ export default class Onyx extends Component<{}, State> {
       const store = await createStore(client)
       this.setState({ client, store })
     } catch (err) {
+      console.warn('error creating apollo client: ', err)
       this.setState({
         connectionError:
           'Error connecting to server, please check you entered a valid URL',
