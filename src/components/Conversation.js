@@ -114,7 +114,9 @@ class MessageRow extends Component<MessageProps> {
 
     const onPressFile = file
       ? () => {
-          document.location.href = `${this.context.httpServerUrl}/files/${file.hash}`
+          document.location.href = `${this.context.httpServerUrl}/files/${
+            file.hash
+          }`
         }
       : null
 
@@ -376,17 +378,14 @@ class Conversation extends Component<Props, State> {
   sendFile = (file: Object) => {
     const reader = new FileReader()
     reader.onload = async e => {
-      const res = await fetch(
-        `${this.context.httpServerUrl}/files`,
-        {
-          body: e.currentTarget.result,
-          headers: {
-            'Content-Length': file.size,
-            'Content-Type': file.type,
-          },
-          method: 'POST',
+      const res = await fetch(`${this.context.httpServerUrl}/files`, {
+        body: e.currentTarget.result,
+        headers: {
+          'Content-Length': file.size,
+          'Content-Type': file.type,
         },
-      )
+        method: 'POST',
+      })
       this.setState({
         file: {
           hash: await res.text(),
@@ -562,7 +561,7 @@ class Conversation extends Component<Props, State> {
   onRowsRendered = () => {
     this.notRendered = false
   }
-  
+
   renderResendInvites = () => {
     return this.props.data.conversation.type === 'CHANNEL' ? (
       <TouchableOpacity
@@ -579,7 +578,11 @@ class Conversation extends Component<Props, State> {
     const { editorState, typingText, file } = this.state
 
     if (data == null || data.conversation == null) {
-      return <Loader />
+      return (
+        <View style={styles.loaderContainer}>
+          <Loader />
+        </View>
+      )
     }
 
     let subject = ''
@@ -720,6 +723,12 @@ class Conversation extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     flexDirection: 'column',
