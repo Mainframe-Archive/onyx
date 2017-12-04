@@ -35,7 +35,7 @@ class Contact extends Component<Props> {
   static contextTypes = {
     wsConnected$: PropTypes.object.isRequired,
   }
-  
+
   unsubscribeContactChanged: UnsubscribeFunc
 
   componentDidMount() {
@@ -79,7 +79,11 @@ class Contact extends Component<Props> {
     const { data } = this.props
 
     if (data == null || data.contact == null) {
-      return <Loader />
+      return (
+        <View style={styles.loaderContainer}>
+          <Loader />
+        </View>
+      )
     }
 
     if (data.contact.state === 'ACCEPTED') {
@@ -98,6 +102,12 @@ class Contact extends Component<Props> {
 }
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
