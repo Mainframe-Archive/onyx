@@ -8,6 +8,7 @@ const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
 const url = require('url')
 const path = require('path')
+const os = require('os')
 
 // Note: always use `path.join()` to make sure delimiters work cross-platform
 // Some platform-specific logic may be needed here, ex using geth.exe on Windows,
@@ -17,10 +18,20 @@ const pwdPath = path.join(dataDir, 'pwd')
 const keystorePath = path.join(dataDir, 'keystore')
 const logPath = path.join(dataDir, 'node.log')
 
+const getBinPath = (name) => {
+  const platform = {
+    darwin: 'mac',
+    linux: 'linux',
+    win32: 'win',
+  }[os.platform()]
+  return is.development
+  ? path.join(app.getAppPath(), '..', 'bin', `${name}-${platform}`)
+  : path.join(process.resourcesPath, 'bin', name)
+}
+
 const setupGeth = async () => {
   console.log("setupGeth() called")
-  const gethPath = path.join(process.resourcesPath, 'bin', 'geth')
-
+  const gethPath = getBinPath('geth')
   try {
     mkdirSync(dataDir)
   } catch (err) {
@@ -42,7 +53,7 @@ const setupGeth = async () => {
 
 const setupSwarm = async () => {
   console.log("setupSwarm() called")
-  const swarmPath = path.join(process.resourcesPath, 'bin', 'swarm')
+  const swarmPath = getBinPath('swarm')
   const keystoreFiles = readdirSync(keystorePath)
   const keyFileName = keystoreFiles[0]
   const keyFilePath = path.join(keystorePath, keyFileName)
