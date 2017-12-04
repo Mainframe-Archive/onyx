@@ -48,33 +48,40 @@ export default (
     certFiles.ca = fs.readFileSync(certPaths.ca)
   } catch (err) {
     console.warn(
-      `Error reading SSL certs, please make sure you've generated client 
+      `Error reading SSL certs, please make sure you've generated client
       and server ssl certificates using the script provided in Onyx server. `,
       err,
     )
   }
-    
+
   // Need to provide our own ws implementation
   // as the default subscriptions-transport-ws
   // WebSocket impl doesn't support using tls certs
-  
+
   // Also using fork of subscriptions-transport-ws
   // to enable forwarding the cert options to ws
-  
-  // TODO: - extend WebSocket to avoid forking 
+
+  // TODO: - extend WebSocket to avoid forking
   // subscriptions-transport-ws
-  
+
+  class OnyxWebSocket extends WebSocket {
+
+    constructor (url, protocol) {
+      super(url, protocol, certFiles)
+    }
+  }
+
   const subClient = new SubscriptionClient(
-    url, 
+    url,
     {
       reconnect: true,
       connectionParams: certFiles,
     },
-    WebSocket,
+    OnyxWebSocket,
   )
-    
+
   subClient.onDisconnected(() => onDisconnected())
-  subClient.onConnected(() => onConnected())    
+  subClient.onConnected(() => onConnected())
   return new ApolloClient({
     fragmentMatcher,
     networkInterface: subClient,
