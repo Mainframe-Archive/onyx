@@ -9,19 +9,19 @@ TMP_DIR=$ROOT_DIR/tmp
 
 TARGETS=linux/amd64,darwin/amd64,windows/amd64
 
-mkdir $BIN_DIR -p
-mkdir $TMP_DIR -p
+mkdir -p $BIN_DIR
+mkdir -p $TMP_DIR
 
 if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
     echo "cloning the go-ethereum repo"
-    git clone --depth 1 git@github.com:thusfresh/go-ethereum.git -b mainframe
+    git clone --depth 1 git@github.com:nolash/go-ethereum.git -b pss-tmp-binfix
 fi
 
 cd $TMP_DIR/go-ethereum
 
-git fetch --depth 1 origin $COMMIT_HASH
-git checkout $COMMIT_HASH
+# git fetch --depth 1 origin $COMMIT_HASH
+# git checkout $COMMIT_HASH
 
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/geth
 ./build/env.sh go run build/ci.go xgo -- --go=latest --targets=$TARGETS -v ./cmd/swarm
