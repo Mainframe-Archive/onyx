@@ -1,13 +1,15 @@
 // @flow
 
 import React, { Component } from 'react'
-import { View, StyleSheet } from 'react-native-web'
+import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
 import { compose } from 'react-apollo'
+import PropTypes from 'prop-types'
 
 import Avatar from './Avatar'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
 import Text from './Text'
+import FileSelector from './FileSelector'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -36,6 +38,11 @@ type State = {
 }
 
 export class EditProfile extends Component<Props, State> {
+  static contextTypes = {
+    httpServerUrl: PropTypes.string.isRequired,
+  }
+
+  fileSelector: ?Element<typeof FileSelector>
 
   constructor (props: Props) {
     super(props)
@@ -46,23 +53,76 @@ export class EditProfile extends Component<Props, State> {
     }
   }
 
-  onSave = () => {
+  bindFileSelector = (fileSelector: ?Element<typeof FileSelector>) => {
+    this.fileSelector = fileSelector
+  }
+
+  onFilesSelected = (files: Array<Object>) => {
+    if (files.length) {
+      this.uploadFile(files[0])
+    }
+  }
+
+  uploadFile = (file: Object) => {
+    const reader = new FileReader()
+    reader.onload = async e => {
+      const res = await fetch(`${this.context.httpServerUrl}/files`, {
+        body: e.currentTarget.result,
+        headers: {
+          'Content-Length': file.size,
+          'Content-Type': file.type,
+        },
+        method: 'POST',
+      })
+      await this.saveProfile({
+        avatarSwarmHash: await res.text()
+      })
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
+  onSave = async () => {
     if (this.state.name) {
       const firstEdit = !this.props.profile.name
-      this.props.updateProfile({
-        name: this.state.name,
-        bio: this.state.bio,
-      })
-      if (firstEdit) {
-        this.props.onCloseModal()
-      } else {
-        this.props.onDoneEditing()
+      try {
+        await this.saveProfile({
+          name: this.state.name,
+          bio: this.state.bio,
+        })
+        if (firstEdit) {
+          this.props.onCloseModal()
+        } else {
+          this.props.onDoneEditing()
+        }
+      } catch (err) {
+        console.warn(err)
       }
     } else {
       this.setState({
         invalidMessage: '* Please provide a name',
       })
     }
+  }
+
+  saveProfile = async (data: {
+    name?: string,
+    bio?: string,
+    avatarSwarmHash?: string,
+  }) => {
+    this.setState({
+      invalidMessage: undefined,
+    })
+    return new Promise(async (resolve, reject) => {
+      try {
+        const res = await this.props.updateProfile(data)
+        resolve()
+      } catch (err) {
+        this.setState({
+          invalidMessage: '* Oops, there was a problem updating your profile',
+        })
+        reject(err)
+      }
+    })
   }
 
   onChangeName = (value) => {
@@ -77,13 +137,16 @@ export class EditProfile extends Component<Props, State> {
     })
   }
 
+  onPressAvatar = () => {
+    this.fileSelector && this.fileSelector.openFileSelector()
+  }
+
   render() {
     const { profile } = this.props
     const { name, bio, invalidMessage } = this.state
     if (profile == null) {
       return null
     }
-
     const validationMessage = invalidMessage ? (
       <View style={styles.validationError}>
         <Text style={styles.failedValidationText}>{invalidMessage}</Text>
@@ -92,9 +155,17 @@ export class EditProfile extends Component<Props, State> {
     return (
       <View style={styles.container}>
         <View style={styles.userProfile}>
-          <View style={styles.avatarArea}>
+          <TouchableOpacity
+            style={styles.avatarArea}
+            onPress={this.onPressAvatar}
+            >
             <Avatar size="xx-large" profile={profile} />
-          </View>
+          </TouchableOpacity>
+          <FileSelector
+            onFilesSelected={this.onFilesSelected}
+            //$FlowFixMe
+            ref={this.bindFileSelector}
+          />
           <View style={styles.userData}>
             {validationMessage}
             <TextInput

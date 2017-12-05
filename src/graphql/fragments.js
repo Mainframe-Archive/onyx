@@ -36,7 +36,7 @@ export const MessageData = gql`
 export const ProfileData = gql`
   fragment ProfileData on Profile {
     id
-    avatar
+    avatarSwarmHash
     bio
     name
   }

@@ -3,11 +3,12 @@
 import React, { Component } from 'react'
 import { Image, View, StyleSheet } from 'react-native-web'
 import Blockies from 'react-blockies'
+import PropTypes from 'prop-types'
 
 type Props = {
   profile: {
     id: string,
-    avatar: ?string,
+    avatarSwarmHash: ?string,
   },
   size: 'small' | 'large' | 'x-large' | 'xx-large',
   blocky?: boolean,
@@ -21,6 +22,9 @@ export const AVATAR_SIZE = {
 }
 
 export default class Avatar extends Component<Props> {
+  static contextTypes = {
+    httpServerUrl: PropTypes.string.isRequired,
+  }
   static defaultProps = {
     size: 'small',
   }
@@ -28,7 +32,7 @@ export default class Avatar extends Component<Props> {
   render() {
     const { profile, size, blocky } = this.props
     const avatarSize = AVATAR_SIZE[size]
-    return blocky || profile.avatar == null ? (
+    return blocky || profile.avatarSwarmHash == null ? (
       <View style={styles.container}>
         <Blockies
           seed={profile.id}
@@ -41,7 +45,7 @@ export default class Avatar extends Component<Props> {
         <Image
           resizeMode="cover"
           source={{
-            uri: profile.avatar,
+            uri: `${this.context.httpServerUrl}/files/${profile.avatarSwarmHash}`,
             width: avatarSize,
             height: avatarSize,
           }}
