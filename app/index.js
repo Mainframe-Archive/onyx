@@ -70,7 +70,6 @@ const setupSwarm = async () => {
       '--bootnodes', 'enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@52.51.239.180:30399',
       '--ws',
       '--wsorigins', '*',
-      '--ens-api', '',
     ])
 
     proc.once('error', (error) => {
@@ -249,14 +248,20 @@ const start = async () => {
         if (!existsSync(keystorePath)) {
           await setupGeth()
         }
-        const { swarmProc } = await setupSwarm()
-        const serverPort = await startLocalOnyxServer(appPort)
-        const wsUrl = `ws://localhost:${serverPort}/graphql`
-        const httpUrl = `http://localhost:${serverPort}`
-        appUrl = appUrl + `/?wsUrl=${wsUrl}&httpUrl=${httpUrl}`
+        try {
+          const { swarmProc } = await setupSwarm()
+          const serverPort = await startLocalOnyxServer(appPort)
+          const wsUrl = `ws://localhost:${serverPort}/graphql`
+          const httpUrl = `http://localhost:${serverPort}`
+          appUrl = appUrl + `/?wsUrl=${wsUrl}&httpUrl=${httpUrl}`
+        } catch(e) {
+          console.log(e.stack);
+          const errorMsg = 'There was an issue starting local Swarm node, you may want to check if you have a Swarm node running already, or if the port 3039 is open'
+          appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
+        }
       } catch (err) {
         console.warn('err: ', err)
-        const errorMsg = 'There was an issue starting local GraphQL server, you may want to check you have a swarm node running on default port 8546, or that you specified the correct port if not using default'
+        const errorMsg = 'There was an issue starting local GraphQL server, you may want to check you have a Swarm node running on default port 8546, or that you specified the correct port if not using default'
         appUrl = appUrl + `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
         if (appServer != null) {
           appServer.stop()
