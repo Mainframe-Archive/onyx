@@ -4,11 +4,11 @@ Decentralized messaging application based on PSS.
 
 ## Introduction
 
-Onyx is a proof of concept for our next phase of development on a fully-decentralized messaging platform. It relies on a secure messaging protocol in the Ethereum core called [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss).
+Onyx is a proof-of-concept for our next phase of development on a fully-decentralized messaging platform. It relies on a secure messaging protocol in the Ethereum core called [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss).
 
 ## Installing
 
-To install onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/thusfresh/onyx/releases).
+To install Onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/thusfresh/onyx/releases). If you wish to install the mailboxing service remotely, follow the instructions on its [README](https://github.com/MainframeHQ/onyx-server).
 
 ## Know issues
 
@@ -18,7 +18,23 @@ This application is only a proof of concept. It is meant for demonstration purpo
 - **Reliability**: PSS does not provide deliverability guarantees. When remotely installed, however, the [onyx-server](https://github.com/MainframeHQ/onyx-server) is designed to store messages sent to you while you are offline. As long as PSS delivers them successfully to your Mainframe mailboxing service, they should be waiting for you when you open your desktop or mobile app again. If you are running in the default mode, which runs the mailbox service only locally, any messages sent to you while your app is not running will be lost.
 - **Performance**: We have not sufficiently tested this PoC for large-scale use. All messages are stored in a global state file that gets updated with each new message that is received. We anticipate that this will not scale well. The message store was created quick for the PoC, and will require a more robust implementation in our next phase of development.
 
-If you become aware of a bug or important missing feature, please submit an issue on our [issues page](https://github.com/thusfresh/onyx/issues).
+## Get in touch!
+
+Although this release is not officially supported, we really want to hear your feedback. If you become aware of a bug or have a great idea about a feature that would make Mainframe more awesome, please submit an issue on our [issues page](https://github.com/thusfresh/onyx/issues).
+
+We would also love to chat with you on the Mainframe PoC! To converse with us there, add any member of the Mainframe team as a contact and we will invite you to a general feedback channel:
+
+* Adam Clarke: pubkey
+* Austin Craig: pubkey
+* Brad Hagen: pubkey
+* Carl Youngblood: pubkey
+* Clement Jaquier: pubkey
+* Diogo Perillo: pubkey
+* Jacek Królikowski: pubkey
+* Luca Tavazzani: pubkey
+* Mick Hagen: pubkey
+* Miloš Mošić: pubkey
+* Shane Howley: pubkey
 
 ## Architecture
 
