@@ -22,6 +22,7 @@ type Props = {
   serverURL?: ?string,
   keyQRCode?: boolean,
   hideTitle?: boolean,
+  canEdit?: boolean,
   onPressEdit: () => void,
 }
 
@@ -41,13 +42,23 @@ export default class UserProfile extends Component<Props, State> {
   }
 
   render() {
-    const { profile, serverURL, keyQRCode, hideTitle } = this.props
+    const {
+      profile,
+      serverURL,
+      keyQRCode,
+      hideTitle,
+      canEdit,
+    } = this.props
 
     const { connectedQROpen } = this.state
 
     if (profile == null) {
       return null
     }
+
+    const editButton = canEdit ? (
+      <Button title="Edit Profile" onPress={this.props.onPressEdit} />
+    ) : null
 
     const title = profile.name || profile.id.substr(0, 8)
     return (
@@ -62,7 +73,7 @@ export default class UserProfile extends Component<Props, State> {
               <Text style={styles.bio}>{profile.bio}</Text>
             </View>
           )}
-          <Button title="Edit Profile" onPress={this.props.onPressEdit} />
+          {editButton}
         </View>
         {!connectedQROpen && (
           <View>

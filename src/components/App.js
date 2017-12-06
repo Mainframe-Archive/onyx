@@ -26,7 +26,7 @@ import {
 import Contact from './Contact'
 import CreateChannelModal, { type ChannelData } from './CreateChannelModal'
 import AddContactModal from './AddContactModal'
-import UserProfileModal, { SelfUserProfileModal } from './UserProfileModal'
+import UserProfileModal from './UserProfileModal'
 import Conversation from './Conversation'
 import Loader from './Loader'
 
@@ -167,22 +167,13 @@ class App extends Component<Props, State> {
 
   renderProfileModal() {
     const { openProfile } = this.state
-    if (openProfile) {
-      const isSelf = openProfile.id === this.props.data.viewer.profile.id
-      return isSelf ? (
-        <SelfUserProfileModal
-          serverURL={this.props.data.serverURL}
-          onCloseModal={this.onCloseModal}
-        />
-      ) : (
-        <UserProfileModal
-          profile={openProfile}
-          serverURL={this.props.data.serverURL}
-          onCloseModal={this.onCloseModal}
-        />
-      )
-    }
-    return null
+    return openProfile ? (
+      <UserProfileModal
+        profile={openProfile}
+        serverURL={this.props.data.serverURL}
+        onCloseModal={this.onCloseModal}
+      />
+    ) : null
   }
 
   renderCreateChannelModal() {
