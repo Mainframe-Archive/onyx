@@ -8,7 +8,7 @@ import PropTypes from 'prop-types'
 type Props = {
   profile: {
     id: string,
-    avatarSwarmHash: ?string,
+    avatar: ?string, // Swarm Hash
   },
   size: 'small' | 'large' | 'x-large' | 'xx-large',
   blocky?: boolean,
@@ -32,8 +32,10 @@ export default class Avatar extends Component<Props> {
   render() {
     const { profile, size, blocky } = this.props
     const avatarSize = AVATAR_SIZE[size]
-    return blocky || profile.avatarSwarmHash == null ? (
-      <View style={styles.container}>
+    const containerStyles = [styles.container]
+    containerStyles.push({width: avatarSize, height: avatarSize})
+    return blocky || profile.avatar == null ? (
+      <View style={containerStyles}>
         <Blockies
           seed={profile.id}
           size={8}
@@ -41,11 +43,11 @@ export default class Avatar extends Component<Props> {
         />
       </View>
     ) : (
-      <View style={styles.container}>
+      <View style={containerStyles}>
         <Image
           resizeMode="cover"
           source={{
-            uri: `${this.context.httpServerUrl}/files/${profile.avatarSwarmHash}`,
+            uri: `${this.context.httpServerUrl}/files/${profile.avatar}`,
             width: avatarSize,
             height: avatarSize,
           }}

@@ -75,7 +75,7 @@ export class EditProfile extends Component<Props, State> {
         method: 'POST',
       })
       await this.saveProfile({
-        avatarSwarmHash: await res.text()
+        avatar: await res.text()
       })
     }
     reader.readAsArrayBuffer(file)
@@ -107,7 +107,7 @@ export class EditProfile extends Component<Props, State> {
   saveProfile = async (data: {
     name?: string,
     bio?: string,
-    avatarSwarmHash?: string,
+    avatar?: string,
   }) => {
     this.setState({
       invalidMessage: undefined,
