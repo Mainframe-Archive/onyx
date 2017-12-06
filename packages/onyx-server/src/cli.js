@@ -14,10 +14,12 @@ program
     'Swarm node HTTP URL, defaults to http://localhost:8500',
   )
   .option('-p, --port <port>', 'port for the GraphQL server, defaults to 5000')
+  .option('-u, --unsecure', 'flag to dismiss using TLS')
   .parse(process.argv)
 
 start({
   wsUrl: program.wsUrl,
   httpUrl: program.httpUrl,
   port: program.port ? parseInt(program.port, 10) : undefined,
+  unsecure: program.unsecure,
 })

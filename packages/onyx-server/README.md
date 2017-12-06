@@ -21,6 +21,9 @@ variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_HTTP_URL` or its defaults
 (WebSocket on `ws://localhost:8500`, HTTP on `http://localhost:8500` and port
 5000).
 
+Additionally you can pass `-u` or `--unsecure` to dismiss using tls, only recommended
+for when connecting client and server over a local connection 
+
 The `DEBUG` environment variable can be used to activate logs, ex:
 
 ```sh

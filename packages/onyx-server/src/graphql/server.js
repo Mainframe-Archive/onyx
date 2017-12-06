@@ -1,31 +1,35 @@
 // @flow
 
-import { microGraphiql, microGraphql } from 'apollo-server-micro'
 import type { PSS } from 'erebos'
+import debug from 'debug'
 // $FlowFixMe
 import { execute, subscribe } from 'graphql'
-import { get, post } from 'microrouter'
-import type { Server } from 'net'
 import { SubscriptionServer } from 'subscriptions-transport-ws'
+import bodyParser from 'body-parser'
+import { graphiqlExpress, graphqlExpress } from 'apollo-server-express'
 
 import type DB from '../db'
 
 import createSchema from './schema'
 
-export default (pss: PSS, db: DB, port: number) => {
+export default (pss: PSS, db: DB, port: number, app: express$Application) => {
   const schema = createSchema(pss, db, port)
-  const graphqlHandler = microGraphql({ schema })
-  const graphiqlHandler = microGraphiql({ endpointURL: '/graphql' })
+  const log = debug('onyx:graphql')
+
+  app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }))
+  app.use('/graphiql', graphiqlExpress({
+    endpointURL: '/graphql',
+  }))
 
   return {
-    routes: [
-      get('/graphql', graphqlHandler),
-      post('/graphql', graphqlHandler),
-      get('/graphiql', graphiqlHandler),
-    ],
-    onCreated: (server: Server) => {
+    schema,
+    onCreated: (server: express$Application ) => {
       SubscriptionServer.create(
-        { execute, schema, subscribe },
+        {
+          execute,
+          schema,
+          subscribe,
+        },
         { path: '/graphql', server },
       )
     },

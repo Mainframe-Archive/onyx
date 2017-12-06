@@ -17,6 +17,7 @@ type Options = {
   httpUrl?: string,
   store?: Conf,
   port?: number,
+  unsecure?: boolean,
 }
 
 const start = async (opts: Options) => {
@@ -28,7 +29,7 @@ const start = async (opts: Options) => {
   }
 
   // Setup DB using provided store (optional)
-  const db = new DB(opts.store)
+  const db = new DB(opts.store, `onyx-server-${port}`)
   // Connect to local Swarm node, this also makes the node's address and public key available in the db module
   const pss = await setupPss(db, wsUrl)
 
@@ -37,7 +38,7 @@ const start = async (opts: Options) => {
   // Set subscriptions for stored convos
   await subscribeToStoredConvos(pss, db)
   // Start the BZZ and GraphQL server
-  await createServer(pss, db, httpUrl, port)
+  await createServer(pss, db, httpUrl, port, !opts.unsecure)
 }
 
 export default start

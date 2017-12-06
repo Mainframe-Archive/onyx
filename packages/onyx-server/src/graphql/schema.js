@@ -79,7 +79,7 @@ type File {
 
 input ProfileInput {
   avatar: String
-  name: String!
+  name: String
   bio: String
 }
 

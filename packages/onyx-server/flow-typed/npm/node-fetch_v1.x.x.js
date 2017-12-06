@@ -1,5 +1,5 @@
-// flow-typed signature: 12ca90f2258926f80c00486f72690ea1
-// flow-typed version: 2c4367e37c/node-fetch_v1.x.x/flow_>=v0.44.x
+// flow-typed signature: 284e255a331cbe00e3ddf88897c9452d
+// flow-typed version: 7e7beb7540/node-fetch_v1.x.x/flow_>=v0.44.x
 
 declare module 'node-fetch' {
   declare export class Request mixins Body {
@@ -23,11 +23,13 @@ declare module 'node-fetch' {
     size: number
   }
 
+  declare type HeaderObject = {
+    [index: string]: string
+  }
+
   declare interface RequestInit {
     method?: string,
-    headers?: HeaderInit | {
-      [index: string]: string
-    },
+    headers?: HeaderObject,
     body?: BodyInit,
     redirect?: RequestRedirect,
 

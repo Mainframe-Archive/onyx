@@ -14,7 +14,7 @@ export type ID = string
 
 export type Profile = {
   id: ID, // base64-encoded public key
-  avatar?: ?string,
+  avatar?: ?string, // Swarm hash
   name?: ?string,
   bio?: ?string,
 }
@@ -123,8 +123,8 @@ export default class DB {
   _store: Conf
   _typings: Map<ID, ConvoTypings> = new Map()
 
-  constructor(store: ?Conf) {
-    this._store = store || new Conf()
+  constructor(store: ?Conf, name?: string) {
+    this._store = store || new Conf({configName: name || 'onyx-server'})
     if (!this._store.has('state')) {
       this.resetState()
     }
