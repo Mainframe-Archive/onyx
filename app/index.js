@@ -199,7 +199,7 @@ const start = async () => {
         } catch (e) {
           console.log(e.stack)
           errorMsg =
-            'There was an issue starting local Swarm node, you may want to check if you have a Swarm node running already, or if the port 3039 is open'
+            'There was an issue starting local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is open'
         }
       }
 
