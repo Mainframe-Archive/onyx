@@ -164,6 +164,7 @@ const startLocalOnyxServer = async () => {
     httpUrl: SWARM_HTTP_URL,
     port,
     store,
+    unsecure: true,
   })
   return port
 }
