@@ -326,6 +326,9 @@ const styles = StyleSheet.create({
   list: {
     paddingLeft: BASIC_SPACING + 4,
   },
+  profile: {
+    padding: BASIC_SPACING,
+  },
   channels: {
     backgroundColor: COLORS.SECONDARY_BLUE,
     paddingTop: BASIC_SPACING + 4,

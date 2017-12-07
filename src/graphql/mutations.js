@@ -138,6 +138,7 @@ export const UpdateProfileMutation = graphql(
       updateProfile(input: $input) {
         name
         bio
+        avatar
       }
     }
   `,
