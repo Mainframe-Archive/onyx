@@ -67,8 +67,6 @@ const start = async () => {
       '--ws',
       '--wsorigins',
       '*',
-      '--ens-api',
-      '',
     ])
 
     proc.once('error', error => {

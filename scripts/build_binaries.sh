@@ -20,8 +20,8 @@ TMP_DIR=$ROOT_DIR/tmp
 
 TARGETS=linux/amd64,darwin/amd64,windows/amd64
 
-mkdir $BIN_DIR -p
-mkdir $TMP_DIR -p
+mkdir -p $BIN_DIR
+mkdir -p $TMP_DIR
 
 if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
