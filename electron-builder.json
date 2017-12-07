@@ -13,6 +13,14 @@
     {
       "from": "./bin/swarm-${os}",
       "to": "bin/swarm"
+    },
+    {
+      "from": "./bin/geth-${os}.exe",
+      "to": "bin/geth.exe"
+    },
+    {
+      "from": "./bin/swarm-${os}.exe",
+      "to": "bin/swarm.exe"
     }
   ],
   "appImage": {
