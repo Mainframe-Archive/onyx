@@ -3,8 +3,8 @@
   "version": "0.2.0",
   "description": "PSS mailboxing service",
   "main": "lib/index.js",
-  "repository": "git@github.com:thusfresh/onyx-server.git",
-  "author": "Paul Le Cam <paul@mainframe.com>",
+  "repository": "git@github.com:MainframeHQ/onyx-server.git",
+  "author": "Mainframe",
   "license": "MIT",
   "bin": {
     "onyx-server": "./bin/onyx-server"
