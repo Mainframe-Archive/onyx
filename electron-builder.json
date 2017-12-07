@@ -5,37 +5,49 @@
   "directories": {
     "buildResources": "assets"
   },
-  "extraResources": [
-    {
-      "from": "./bin/geth-${os}",
-      "to": "bin/geth"
-    },
-    {
-      "from": "./bin/swarm-${os}",
-      "to": "bin/swarm"
-    },
-    {
-      "from": "./bin/geth-${os}.exe",
-      "to": "bin/geth.exe"
-    },
-    {
-      "from": "./bin/swarm-${os}.exe",
-      "to": "bin/swarm.exe"
-    }
-  ],
   "appImage": {
     "systemIntegration": "doNotAsk"
   },
   "linux": {
     "category": "Network",
-    "target": "AppImage"
+    "target": "AppImage",
+    "extraResources": [
+      {
+        "from": "./bin/geth-linux",
+        "to": "bin/geth"
+      },
+      {
+        "from": "./bin/swarm-linux",
+        "to": "bin/swarm"
+      },
+    ],
   },
   "mac": {
     "icon": "assets/icon.icns",
-    "target": "dir"
+    "target": "dir",
+    "extraResources": [
+      {
+        "from": "./bin/geth-mac",
+        "to": "bin/geth"
+      },
+      {
+        "from": "./bin/swarm-mac",
+        "to": "bin/swarm"
+      },
+    ],
   },
   "win": {
     "icon": "assets/icon.ico",
-    "target": "nsis"
+    "target": "nsis",
+    "extraResources": [
+      {
+        "from": "./bin/geth-win.exe",
+        "to": "bin/geth.exe"
+      },
+      {
+        "from": "./bin/swarm-win.exe",
+        "to": "bin/swarm.exe"
+      }
+    ]
   }
 }
