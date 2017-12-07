@@ -9,6 +9,9 @@
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js && mv build app/build",
+    "builder": "electron-builder",
+    "build:binaries": "./scripts/build_binaries.sh",
+    "build:binaries:lmw": "./scripts/build_binaries.sh -mwl",
     "clean": "del app/build",
     "dist": "yarn clean && yarn build && electron-builder",
     "electron": "electron app",

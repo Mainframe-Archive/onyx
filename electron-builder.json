@@ -5,16 +5,49 @@
   "directories": {
     "buildResources": "assets"
   },
+  "appImage": {
+    "systemIntegration": "doNotAsk"
+  },
   "linux": {
     "category": "Network",
-    "target": "AppImage"
+    "target": "AppImage",
+    "extraResources": [
+      {
+        "from": "./bin/geth-linux",
+        "to": "bin/geth"
+      },
+      {
+        "from": "./bin/swarm-linux",
+        "to": "bin/swarm"
+      },
+    ],
   },
   "mac": {
-    "icon": "icon.icns",
-    "target": "dir"
+    "icon": "assets/icon.icns",
+    "target": "dir",
+    "extraResources": [
+      {
+        "from": "./bin/geth-mac",
+        "to": "bin/geth"
+      },
+      {
+        "from": "./bin/swarm-mac",
+        "to": "bin/swarm"
+      },
+    ],
   },
   "win": {
-    "icon": "icon.ico",
-    "target": "nsis"
+    "icon": "assets/icon.ico",
+    "target": "nsis",
+    "extraResources": [
+      {
+        "from": "./bin/geth-win.exe",
+        "to": "bin/geth.exe"
+      },
+      {
+        "from": "./bin/swarm-win.exe",
+        "to": "bin/swarm.exe"
+      }
+    ]
   }
 }
