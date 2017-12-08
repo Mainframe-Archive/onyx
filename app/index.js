@@ -17,7 +17,7 @@ const SWARM_WS_URL =
 const SWARM_HTTP_URL =
   process.env.SWARM_HTTP_URL ||
   (config && config.swarmHttpUrl) ||
-  'http://localhost:8500'
+  'https://onyx-storage.mainframe.com'
 
 let appServer, loadingWindow, mainWindow
 
