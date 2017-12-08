@@ -1,4 +1,5 @@
 node_modules
 lib
+external_deps
 certs
 .srl

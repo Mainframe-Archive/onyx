@@ -30,6 +30,26 @@ The `DEBUG` environment variable can be used to activate logs, ex:
 DEBUG="onyx*" onyx-server
 ```
 
+### Development
+
+To build local version run `yarn start`. Afterwards you can start the built server
+from `./bin/onyx-server`.
+
+Onyx server depends on having a local swarm node running. You can start it by running
+the `start_swarm_node.sh` script. This should allow you to run `onyx-server` with
+no special arguments.
+
+in one shell:
+```sh
+./start_swarm_node.sh <some_swarm_data_directory_here>
+```
+
+in another shell:
+```sh
+yarn start
+./bin/onyx-server
+```
+
 ### API
 
 ```js
