@@ -69,21 +69,12 @@ const start = async () => {
       '*',
     ])
 
-    proc.once('error', error => {
-      console.log('Failed to start Swarm node', error)
+    proc.catch(error => {
+      console.error('Failed to start Swarm node')
       reject(error)
     })
 
     proc.stderr.pipe(createWriteStream(logPath, { flags: 'a' }))
-
-    proc.stdout.on('data', data => {
-      const dataStr = data.toString()
-      if (dataStr.toLowerCase().indexOf('fatal:') !== -1) {
-        const error = new Error(`Swarm error: ${dataStr}`)
-        console.log(error)
-        reject(error)
-      }
-    })
 
     proc.stderr.on('data', data => {
       if (
