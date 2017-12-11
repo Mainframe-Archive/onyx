@@ -69,9 +69,9 @@ const start = async () => {
       '*',
     ])
 
-    proc.once('error', error => {
-      console.log('Failed to start Swarm node', error)
-      reject(error)
+    proc.catch(error => {
+      console.error('Failed to start Swarm node: ', error.stderr)
+      reject(error.stderr)
     })
 
     proc.stderr.pipe(createWriteStream(logPath, { flags: 'a' }))
