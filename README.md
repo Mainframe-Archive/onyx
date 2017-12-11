@@ -40,7 +40,7 @@ We would also love to chat with you on the Mainframe PoC! To converse with us th
 
 Mainframe is a compromise-free messaging platform that combines the desired features of today's best messaging tools while also maintaining the highest level of security and user sovereignty. The platform consists of user-installed client apps (mobile and desktop) that connect to a Mainframe node. This node can be run on the user's desktop or deployed to the cloud.
 
-![Mainframe Architecture][docs/architecture.png]
+![Mainframe Architecture](docs/architecture.png)
 
 A Mainframe node consists of a blockchain node with a messaging layer and various services necessary for storing messages and managing contacts. The first supported blockchain is [Ethereum](https://www.ethereum.org) and makes use of the [Swarm](https://github.com/ethersphere/swarm) distributed storage platform and [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss) secure messaging protocol for message delivery and file storage. Later development milestones will include support for messaging on and between multiple blockchains, and incentivization for reliable message delivery and file storage using Mainframe tokens.
 
