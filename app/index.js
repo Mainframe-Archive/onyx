@@ -6,6 +6,7 @@ const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
 const url = require('url')
 const path = require('path')
+const querystring = require('querystring');
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
@@ -191,7 +192,7 @@ const start = async () => {
       } catch (e) {
         console.log(e.stack)
         errorMsg =
-          'There was an issue setting up the Geth account, you may want to check if your configuration is valid'
+          'There was an error setting up the Geth account\nDebug: ' + e.toString()
       }
 
       if (!errorMsg) {
@@ -200,7 +201,7 @@ const start = async () => {
         } catch (e) {
           console.log(e.stack)
           errorMsg =
-            'There was an issue starting local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is open'
+            'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' + e.toString()
         }
       }
 
@@ -209,16 +210,16 @@ const start = async () => {
           const serverPort = await startLocalOnyxServer(appPort)
           const wsUrl = `ws://localhost:${serverPort}/graphql`
           const httpUrl = `http://localhost:${serverPort}`
-          appUrl += `/?wsUrl=${wsUrl}&httpUrl=${httpUrl}`
+          appUrl += `/?${querystring.stringify({ wsUrl: wsUrl, httpUrl: httpUrl })}`
         } catch (e) {
           console.log(e.stack)
           errorMsg =
-            'There was an issue starting local GraphQL server, you may want to check you have a Swarm node running on default port 8546, or that you specified the correct port if not using default'
+            'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' + SWARM_WS_URL + '\nDebug: ' + e.toString()
         }
       }
 
       if (errorMsg) {
-        appUrl += `/?wsUrl=${storedWsUrl}&connectionError=${errorMsg}`
+        appUrl += `/?${querystring.stringify({ wsUrl: storedWsUrl, connectionError: errorMsg })}`
         if (appServer != null) {
           appServer.stop()
         }
@@ -232,8 +233,8 @@ const start = async () => {
         domain = storedWsUrl.split('/')[0]
       }
       appUrl += domain
-        ? `/?wsUrl=${storedWsUrl}&httpUrl=http://${domain}`
-        : `/?wsUrl=${storedWsUrl}&connectionError=Invalid ws url`
+        ? `/?${querystring.stringify({ wsUrl: storedWsUrl, httpUrl: `http://${domain}` })}`
+        : `/?${querystring.stringify({ wsUrl: storedWsUrl, connectionError: 'Invalid ws url' })}`
     }
   }
 
