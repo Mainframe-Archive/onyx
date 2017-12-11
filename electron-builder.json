@@ -24,7 +24,7 @@
   },
   "mac": {
     "icon": "assets/icon.icns",
-    "target": "dir",
+    "target": ["dir", "dmg"],
     "extraResources": [
       {
         "from": "./bin/geth-mac",
