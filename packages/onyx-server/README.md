@@ -2,10 +2,14 @@
 
 PSS mailboxing service for the Onyx app
 
+## Prerequisites
+
+[Node](https://nodejs.org/en/) v8+ with [npm](https://www.npmjs.com/).
+
 ## Installation
 
 ```sh
-yarn add onyx-server
+npm install --global onyx-server
 ```
 
 ## Usage
@@ -18,7 +22,7 @@ onyx-server --port 5000 --http-url http://localhost:8500 --ws-url ws://localhost
 
 All arguments are optional, when not provided the server will use environment
 variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_HTTP_URL` or its defaults
-(WebSocket on `ws://localhost:8500`, HTTP on `http://localhost:8500` and port
+(WebSocket on `ws://localhost:8546`, HTTP on `http://localhost:8500` and port
 5000).
 
 Additionally you can pass `-u` or `--unsecure` to dismiss using tls, only recommended

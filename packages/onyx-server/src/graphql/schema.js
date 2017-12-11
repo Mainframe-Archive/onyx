@@ -183,7 +183,7 @@ export default (pss: PSS, db: DB, port: number) => {
           input.peers,
           input.dark,
         )
-        return db.getConversation(topic.hex, true)
+        return db.getConversation(topic.id, true)
       },
       requestContact: async (root, { id }) => {
         log('requestContact', id)

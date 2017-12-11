@@ -1,40 +1,29 @@
 // @flow
 
 import debug from 'debug'
-import {
-  base64ToHex,
-  hexToBase64,
-  encodeHex,
-  type PSS,
-  type topic,
-} from 'erebos'
+import type { hex, PSS } from 'erebos'
 import { Observable } from 'rxjs'
 import { AnonymousSubject } from 'rxjs/Subject'
 import { Subscriber } from 'rxjs/Subscriber'
 
 import { decodeProtocol, encodeProtocol, type ProtocolEvent } from './protocol'
 
-type publicKey = string
-
 export class TopicSubject extends AnonymousSubject<Object> {
-  hex: string
+  id: hex
 
   _log: (...args: *) => void
-  _peers: Set<publicKey>
+  _peers: Set<hex>
   _pss: PSS
-  _topic: topic
 
-  constructor(pss: PSS, topic: topic, subscription: string) {
-    // $FlowFixMe
-    const topicHex = encodeHex(topic)
-    const log = debug(`onyx:pss:topic:${topicHex}`)
+  constructor(pss: PSS, topic: hex, subscription: hex) {
+    const log = debug(`onyx:pss:topic:${topic}`)
     const peers = new Set()
 
     const observer = new Subscriber((data: Object) => {
       log('send to all', data)
       const msg = encodeProtocol(data)
       peers.forEach(key => {
-        pss.sendAsym(base64ToHex(key), topic, msg)
+        pss.sendAsym(key, topic, msg)
       })
     })
 
@@ -42,10 +31,9 @@ export class TopicSubject extends AnonymousSubject<Object> {
       .createSubscription(subscription)
       // $FlowFixMe
       .map(evt => {
-        const sender = hexToBase64(evt.Key)
         const data = decodeProtocol(evt.Msg)
-        if (sender && data) {
-          return { sender, ...data }
+        if (evt.Key && data) {
+          return { sender: evt.Key, ...data }
         } else {
           log('invalid message from subscription', evt)
         }
@@ -53,32 +41,32 @@ export class TopicSubject extends AnonymousSubject<Object> {
       .filter(Boolean)
 
     super(observer, observable)
-    this.hex = topicHex
+    this.id = topic
     this._log = log
     this._peers = peers
     this._pss = pss
-    this._topic = topic
 
     log('setup')
   }
 
-  addPeer(key: publicKey): this {
+  addPeer(key: hex): this {
     this._peers.add(key)
     return this
   }
 
-  removePeer(key: publicKey): this {
+  removePeer(key: hex): this {
     this._peers.delete(key)
     return this
   }
 
-  toPeer(key: publicKey, data: Object) {
+  toPeer(key: hex, data: Object): this {
     this._log('send to peer', key, data)
-    this._pss.sendAsym(base64ToHex(key), this._topic, encodeProtocol(data))
+    this._pss.sendAsym(key, this.id, encodeProtocol(data))
+    return this
   }
 }
 
-export default async (pss: PSS, topic: topic): Promise<TopicSubject> => {
+export default async (pss: PSS, topic: hex): Promise<TopicSubject> => {
   const subscription = await pss.subscribeTopic(topic)
   return new TopicSubject(pss, topic, subscription)
 }

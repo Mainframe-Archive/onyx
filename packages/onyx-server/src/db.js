@@ -2,7 +2,7 @@
 
 import Conf from 'conf'
 import debug from 'debug'
-import type { topic } from 'erebos'
+import type { hex } from 'erebos'
 import { PubSub } from 'graphql-subscriptions'
 import { merge } from 'lodash'
 
@@ -10,10 +10,8 @@ const TYPING_TIMEOUT = 10000 // 10 secs in ms
 
 const log = debug('onyx:db')
 
-export type ID = string
-
 export type Profile = {
-  id: ID, // base64-encoded public key
+  id: hex, // hex-encoded public key
   avatar?: ?string, // Swarm hash
   name?: ?string,
   bio?: ?string,
@@ -39,14 +37,14 @@ export type MessageBlock = MessageBlockFile | MessageBlockText
 export type MessageSource = 'SYSTEM' | 'USER'
 
 export type Message = {
-  sender: ID, // Address
+  sender: hex, // Address
   blocks: Array<MessageBlock>,
   source: MessageSource,
   timestamp: number,
 }
 
 export type SendMessage = {
-  sender?: ?ID,
+  sender?: ?hex,
   blocks: Array<MessageBlock>,
   source?: ?MessageSource,
   timestamp?: ?number,
@@ -55,19 +53,19 @@ export type SendMessage = {
 export type ConvoType = 'CHANNEL' | 'DIRECT'
 
 export type Conversation = {
-  id: ID, // Topic hex
+  id: hex, // Topic hex
   lastActiveTimestamp: number,
   messages: Array<Message>,
   messageCount: number,
   // $FlowFixMe
-  peers: Array<ID>,
+  peers: Array<hex>,
   type: ConvoType,
   pointer: number,
   subject?: ?string,
 }
 
 export type ConversationData = {
-  id: ID, // Topic hex
+  id: hex, // Topic hex
   lastActiveTimestamp: number,
   messages: Array<Message>,
   messageCount: number,
@@ -82,22 +80,22 @@ export type ContactState = 'ACCEPTED' | 'RECEIVED' | 'SENT'
 
 export type Contact = {
   profile: Profile,
-  address?: ?string,
-  convoID?: ?ID,
+  address?: ?hex,
+  convoID?: ?hex,
   state?: ?ContactState,
 }
 
 export type ContactData = {
   profile: Profile,
-  address?: ?string,
-  convoID?: ?ID,
+  address?: ?hex,
+  convoID?: ?hex,
   convo?: ?Conversation,
   state?: ?ContactState,
 }
 
 export type ContactRequest = {
-  address: string,
-  topic: topic,
+  address: hex,
+  topic: hex,
 }
 
 type Viewer = {
@@ -107,13 +105,13 @@ type Viewer = {
 }
 
 type Timer = number
-type ConvoTypings = Map<ID, Timer> // keyed by peer ID
+type ConvoTypings = Map<hex, Timer> // keyed by peer hex
 
 type State = {
   address: string,
-  contactRequests: { [ID]: ContactRequest },
-  contacts: { [ID]: Contact },
-  convos: { [ID]: Conversation },
+  contactRequests: { [hex]: ContactRequest },
+  contacts: { [hex]: Contact },
+  convos: { [hex]: Conversation },
   profile: ?Profile,
 }
 
@@ -121,10 +119,10 @@ export default class DB {
   pubsub: PubSub = new PubSub()
 
   _store: Conf
-  _typings: Map<ID, ConvoTypings> = new Map()
+  _typings: Map<hex, ConvoTypings> = new Map()
 
   constructor(store: ?Conf, name?: string) {
-    this._store = store || new Conf({configName: name || 'onyx-server'})
+    this._store = store || new Conf({ configName: name || 'onyx-server' })
     if (!this._store.has('state')) {
       this.resetState()
     }
@@ -140,7 +138,7 @@ export default class DB {
     })
   }
 
-  setupStore(address: string = '', id: string) {
+  setupStore(address: hex = '', id: hex) {
     const storedId = this._store.get('state.profile.id')
     if (storedId != null && storedId !== id) {
       this.resetState()
@@ -149,7 +147,7 @@ export default class DB {
     this._store.set('state.address', address)
   }
 
-  setTypings(convoID: ID, convoTypings: ConvoTypings) {
+  setTypings(convoID: hex, convoTypings: ConvoTypings) {
     this._typings.set(convoID, convoTypings)
     const peers = Array.from(convoTypings.keys()).reduce((acc, id) => {
       const contact = this.getContact(id)
@@ -162,7 +160,7 @@ export default class DB {
     return peers
   }
 
-  setTyping(convoID: ID, peerID: ID, typing: boolean) {
+  setTyping(convoID: hex, peerID: hex, typing: boolean) {
     let convoTypings = this._typings.get(convoID)
     if (convoTypings == null) {
       convoTypings = new Map()
@@ -184,11 +182,11 @@ export default class DB {
     }
   }
 
-  resetTyping(convoID: ID, peerID: ID) {
+  resetTyping(convoID: hex, peerID: hex) {
     return setTimeout(this.setTyping, TYPING_TIMEOUT, convoID, peerID, false)
   }
 
-  getAddress(): string {
+  getAddress(): hex {
     return this._store.get('state.address')
   }
 
@@ -200,11 +198,11 @@ export default class DB {
     return this._store.get('state.profile')
   }
 
-  deleteContactRequest(id: ID) {
+  deleteContactRequest(id: hex) {
     this._store.delete(`state.contactRequests.${id}`)
   }
 
-  getContactRequest(id: ID) {
+  getContactRequest(id: hex) {
     return this._store.get(`state.contactRequests.${id}`)
   }
 
@@ -217,7 +215,7 @@ export default class DB {
   }
 
   getConversation(
-    id: ID,
+    id: hex,
     withContacts: boolean = false,
   ): ?(Conversation | ConversationData) {
     const convo = this._store.get(`state.convos.${id}`)
@@ -232,7 +230,7 @@ export default class DB {
     }
   }
 
-  getContact(id: ID, withConvo: boolean = false): ?(Contact | ContactData) {
+  getContact(id: hex, withConvo: boolean = false): ?(Contact | ContactData) {
     const contact = this._store.get(`state.contacts.${id}`)
     if (contact) {
       const convo =
@@ -280,7 +278,7 @@ export default class DB {
     this.pubsub.publish('contactsChanged')
   }
 
-  hasConversation(convoId: ID) {
+  hasConversation(convoId: hex) {
     return this._store.has(`state.convos.${convoId}`)
   }
 
@@ -292,7 +290,7 @@ export default class DB {
     )
   }
 
-  updateConversationPointer(id: ID): ?Conversation {
+  updateConversationPointer(id: hex): ?Conversation {
     const convo = this._store.get(`state.convos.${id}`)
     if (convo != null && convo.pointer != convo.messages.length) {
       convo.lastActiveTimestamp = Date.now()
@@ -308,7 +306,7 @@ export default class DB {
   }
 
   addMessage(
-    id: ID,
+    id: hex,
     msg: Message | SendMessage,
     fromSelf: boolean = false,
   ): ?Message {

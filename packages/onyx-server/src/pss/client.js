@@ -1,23 +1,14 @@
 // @flow
 
 import debug from 'debug'
-import {
-  base64ToArray,
-  base64ToHex,
-  createPSSWebSocket,
-  encodeHex,
-  hexToArray,
-  type byteArray,
-  type topic,
-  type PSS,
-} from 'erebos'
+import { createPSSWebSocket, encodeHex, type hex, type PSS } from 'erebos'
 import { Subscriber } from 'rxjs/Subscriber'
+import type { Subscription } from 'rxjs/Subscription'
 
 import type DB, {
   Contact,
   ContactRequest,
   ConvoType,
-  ID,
   MessageBlock,
   SendMessage,
 } from '../db'
@@ -41,14 +32,7 @@ import {
 import createTopicSubject, { type TopicSubject } from './TopicSubject'
 
 const logClient = debug('onyx:pss:client')
-const topics: Map<ID, TopicSubject> = new Map()
-
-export const setPeerPublicKey = (
-  pss: PSS,
-  id: ID,
-  topic: topic,
-  address: string = '',
-) => pss.setPeerPublicKey(base64ToArray(id), topic, address)
+const topics: Map<hex, TopicSubject> = new Map()
 
 export const setupPss = async (db: DB, url: string) => {
   logClient(`connecting to Swarm ${url}`)
@@ -71,9 +55,8 @@ export const subscribeToStoredConvos = async (pss: PSS, db: DB) => {
     switch (c.type) {
       case 'DIRECT': {
         const contact = c.peers[0]
-        // $FlowFixMe
-        const dmTopic = await joinDirectTopic(pss, db, hexToArray(c.id), {
-          address: contact.address,
+        const dmTopic = await joinDirectTopic(pss, db, c.id, {
+          address: contact.address || '0x',
           pubKey: contact.profile.id,
         })
         createP2PTopicSubscription(pss, db, dmTopic)
@@ -81,22 +64,33 @@ export const subscribeToStoredConvos = async (pss: PSS, db: DB) => {
       }
       case 'CHANNEL': {
         const channel = {
-          subject: c.subject,
-          // $FlowFixMe
-          topic: hexToArray(c.id),
+          subject: c.subject || '',
+          topic: c.id,
+          peers: [],
+          dark: true,
         }
         const profile = db.getProfile()
         if (profile) {
           const peers = c.peers.reduce((acc, p) => {
             if (p.profile && p.profile.id !== profile.id) {
+              // Infer darkness from peer addresses - could be simpler to store the value
+              if (p.address && p.address !== '0x') {
+                channel.dark = false
+              }
               acc.push({
                 pubKey: p.profile.id,
-                address: p.address,
+                address: p.address || '0x',
               })
             }
             return acc
           }, [])
-          // $FlowFixMe
+          channel.peers = [
+            ...peers,
+            {
+              pubKey: profile.id,
+              address: db.getAddress(),
+            },
+          ]
           const chanTopic = await joinChannelTopic(pss, db, channel, peers)
           createChannelTopicSubscription(pss, db, chanTopic)
         }
@@ -106,12 +100,10 @@ export const subscribeToStoredConvos = async (pss: PSS, db: DB) => {
   })
 }
 
-export const createContactTopic = (
-  pss: PSS,
-  publicKey: string,
-): Promise<topic> => pss.stringToTopic(`onyx:contact:${publicKey}`)
+export const createContactTopic = (pss: PSS, publicKey: hex): Promise<hex> =>
+  pss.stringToTopic(`onyx:contact:${publicKey}`)
 
-export const createRandomTopic = (pss: PSS): Promise<topic> =>
+export const createRandomTopic = (pss: PSS): Promise<hex> =>
   pss.stringToTopic(
     Math.random()
       .toString(36)
@@ -122,14 +114,14 @@ const addTopic = (
   db: DB,
   topic: TopicSubject,
   type: ConvoType,
-  peers: Array<ID>,
+  peers: Array<hex>,
   channel?: ChannelInvitePayload,
 ) => {
-  topics.set(topic.hex, topic)
-  if (!db.hasConversation(topic.hex)) {
+  topics.set(topic.id, topic)
+  if (!db.hasConversation(topic.id)) {
     db.setConversation({
       dark: channel ? channel.dark : false,
-      id: topic.hex,
+      id: topic.id,
       lastActiveTimestamp: Date.now(),
       messages: [],
       messageCount: 0,
@@ -156,11 +148,11 @@ export const joinChannelTopic = async (
       const contact = db.getContact(p.pubKey)
       if (contact == null) {
         db.setContact({
-          address: p.address,
+          address: p.address || '0x',
           profile: { id: p.pubKey },
         })
       }
-      await setPeerPublicKey(pss, p.pubKey, channel.topic, p.address)
+      await pss.setPeerPublicKey(p.pubKey, channel.topic)
       logClient('add peer', channel.topic, p.pubKey)
       topic.addPeer(p.pubKey)
       return p.pubKey
@@ -175,12 +167,12 @@ export const joinChannelTopic = async (
 export const joinDirectTopic = async (
   pss: PSS,
   db: DB,
-  topicID: topic,
+  id: hex,
   peer: PeerInfo,
 ): Promise<TopicSubject> => {
   const [topic] = await Promise.all([
-    createTopicSubject(pss, topicID),
-    setPeerPublicKey(pss, peer.pubKey, topicID, peer.address),
+    createTopicSubject(pss, id),
+    pss.setPeerPublicKey(peer.pubKey, id),
   ])
   topic.addPeer(peer.pubKey)
   addTopic(db, topic, 'DIRECT', [peer.pubKey])
@@ -189,7 +181,7 @@ export const joinDirectTopic = async (
 
 export const sendMessage = (
   db: DB,
-  topicHex: ID,
+  topicHex: hex,
   blocks: Array<MessageBlock>,
 ): ?SendMessage => {
   const topic = topics.get(topicHex)
@@ -208,7 +200,7 @@ export const sendMessage = (
   return message
 }
 
-export const setTyping = (topicHex: ID, typing: boolean) => {
+export const setTyping = (topicHex: hex, typing: boolean) => {
   const topic = topics.get(topicHex)
   if (topic == null) {
     logClient('cannot set typing to missing topic:', topicHex)
@@ -232,7 +224,7 @@ const handleTopicJoined = (
     (!contact.address || contact.address.length < payload.address.length)
   ) {
     // Update contact's public key with a more precise address if provided
-    setPeerPublicKey(pss, contact.profile.id, topic._topic, payload.address)
+    pss.setPeerPublicKey(contact.profile.id, topic.id, payload.address)
   }
 }
 
@@ -244,10 +236,10 @@ const handleTopicMessage = (
   switch (msg.type) {
     case 'TOPIC_MESSAGE':
       logClient('received topic message', msg.sender, msg.payload)
-      db.addMessage(topic.hex, { ...msg.payload, sender: msg.sender })
+      db.addMessage(topic.id, { ...msg.payload, sender: msg.sender })
       break
     case 'TOPIC_TYPING':
-      db.setTyping(topic.hex, msg.sender, msg.payload.typing)
+      db.setTyping(topic.id, msg.sender, msg.payload.typing)
       break
     default:
       logClient('unhandled message topic type', msg.type)
@@ -258,8 +250,8 @@ const createChannelTopicSubscription = (
   pss: PSS,
   db: DB,
   topic: TopicSubject,
-) => {
-  const log = debug(`onyx:pss:client:topic:channel:${topic.hex}`)
+): Subscription => {
+  const log = debug(`onyx:pss:client:topic:channel:${topic.id}`)
   log('create subscription')
   return topic.subscribe((msg: ReceivedEvent) => {
     log('received message', msg)
@@ -292,7 +284,7 @@ const createChannelTopicSubscription = (
 }
 
 const createP2PTopicSubscription = (pss: PSS, db: DB, topic: TopicSubject) => {
-  const log = debug(`onyx:pss:client:topic:p2p:${topic.hex}`)
+  const log = debug(`onyx:pss:client:topic:p2p:${topic.id}`)
   return topic.subscribe((msg: ReceivedEvent) => {
     log('received message', msg)
     switch (msg.type) {
@@ -320,7 +312,7 @@ const createP2PTopicSubscription = (pss: PSS, db: DB, topic: TopicSubject) => {
 export const acceptContact = async (
   pss: PSS,
   db: DB,
-  id: ID,
+  id: hex,
   request: ContactRequest,
 ) => {
   const existing = db.getContact(id)
@@ -338,7 +330,7 @@ export const acceptContact = async (
   db.deleteContactRequest(id)
   db.setContact({
     address: request.address,
-    convoID: topic.hex,
+    convoID: topic.id,
     profile: existing.profile,
     state: 'ACCEPTED',
   })
@@ -380,24 +372,27 @@ export const createChannel = async (
   pss: PSS,
   db: DB,
   subject: string,
-  peers: Array<ID>,
+  peers: Array<hex>,
   dark: boolean,
-) => {
+): Promise<{|
+  +topic: TopicSubject,
+  +topicSubscription: Subscription,
+|}> => {
   const profile = db.getProfile()
   if (profile == null) {
     throw new Error('Cannot create channel before profile is setup')
   }
   // Create and join the topic for this channel
-  const topicID = await createRandomTopic(pss)
+  const topichex = await createRandomTopic(pss)
   const peerContacts = peers.map(id => db.getContact(id)).filter(Boolean)
   const pssPeers = formatPSSPeers(peerContacts, dark)
 
   const channel = {
     dark,
-    topic: topicID,
+    topic: topichex,
     subject,
     peers: [
-      { pubKey: profile.id, address: dark ? '' : db.getAddress() },
+      { pubKey: profile.id, address: dark ? '0x' : db.getAddress() },
       ...pssPeers,
     ],
   }
@@ -421,7 +416,7 @@ export const resendInvites = async (
   channelId: string,
   dark: boolean,
   subject: string,
-  channelPeers: Array<ID>,
+  channelPeers: Array<hex>,
 ) => {
   const profile = db.getProfile()
   if (profile == null) {
@@ -432,7 +427,7 @@ export const resendInvites = async (
     // $FlowFixMe
     topic: hexToArray(channelId),
     peers: [
-      { pubKey: profile.id, address: dark ? '' : db.getAddress() },
+      { pubKey: profile.id, address: dark ? '0x' : db.getAddress() },
       ...formatPSSPeers(peerContacts, dark),
     ],
     dark,
@@ -446,7 +441,7 @@ const formatPSSPeers = (
   dark: boolean,
 ): Array<*> => {
   return contactPeers.map(c => ({
-    address: (!dark && c.address) || '',
+    address: (!dark && c.address) || '0x',
     pubKey: c.profile.id,
   }))
 }
@@ -479,7 +474,7 @@ export const addContactRequest = async (
   return contact
 }
 
-export const requestContact = async (pss: PSS, db: DB, id: string) => {
+export const requestContact = async (pss: PSS, db: DB, id: hex) => {
   const profile = db.getProfile()
   if (profile == null) {
     throw new Error('Cannot call requestContact() before profile is setup')
@@ -487,23 +482,22 @@ export const requestContact = async (pss: PSS, db: DB, id: string) => {
 
   // Get topic for contact + create random new p2p topic
   const [contactTopic, newTopic] = await Promise.all([
-    // $FlowFixMe
     createContactTopic(pss, id),
     createRandomTopic(pss),
   ])
-  const log = debug(`onyx:pss:client:topic:p2p:${encodeHex(contactTopic)}`)
+  const log = debug(`onyx:pss:client:topic:p2p:${contactTopic}`)
 
   // Create p2p topic and setup keys
   const [topic] = await Promise.all([
-    joinDirectTopic(pss, db, newTopic, { pubKey: id, address: '' }),
-    setPeerPublicKey(pss, id, contactTopic),
+    joinDirectTopic(pss, db, newTopic, { pubKey: id, address: '0x' }),
+    pss.setPeerPublicKey(id, contactTopic, '0x'),
   ])
 
   const topicSubscription = createP2PTopicSubscription(pss, db, topic)
 
   const existing = db.getContact(id)
   const contact = {
-    convoID: topic.hex,
+    convoID: topic.id,
     profile: existing ? existing.profile : { id },
     state: 'SENT',
   }
@@ -516,7 +510,7 @@ export const requestContact = async (pss: PSS, db: DB, id: string) => {
   })
   log('request contact', req)
   // Send message requesting contact
-  await pss.sendAsym(base64ToHex(id), contactTopic, encodeProtocol(req))
+  await pss.sendAsym(id, contactTopic, encodeProtocol(req))
 
   return {
     contact,
@@ -532,9 +526,9 @@ export const setupContactTopic = async (pss: PSS, db: DB) => {
     throw new Error('Cannot setup contact topic: profile is not setup')
   }
 
-  const topic: topic = await createContactTopic(pss, profile.id)
+  const topic = await createContactTopic(pss, profile.id)
   const subscription = await pss.subscribeTopic(topic)
-  const log = debug(`onyx:pss:client:topic:contact:${encodeHex(topic)}`)
+  const log = debug(`onyx:pss:client:topic:contact:${topic}`)
 
   return pss.createSubscription(subscription).subscribe(evt => {
     log('received message', evt)
