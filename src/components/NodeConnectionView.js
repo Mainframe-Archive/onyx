@@ -99,10 +99,7 @@ export default class NodeConnectionView extends Component {
             >
               <View style={styles.buttonText}>
                 <Text style={styles.defaultNodeButtonTitle}>
-                  Connect on localhost
-                </Text>
-                <Text style={styles.defaultNodeButtonSubtitle}>
-                  {this.props.defaultLocalhostUrl}
+                  Start local onyx server
                 </Text>
               </View>
               <Icon name="arrow-right" />
@@ -115,10 +112,10 @@ export default class NodeConnectionView extends Component {
             <TextInput
               white
               value={this.state.url}
-              placeholder="Graphql wss url"
+              placeholder="Onyx server websocket url"
               onChangeText={this.onChangeUrl}
             />
-            <Button outlineStyle title="Connect" onPress={this.onPressConnect} />
+            <Button outlineStyle title="Connect to remote server" onPress={this.onPressConnect} />
           </View>
           <MainframeBar footer />
         </View>
