@@ -38,7 +38,8 @@ const start = async (opts: Options) => {
   // Set subscriptions for stored convos
   await subscribeToStoredConvos(pss, db)
   // Start the BZZ and GraphQL server
-  await createServer(pss, db, httpUrl, port, !opts.unsecure)
+  const server = await createServer(pss, db, httpUrl, port, !opts.unsecure)
+  return server
 }
 
 export default start

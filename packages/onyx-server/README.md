@@ -22,7 +22,7 @@ variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_HTTP_URL` or its defaults
 5000).
 
 Additionally you can pass `-u` or `--unsecure` to dismiss using tls, only recommended
-for when connecting client and server over a local connection 
+for when connecting client and server over a local connection
 
 The `DEBUG` environment variable can be used to activate logs, ex:
 
@@ -62,7 +62,7 @@ startServer({
   port: 5000,
   store: new Conf(),
 }).then(
-  () => {
+  server => {
     console.log('server started')
   },
   err => {

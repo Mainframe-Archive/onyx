@@ -42,7 +42,9 @@ export default (
         options.ca = fs.readFileSync(path.join('certs', 'ca-crt.pem'))
       } catch (err) {
         console.warn(
-          `error reading ssl certificates, please make sure to run the certificate generation script.\n ${err}`
+          `error reading ssl certificates, please make sure to run the certificate generation script.\n ${
+            err
+          }`,
         )
         throw err
       }
@@ -51,13 +53,13 @@ export default (
       server = http.createServer(app)
     }
 
-    server.listen(port, 'localhost', (err) =>  {
+    server.listen(port, 'localhost', err => {
       if (err) {
         reject(err)
       } else {
         log(`running on port ${port}`)
         graphql.onCreated(server)
-        resolve()
+        resolve(server)
       }
     })
   })
