@@ -210,7 +210,7 @@ const start = async () => {
           const serverPort = await startLocalOnyxServer(appPort)
           const wsUrl = `ws://localhost:${serverPort}/graphql`
           const httpUrl = `http://localhost:${serverPort}`
-          appUrl += `/?${querystring.stringify({ wsUrl: wsUrl, httpUrl: httpUrl })}`
+          appUrl += `/?${querystring.stringify({ wsUrl, httpUrl })}`
         } catch (e) {
           console.log(e.stack)
           errorMsg =
