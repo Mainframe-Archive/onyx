@@ -22,7 +22,7 @@ cd "$GODIR"
 # doing the fetch here and now makes sure that we can change the chosen
 # commit hash without the risk of breaking the script
 git fetch
-git checkout onyx-0.1
+git checkout onyx-0.4
 make geth
 make swarm
 
@@ -46,6 +46,7 @@ $GODIR/build/bin/swarm \
     --password $DATADIR/password \
     --verbosity 4 \
     --bzzaccount $KEY \
+    --ens-api '' \
     --pss \
     --bzznetworkid 922 \
     --bootnodes enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@54.171.164.15:30399 \

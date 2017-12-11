@@ -21,7 +21,7 @@ type Options = {
 }
 
 const start = async (opts: Options) => {
-  const httpUrl = opts.httpUrl || SWARM_HTTP_URL || 'http://localhost:8500'
+  const httpUrl = opts.httpUrl || SWARM_HTTP_URL || 'https://onyx-storage.mainframe.com'
   const wsUrl = opts.wsUrl || SWARM_WS_URL || 'ws://localhost:8546'
   let port = opts.port
   if (port == null) {
