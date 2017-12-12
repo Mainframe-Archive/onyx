@@ -67,7 +67,7 @@ export class EditProfile extends Component<Props, State> {
   uploadFile = (file: Object) => {
     const reader = new FileReader()
     reader.onload = async e => {
-      const res = await fetch(`${this.context.httpServerUrl}/files`, {
+      const res = await fetch(`${this.context.httpServerUrl}/bzzr:`, {
         body: e.currentTarget.result,
         headers: {
           'Content-Length': file.size,
