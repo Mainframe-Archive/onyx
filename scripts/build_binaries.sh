@@ -13,7 +13,7 @@ else
   exit 1
 fi
 
-COMMIT_HASH=5c8bb8adb87d2977976efc05c9a44bfccafc3188
+GIT_REF=onyx-0.4
 ROOT_DIR=$(pwd)
 BIN_DIR=$ROOT_DIR/bin
 TMP_DIR=$ROOT_DIR/tmp
@@ -26,13 +26,13 @@ mkdir -p $TMP_DIR
 if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
     echo "cloning the go-ethereum repo"
-    git clone --depth 1 https://github.com/MainframeHQ/go-ethereum.git -b mainframe
+    git clone --depth 1 https://github.com/MainframeHQ/go-ethereum.git -b pss
 fi
 
 cd $TMP_DIR/go-ethereum
 
-git fetch --depth 1 origin $COMMIT_HASH
-git checkout $COMMIT_HASH
+git fetch --depth 1 origin $GIT_REF
+git checkout $GIT_REF
 
 if [[ $1 == "-mwl" ]]
 then
