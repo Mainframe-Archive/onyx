@@ -10,6 +10,7 @@ import TextInput from './Form/TextInput'
 import Button from './Form/Button'
 import Text from './Text'
 import FileSelector from './FileSelector'
+import Icon from './Icon'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -152,12 +153,18 @@ export class EditProfile extends Component<Props, State> {
     return (
       <View style={styles.container}>
         <View style={styles.userProfile}>
-          <TouchableOpacity
-            style={styles.avatarArea}
-            onPress={this.onPressAvatar}
+          <View style={styles.avatarArea}>
+            <TouchableOpacity
+              style={styles.avatarUpload}
+              onPress={this.onPressAvatar}
           >
-            <Avatar size="xx-large" profile={profile} />
-          </TouchableOpacity>
+              <Icon name="camera" />
+              <Text style={styles.avatarUploadText}>Upload photo</Text>
+            </TouchableOpacity>
+            <View style={styles.avatar}>
+              <Avatar size="large" profile={profile} />
+            </View>
+          </View>
           <FileSelector
             onFilesSelected={this.onFilesSelected}
             //$FlowFixMe
@@ -213,6 +220,28 @@ const styles = StyleSheet.create({
   failedValidationText: {
     textAlign: 'center',
     color: COLORS.PRIMARY_RED,
+  },
+  avatarArea: {
+    width: 160,
+    height: 160,
+    position: 'relative',
+  },
+  avatarUpload: {
+    width: 160,
+    height: 160,
+    backgroundColor: COLORS.GRAY_E6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    borderRadius: 80,
+  },
+  avatarUploadText: {
+    color: COLORS.PRIMARY_RED,
+  },
+  avatar: {
+    position: 'absolute',
+    right: -10,
+    bottom: 10,
   },
 })
 
