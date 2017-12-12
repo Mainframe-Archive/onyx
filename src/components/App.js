@@ -122,7 +122,12 @@ class App extends Component<Props, State> {
   }
 
   onPressAddContact = (id: string) => {
-    if (id !== this.props.data.viewer.profile.id) {
+    const contactWithId = this.props.data.viewer.contacts.filter(
+      ({ profile }) => profile.id === id,
+    )
+    if (contactWithId.length) {
+      this.setOpenContact(contactWithId[0].profile)
+    } else if (id !== this.props.data.viewer.profile.id) {
       this.props.requestContact(id)
     }
     this.setState({ openModal: undefined })
@@ -155,12 +160,14 @@ class App extends Component<Props, State> {
 
   renderAddContactModal() {
     const { openModal } = this.state
+    const { data } = this.props
 
     return (
       <AddContactModal
         isOpen={openModal === 'contact'}
         onPressAddContact={this.onPressAddContact}
         onCloseModal={this.onCloseModal}
+        viewerId={data.viewer.profile.id}
       />
     )
   }
@@ -203,7 +210,6 @@ class App extends Component<Props, State> {
 
   render() {
     const { data, openChannel, openContact, setOpenChannel } = this.props
-
     if (data == null || data.viewer == null) {
       return (
         <View style={styles.loaderContainer}>

@@ -113,17 +113,14 @@ export class EditProfile extends Component<Props, State> {
     this.setState({
       invalidMessage: undefined,
     })
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await this.props.updateProfile(data)
-        resolve()
-      } catch (err) {
-        this.setState({
-          invalidMessage: '* Oops, there was a problem updating your profile',
-        })
-        reject(err)
-      }
-    })
+    try {
+      await this.props.updateProfile(data)
+    } catch (err) {
+      this.setState({
+        invalidMessage: '* Oops, there was a problem updating your profile',
+      })
+      throw err
+    }
   }
 
   onChangeName = value => {
@@ -160,7 +157,7 @@ export class EditProfile extends Component<Props, State> {
             <TouchableOpacity
               style={styles.avatarUpload}
               onPress={this.onPressAvatar}
-            >
+          >
               <Icon name="camera" />
               <Text style={styles.avatarUploadText}>Upload photo</Text>
             </TouchableOpacity>

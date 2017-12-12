@@ -4,6 +4,7 @@ const execa = require('execa')
 const {
   createWriteStream,
   ensureDir,
+  pathExists,
   readdir,
   readJson,
   remove,
@@ -32,6 +33,11 @@ const swarmPath = getBinPath('swarm')
 let proc
 
 const setup = async () => {
+  if (await pathExists(keystorePath)) {
+    console.log('keystore exists, skip setup')
+    return
+  }
+
   await ensureDir(dataDir)
   await writeFile(pwdPath, 'secret')
   await execa(gethPath, [
@@ -67,6 +73,8 @@ const start = async () => {
       '--ws',
       '--wsorigins',
       '*',
+      '--ens-api',
+      '',
     ])
 
     proc.catch(error => {

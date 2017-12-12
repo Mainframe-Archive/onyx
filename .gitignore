@@ -1,4 +1,5 @@
 node_modules
-dist
-tmp
-bin
+/dist
+/tmp
+/bin
+/app/build
