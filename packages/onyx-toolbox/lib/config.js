@@ -3,31 +3,42 @@ const path = require('path')
 
 const { onyx } = require('../package.json')
 
+const swarmRootPath = path.join(process.env.HOME, '.onyx-toolbox', 'swarm')
+const swarmGitPath = path.join(swarmRootPath, 'go-ethereum')
+
 const conf = new Conf({ configName: 'toolbox' })
 
-const baseDirPath = path.join(process.env.HOME, '.onyx-toolbox')
-const swarmDirPath = path.join(baseDirPath, 'swarm')
-const swarmDataPath = path.join(swarmDirPath, 'data')
-const swarmPwdPath = path.join(swarmDirPath, 'pwd')
-const swarmGitPath = path.join(swarmDirPath, 'go-ethereum')
-const swarmBinPath = path.join(swarmGitPath, 'build', 'bin', 'swarm')
-const gethBinPath = path.join(swarmGitPath, 'build', 'bin', 'geth')
-const serverBinPath = path.resolve(
-  __dirname,
-  '..',
-  'node_modules',
-  '.bin',
-  'onyx-server',
-)
+const getPath = key => conf.get(`paths.${key}`)
+
+const setPath = (key, value) => conf.set(`paths.${key}`, value)
+
+const setPaths = (paths = {}) =>
+  Object.keys(paths).forEach(key => setPath(key, paths[key]))
+
+const resetPaths = () => {
+  setPaths({
+    geth: {
+      bin: path.join(swarmGitPath, 'build', 'bin', 'geth'),
+    },
+    server: {
+      bin: path.resolve(__dirname, '..', 'node_modules', '.bin', 'onyx-server'),
+    },
+    swarm: {
+      bin: path.join(swarmGitPath, 'build', 'bin', 'swarm'),
+      data: path.join(swarmRootPath, 'data'),
+      git: swarmGitPath,
+      pwd: path.join(swarmRootPath, 'pwd'),
+      root: swarmRootPath,
+    },
+  })
+}
+
+resetPaths()
 
 module.exports = Object.assign({}, onyx, {
   conf,
-  baseDirPath,
-  swarmDirPath,
-  swarmDataPath,
-  swarmPwdPath,
-  swarmGitPath,
-  swarmBinPath,
-  gethBinPath,
-  serverBinPath,
+  getPath,
+  setPath,
+  setPaths,
+  resetPaths,
 })

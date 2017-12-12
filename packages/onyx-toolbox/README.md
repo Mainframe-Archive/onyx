@@ -12,7 +12,7 @@ Environment tools for the [Onyx server](https://github.com/MainframeHQ/onyx-serv
 npm install --global onyx-toolbox
 ```
 
-## Usage
+## CLI
 
 ```
 Usage
@@ -27,6 +27,10 @@ Commands
   stop - Stop the Onyx server
   swarm <action> - Swarm commands
 ```
+
+## API
+
+Work in progress - check the `lib/api.js` and `lib/config.js` files to see the public API.
 
 ## License
 

@@ -15,15 +15,8 @@ const {
   startServer,
   stopServer,
 } = require('./api')
-const {
-  conf,
-  gethBinPath,
-  swarmBinPath,
-  swarmDataPath,
-  swarmDirPath,
-  swarmGitPath,
-  swarmPwdPath,
-} = require('./config')
+const { conf, getPath } = require('./config')
+const { processIsRunning } = require('./utils')
 
 const checkEnvironmentTask = new Listr(
   [
@@ -58,13 +51,13 @@ const setupSwarmTask = new Listr([
   },
   {
     title: 'Check working directory',
-    task: () => ensureDir(swarmDirPath),
+    task: () => ensureDir(getPath('swarm.root')),
   },
   {
     title: 'Clone MainframeHQ/go-ethereum',
-    task: () => gitClone(swarmDirPath),
+    task: () => gitClone(getPath('swarm.root')),
     skip: async () => {
-      if (await pathExists(swarmGitPath)) {
+      if (await pathExists(getPath('swarm.git'))) {
         return 'Repository already exists'
       }
       return false
@@ -73,17 +66,17 @@ const setupSwarmTask = new Listr([
   {
     title: 'Fetch latest update',
     task: async ctx => {
-      ctx.forceBuild = await gitFetch(swarmGitPath)
+      ctx.forceBuild = await gitFetch(getPath('swarm.git'))
     },
   },
   {
     title: 'Build geth',
-    task: () => buildBin(swarmGitPath, 'geth'),
+    task: () => buildBin(getPath('swarm.git'), 'geth'),
     skip: async ctx => {
       if (ctx.forceBuild) {
         return false
       }
-      if (await pathExists(gethBinPath)) {
+      if (await pathExists(getPath('geth.bin'))) {
         return 'geth binary already exists'
       }
       return false
@@ -91,12 +84,12 @@ const setupSwarmTask = new Listr([
   },
   {
     title: 'Build swarm',
-    task: () => buildBin(swarmGitPath, 'swarm'),
+    task: () => buildBin(getPath('swarm.git'), 'swarm'),
     skip: async ctx => {
       if (ctx.forceBuild) {
         return false
       }
-      if (await pathExists(swarmBinPath)) {
+      if (await pathExists(getPath('swarm.bin'))) {
         return 'swarm binary already exists'
       }
       return false
@@ -104,13 +97,13 @@ const setupSwarmTask = new Listr([
   },
   {
     title: 'Check data directory',
-    task: () => ensureDir(swarmDataPath),
+    task: () => ensureDir(getPath('swarm.data')),
   },
   {
     title: 'Create password file',
-    task: () => writeFile(swarmPwdPath, 'onyx'),
+    task: () => writeFile(getPath('swarm.pwd'), 'onyx'),
     skip: async () => {
-      if (await pathExists(swarmPwdPath)) {
+      if (await pathExists(getPath('swarm.pwd'))) {
         return 'Password file is already created'
       }
       return false
@@ -157,7 +150,9 @@ const startSwarmTask = new Listr([
     },
     skip: () => {
       const pid = conf.get('swarmPid')
-      return pid ? `Swarm is already started with pid ${pid}` : false
+      return pid && processIsRunning(pid)
+        ? `Swarm is already started with pid ${pid}`
+        : false
     },
   },
 ])
@@ -226,13 +221,13 @@ const startServerTask = new Listr([
         }/graphql with pid ${server.pid}`
       } else {
         throw new Error(
-          'Failed to start the Onyx, try adding the --attach flag to see the logs',
+          'Failed to start the Onyx server, try adding the --attach flag and setting the DEBUG environment variable to see the logs',
         )
       }
     },
     skip: () => {
       const server = conf.get('server')
-      return server
+      return server && processIsRunning(server.pid)
         ? `Onyx server already started on ws://localhost:${
             server.port
           }/graphql with pid ${server.pid}`

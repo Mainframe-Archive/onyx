@@ -5,16 +5,7 @@ const getPort = require('get-port')
 const execa = require('execa')
 const createServer = require('onyx-server').default
 
-const {
-  gitTag,
-  conf,
-  gethBinPath,
-  serverBinPath,
-  swarmBinPath,
-  swarmDataPath,
-  swarmDirPath,
-  swarmPwdPath,
-} = require('./config')
+const { conf, getPath, gitTag, resetPaths } = require('./config')
 const { buildFlags, killProcess, processIsRunning, sleep } = require('./utils')
 
 const checkGit = async () => {
@@ -51,7 +42,7 @@ const gitClone = cwd =>
 
 const gitFetch = async cwd => {
   const options = { cwd }
-  const fetchOut = await execa.stdout('git', ['fetch'], options)
+  const fetchOut = await execa.stdout('git', ['fetch', '--depth', 1], options)
   await execa('git', ['checkout', gitTag], options)
   return fetchOut !== ''
 }
@@ -64,11 +55,11 @@ const buildBin = (cwd, name) =>
   )
 
 const createAccount = async () => {
-  const res = await execa.stdout(gethBinPath, [
+  const res = await execa.stdout(getPath('geth.bin'), [
     '--datadir',
-    swarmDataPath,
+    getPath('swarm.data'),
     '--password',
-    swarmPwdPath,
+    getPath('swarm.pwd'),
     'account',
     'new',
   ])
@@ -77,10 +68,10 @@ const createAccount = async () => {
 
 const startSwarmProc = attach => {
   const proc = spawn(
-    swarmBinPath,
+    getPath('swarm.bin'),
     buildFlags('swarm', {
-      datadir: swarmDataPath,
-      password: swarmPwdPath,
+      datadir: getPath('swarm.data'),
+      password: getPath('swarm.pwd'),
       bzzaccount: conf.get('account'),
     }),
     attach ? { stdio: 'inherit' } : { detached: true, stdio: 'ignore' },
@@ -120,13 +111,15 @@ const stopSwarm = () => {
 }
 
 const cleanSwarm = () => {
+  const swarmPath = getPath('swarm.root')
   conf.store = {}
-  return remove(swarmDirPath)
+  resetPaths()
+  return remove(swarmPath)
 }
 
 const startServerProc = (options = {}) => {
   const proc = spawn(
-    serverBinPath,
+    getPath('server.bin'),
     buildFlags('server', {
       port: options.port == null ? false : options.port,
       unsecure: !!options.unsecure,
