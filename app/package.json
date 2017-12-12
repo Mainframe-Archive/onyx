@@ -10,7 +10,7 @@
     "execa": "^0.8.0",
     "fs-extra": "^4.0.3",
     "get-port": "^3.2.0",
-    "onyx-server": "^0.2.0",
+    "onyx-server": "^0.4.2",
     "static-server": "^3.0.0"
   }
 }
