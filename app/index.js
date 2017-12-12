@@ -4,9 +4,8 @@ const Store = require('electron-store')
 const getPort = require('get-port')
 const createOnyxServer = require('onyx-server').default
 const StaticServer = require('static-server')
-const url = require('url')
 const path = require('path')
-const querystring = require('querystring');
+const querystring = require('querystring')
 
 const { config } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
@@ -20,7 +19,7 @@ const SWARM_HTTP_URL =
   (config && config.swarmHttpUrl) ||
   'https://onyx-storage.mainframe.com'
 
-let appServer, loadingWindow, mainWindow
+let appServer, mainWindow
 
 const shouldQuit = app.makeSingleInstance(() => {
   if (mainWindow) {
@@ -34,13 +33,6 @@ if (shouldQuit) {
 }
 
 const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
-
-const clearEventListeners = () => {
-  if (mainWindow) {
-    mainWindow.removeListener('ready-to-show', showFunc)
-    mainWindow.removeListener('closed', closedFunc)
-  }
-}
 
 const menu = Menu.buildFromTemplate([
   {
@@ -125,20 +117,15 @@ const createMainWindow = async url => {
   Menu.setApplicationMenu(menu)
 
   mainWindow = new BrowserWindow({ width: 800, height: 600, show: false })
-
   mainWindow.loadURL(url)
 
-  showFunc = () => {
+  mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-  }
-
-  closedFunc = () => {
+  })
+  mainWindow.on('closed', () => {
     swarm.stop()
     mainWindow = null
-  }
-
-  mainWindow.on('ready-to-show', showFunc)
-  mainWindow.on('closed', closedFunc)
+  })
 }
 
 const startAppServer = async () => {
@@ -192,7 +179,8 @@ const start = async () => {
       } catch (e) {
         console.log(e.stack)
         errorMsg =
-          'There was an error setting up the Geth account\nDebug: ' + e.toString()
+          'There was an error setting up the Geth account\nDebug: ' +
+          e.toString()
       }
 
       if (!errorMsg) {
@@ -201,7 +189,8 @@ const start = async () => {
         } catch (e) {
           console.log(e.stack)
           errorMsg =
-            'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' + e.toString()
+            'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' +
+            e.toString()
         }
       }
 
@@ -214,12 +203,18 @@ const start = async () => {
         } catch (e) {
           console.log(e.stack)
           errorMsg =
-            'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' + SWARM_WS_URL + '\nDebug: ' + e.toString()
+            'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +
+            SWARM_WS_URL +
+            '\nDebug: ' +
+            e.toString()
         }
       }
 
       if (errorMsg) {
-        appUrl += `/?${querystring.stringify({ wsUrl: storedWsUrl, connectionError: errorMsg })}`
+        appUrl += `/?${querystring.stringify({
+          wsUrl: storedWsUrl,
+          connectionError: errorMsg,
+        })}`
         if (appServer != null) {
           appServer.stop()
         }
@@ -233,8 +228,14 @@ const start = async () => {
         domain = storedWsUrl.split('/')[0]
       }
       appUrl += domain
-        ? `/?${querystring.stringify({ wsUrl: storedWsUrl, httpUrl: `http://${domain}` })}`
-        : `/?${querystring.stringify({ wsUrl: storedWsUrl, connectionError: 'Invalid ws url' })}`
+        ? `/?${querystring.stringify({
+            wsUrl: storedWsUrl,
+            httpUrl: `http://${domain}`,
+          })}`
+        : `/?${querystring.stringify({
+            wsUrl: storedWsUrl,
+            connectionError: 'Invalid ws url',
+          })}`
     }
   }
 
