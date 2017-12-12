@@ -67,6 +67,8 @@ const start = async () => {
       '--ws',
       '--wsorigins',
       '*',
+      '--ens-api',
+      '',
     ])
 
     proc.catch(error => {

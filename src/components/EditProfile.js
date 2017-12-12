@@ -44,7 +44,7 @@ export class EditProfile extends Component<Props, State> {
 
   fileSelector: ?Element<typeof FileSelector>
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props)
     const { profile } = props
     this.state = {
@@ -75,7 +75,7 @@ export class EditProfile extends Component<Props, State> {
         method: 'POST',
       })
       await this.saveProfile({
-        avatar: await res.text()
+        avatar: await res.text(),
       })
     }
     reader.readAsArrayBuffer(file)
@@ -112,26 +112,23 @@ export class EditProfile extends Component<Props, State> {
     this.setState({
       invalidMessage: undefined,
     })
-    return new Promise(async (resolve, reject) => {
-      try {
-        const res = await this.props.updateProfile(data)
-        resolve()
-      } catch (err) {
-        this.setState({
-          invalidMessage: '* Oops, there was a problem updating your profile',
-        })
-        reject(err)
-      }
-    })
+    try {
+      await this.props.updateProfile(data)
+    } catch (err) {
+      this.setState({
+        invalidMessage: '* Oops, there was a problem updating your profile',
+      })
+      throw err
+    }
   }
 
-  onChangeName = (value) => {
+  onChangeName = value => {
     this.setState({
       name: value,
     })
   }
 
-  onChangeBio = (value) => {
+  onChangeBio = value => {
     this.setState({
       bio: value,
     })
@@ -158,7 +155,7 @@ export class EditProfile extends Component<Props, State> {
           <TouchableOpacity
             style={styles.avatarArea}
             onPress={this.onPressAvatar}
-            >
+          >
             <Avatar size="xx-large" profile={profile} />
           </TouchableOpacity>
           <FileSelector
@@ -172,14 +169,14 @@ export class EditProfile extends Component<Props, State> {
               onChangeText={this.onChangeName}
               placeholder="name"
               value={name}
-              />
+            />
             <TextInput
               onChangeText={this.onChangeBio}
               placeholder="bio"
               value={bio}
               multiline
-              />
-            <Button title="Done" onPress={this.onSave}/>
+            />
+            <Button title="Done" onPress={this.onSave} />
           </View>
         </View>
       </View>
@@ -216,9 +213,7 @@ const styles = StyleSheet.create({
   failedValidationText: {
     textAlign: 'center',
     color: COLORS.PRIMARY_RED,
-  }
+  },
 })
 
-export default compose(
-  UpdateProfileMutation,
-)(EditProfile)
+export default compose(UpdateProfileMutation)(EditProfile)
