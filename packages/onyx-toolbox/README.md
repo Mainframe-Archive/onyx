@@ -14,12 +14,17 @@ npm install --global onyx-toolbox
 
 ## Usage
 
-```sh
-onyx <command>
+```
+Usage
+  onyx <command>
 
 Commands
+  clean - Clean the environment created by the setup
   help <command> - Information and available flags for the specified command
+  reset - Reset the environment, same as clean + setup
   setup - Setup the environment
+  start - Start the Onyx server
+  stop - Stop the Onyx server
   swarm <action> - Swarm commands
 ```
 
@@ -27,4 +32,3 @@ Commands
 
 MIT.\
 See [LICENSE](LICENSE) file.
-
