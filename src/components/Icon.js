@@ -22,6 +22,7 @@ import Pdf from './icons/pdf.svg'
 import GenericFile from './icons/generic-file.svg'
 import Download from './icons/download.svg'
 import Camera from './icons/camera_icon.svg'
+import Rolling from './icons/rolling.svg'
 
 const ICONS = {
   plus: PlusIcon,
@@ -45,6 +46,7 @@ const ICONS = {
   pdf: Pdf,
   'generic-file': GenericFile,
   camera: Camera,
+  rolling: Rolling,
 }
 
 type Props = {

@@ -21,14 +21,18 @@ type Props = {
 
 type State = {
   url: ?string,
+  loadingLocal: boolean,
+  loadingRemote: boolean,
   showCertsSelectModal?: boolean,
 }
 
 export default class NodeConnectionView extends Component {
   state: State = {
     url: '',
+    loadingLocal: false,
+    loadingRemote: false,
   }
-  
+
   constructor(props: Props) {
     super(props)
     this.state = {
@@ -51,23 +55,57 @@ export default class NodeConnectionView extends Component {
           showCertsSelectModal: true,
         })
       } else {
+        this.setState({ loadingRemote: true })
         onSetWsUrl(url)
       }
     }
   }
 
   onPressConnectDefault = () => {
+    this.setState({ loadingLocal: true })
     onSetWsUrl('local')
   }
-  
+
   onCopiedCerts = () => {
     onSetWsUrl(this.state.url)
   }
-  
+
   onRequestClose = () => {
     this.setState({
       showCertsSelectModal: false,
     })
+  }
+
+  renderLocalConnectButton() {
+    const { loadingLocal } = this.state
+    return loadingLocal ? (
+      <Icon name="rolling" />
+    ) : (
+      <TouchableOpacity
+        onPress={this.onPressConnectDefault}
+        style={styles.defaultNodeButton}
+      >
+        <View style={styles.buttonText}>
+          <Text style={styles.defaultNodeButtonTitle}>
+            Start local onyx server
+          </Text>
+        </View>
+        <Icon name="arrow-right" />
+      </TouchableOpacity>
+    )
+  }
+
+  renderRemoteConnectButton() {
+    const { loadingRemote } = this.state
+    return loadingRemote ? (
+      <Icon name="rolling" />
+    ) : (
+      <Button
+        outlineStyle
+        title="Connect to remote server"
+        onPress={this.onPressConnect}
+      />
+    )
   }
 
   render() {
@@ -76,7 +114,7 @@ export default class NodeConnectionView extends Component {
         <Text style={styles.errorText}>{this.props.connectionError}</Text>
       </View>
     ) : null
-    
+
     const certSelectionModal = this.state.showCertsSelectModal ? (
       <CertSelectionModal
         onRequestClose={this.onRequestClose}
@@ -93,17 +131,7 @@ export default class NodeConnectionView extends Component {
             <View style={styles.icon}>
               <Icon name="mainframe-icon" />
             </View>
-            <TouchableOpacity
-              onPress={this.onPressConnectDefault}
-              style={styles.defaultNodeButton}
-            >
-              <View style={styles.buttonText}>
-                <Text style={styles.defaultNodeButtonTitle}>
-                  Start local onyx server
-                </Text>
-              </View>
-              <Icon name="arrow-right" />
-            </TouchableOpacity>
+            {this.renderLocalConnectButton()}
             <View style={styles.separator}>
               <View style={[styles.separatorLine, styles.lineLeft]} />
               <Text style={styles.separatorLabel}>OR</Text>
@@ -115,7 +143,7 @@ export default class NodeConnectionView extends Component {
               placeholder="Onyx server websocket url"
               onChangeText={this.onChangeUrl}
             />
-            <Button outlineStyle title="Connect to remote server" onPress={this.onPressConnect} />
+            {this.renderRemoteConnectButton()}
           </View>
           <MainframeBar footer />
         </View>
