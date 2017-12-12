@@ -5,9 +5,9 @@ const Listr = require('listr')
 const {
   buildBin,
   checkGit,
+  checkGo,
   cleanSwarm,
   createAccount,
-  getGoRoot,
   gitClone,
   gitFetch,
   startSwarm,
@@ -38,11 +38,11 @@ const checkEnvironmentTask = new Listr(
       },
     },
     {
-      title: '$GOROOT is set',
+      title: 'Go is available',
       task: async () => {
-        if ((await getGoRoot()) === '') {
+        if ((await checkGo()) === false) {
           throw new Error(
-            '$GOROOT is not set - please install Go: https://golang.org/doc/install',
+            'Go is not available - please install it: https://golang.org/doc/install',
           )
         }
       },
@@ -220,9 +220,15 @@ const startServerTask = new Listr([
     title: 'Start the Onyx server',
     task: async (ctx, task) => {
       const server = await startServer(ctx.options)
-      task.title = `Onyx server started on ws://localhost:${
-        server.port
-      }/graphql with pid ${server.pid}`
+      if (server) {
+        task.title = `Onyx server started on ws://localhost:${
+          server.port
+        }/graphql with pid ${server.pid}`
+      } else {
+        throw new Error(
+          'Failed to start the Onyx, try adding the --attach flag to see the logs',
+        )
+      }
     },
     skip: () => {
       const server = conf.get('server')

@@ -26,12 +26,12 @@ const checkGit = async () => {
   }
 }
 
-const getGoRoot = async () => {
+const checkGo = async () => {
   try {
-    const shell = await execa.shell('echo $GOROOT')
-    return shell.stdout
+    await execa('go', ['version'])
+    return true
   } catch (err) {
-    return ''
+    return false
   }
 }
 
@@ -178,7 +178,7 @@ const stopServer = async () => {
 
 module.exports = {
   checkGit,
-  getGoRoot,
+  checkGo,
   gitClone,
   gitFetch,
   buildBin,

@@ -53,7 +53,9 @@ const helpTexts = {
     onyx start <flags>
 
   Flags
+    --attach, -a - Attach to the Onyx process, useful for debugging using the DEBUG environment variable, ex: DEBUG='onyx*' onyx start --attach
     --port, -p - Server port
+    --unsecure, -u - Run the server without TLS
   `,
   stop: `
   Stop the Onyx server.
@@ -109,10 +111,16 @@ const swarmCommands = {
 }
 
 const commands = {
-  clean: () => cleanSwarmTask.run(),
+  clean: () => {
+    cleanSwarmTask.run()
+  },
   help: inputs => helpCommands(inputs.join(' ')),
-  reset: () => resetSwarmTask.run(),
-  setup: () => setupSwarmTask.run(),
+  reset: () => {
+    resetSwarmTask.run()
+  },
+  setup: () => {
+    setupSwarmTask.run()
+  },
   start: (inputs, flags = {}) => {
     const options = {
       attach: flags.attach,
@@ -121,11 +129,15 @@ const commands = {
       wait: flags.wait ? parseInt(flags.wait, 10) : false,
     }
 
-    return flags.attach
-      ? startServer(options)
-      : startServerTask.run({ options })
+    if (flags.attach) {
+      return startServer(options)
+    } else {
+      startServerTask.run({ options })
+    }
   },
-  stop: () => stopServerTask.run(),
+  stop: () => {
+    stopServerTask.run()
+  },
   swarm: (inputs, flags = {}) => {
     const cmd = swarmCommands[inputs[0]]
     if (cmd) {
