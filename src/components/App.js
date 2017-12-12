@@ -155,12 +155,15 @@ class App extends Component<Props, State> {
 
   renderAddContactModal() {
     const { openModal } = this.state
+    const { data } = this.props
 
     return (
       <AddContactModal
         isOpen={openModal === 'contact'}
         onPressAddContact={this.onPressAddContact}
         onCloseModal={this.onCloseModal}
+        contacts={data.viewer.contacts}
+        viewerId={data.viewer.profile.id}
       />
     )
   }
@@ -203,7 +206,6 @@ class App extends Component<Props, State> {
 
   render() {
     const { data, openChannel, openContact, setOpenChannel } = this.props
-
     if (data == null || data.viewer == null) {
       return (
         <View style={styles.loaderContainer}>
