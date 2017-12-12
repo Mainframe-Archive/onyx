@@ -42,13 +42,7 @@ export default class UserProfile extends Component<Props, State> {
   }
 
   render() {
-    const {
-      profile,
-      serverURL,
-      keyQRCode,
-      hideTitle,
-      canEdit,
-    } = this.props
+    const { profile, serverURL, keyQRCode, hideTitle, canEdit } = this.props
 
     const { connectedQROpen } = this.state
 
@@ -57,7 +51,7 @@ export default class UserProfile extends Component<Props, State> {
     }
 
     const editButton = canEdit ? (
-      <Button title="Edit Profile" onPress={this.props.onPressEdit} />
+      <Button title="Edit my profile" onPress={this.props.onPressEdit} />
     ) : null
 
     const title = profile.name || profile.id.substr(0, 8)
@@ -66,7 +60,7 @@ export default class UserProfile extends Component<Props, State> {
         <View style={styles.userProfile}>
           {!hideTitle && <Text style={styles.title}>{title}</Text>}
           <View style={styles.avatarArea}>
-            <Avatar size="xx-large" profile={profile} />
+            <Avatar size="xx-large" profile={profile} blockyOver="large" />
           </View>
           {!!profile.bio && (
             <View style={styles.userData}>

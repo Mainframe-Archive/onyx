@@ -21,6 +21,7 @@ import FileRed from './icons/file-red.svg'
 import Pdf from './icons/pdf.svg'
 import GenericFile from './icons/generic-file.svg'
 import Download from './icons/download.svg'
+import Camera from './icons/camera_icon.svg'
 
 const ICONS = {
   plus: PlusIcon,
@@ -43,6 +44,7 @@ const ICONS = {
   download: Download,
   pdf: Pdf,
   'generic-file': GenericFile,
+  camera: Camera,
 }
 
 type Props = {

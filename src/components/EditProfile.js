@@ -10,6 +10,7 @@ import TextInput from './Form/TextInput'
 import Button from './Form/Button'
 import Text from './Text'
 import FileSelector from './FileSelector'
+import Icon from './Icon'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -44,7 +45,7 @@ export class EditProfile extends Component<Props, State> {
 
   fileSelector: ?Element<typeof FileSelector>
 
-  constructor (props: Props) {
+  constructor(props: Props) {
     super(props)
     const { profile } = props
     this.state = {
@@ -75,7 +76,7 @@ export class EditProfile extends Component<Props, State> {
         method: 'POST',
       })
       await this.saveProfile({
-        avatar: await res.text()
+        avatar: await res.text(),
       })
     }
     reader.readAsArrayBuffer(file)
@@ -125,13 +126,13 @@ export class EditProfile extends Component<Props, State> {
     })
   }
 
-  onChangeName = (value) => {
+  onChangeName = value => {
     this.setState({
       name: value,
     })
   }
 
-  onChangeBio = (value) => {
+  onChangeBio = value => {
     this.setState({
       bio: value,
     })
@@ -155,12 +156,18 @@ export class EditProfile extends Component<Props, State> {
     return (
       <View style={styles.container}>
         <View style={styles.userProfile}>
-          <TouchableOpacity
-            style={styles.avatarArea}
-            onPress={this.onPressAvatar}
+          <View style={styles.avatarArea}>
+            <TouchableOpacity
+              style={styles.avatarUpload}
+              onPress={this.onPressAvatar}
             >
-            <Avatar size="xx-large" profile={profile} />
-          </TouchableOpacity>
+              <Icon name="camera" />
+              <Text style={styles.avatarUploadText}>Upload photo</Text>
+            </TouchableOpacity>
+            <View style={styles.avatar}>
+              <Avatar size="large" profile={profile} />
+            </View>
+          </View>
           <FileSelector
             onFilesSelected={this.onFilesSelected}
             //$FlowFixMe
@@ -172,14 +179,14 @@ export class EditProfile extends Component<Props, State> {
               onChangeText={this.onChangeName}
               placeholder="name"
               value={name}
-              />
+            />
             <TextInput
               onChangeText={this.onChangeBio}
               placeholder="bio"
               value={bio}
               multiline
-              />
-            <Button title="Done" onPress={this.onSave}/>
+            />
+            <Button title="Done" onPress={this.onSave} />
           </View>
         </View>
       </View>
@@ -216,9 +223,29 @@ const styles = StyleSheet.create({
   failedValidationText: {
     textAlign: 'center',
     color: COLORS.PRIMARY_RED,
-  }
+  },
+  avatarArea: {
+    width: 160,
+    height: 160,
+    position: 'relative',
+  },
+  avatarUpload: {
+    width: 160,
+    height: 160,
+    backgroundColor: COLORS.GRAY_E6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    borderRadius: 80,
+  },
+  avatarUploadText: {
+    color: COLORS.PRIMARY_RED,
+  },
+  avatar: {
+    position: 'absolute',
+    right: -10,
+    bottom: 10,
+  },
 })
 
-export default compose(
-  UpdateProfileMutation,
-)(EditProfile)
+export default compose(UpdateProfileMutation)(EditProfile)
