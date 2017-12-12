@@ -12,25 +12,17 @@ import Text from './Text'
 import { BASIC_SPACING } from '../styles'
 import COLORS from '../colors'
 
-const PUB_KEY_VALIDATION = /0x[0-9a-f]{88}/
+const PUB_KEY_VALIDATION = /0x[0-9a-f]{130}/
 const ERRORS = {
   INVALID_KEY: 'This is not a valid public key.',
   YOU: 'Are you trying to add yourself as a contact?',
-  CONTACT_ALREADY: 'This contact is already in your list!',
-}
-
-type Profile = {
-  id: string,
 }
 
 type Props = {
   isOpen: boolean,
   onCloseModal: () => void,
   onPressAddContact: (data: ChannelData) => void,
-  contacts: Array<{
-    profile: Profile,
-    state: string,
-  }>,
+  viewerId: string,
 }
 
 type State = {
@@ -59,13 +51,6 @@ export default class AddContactModal extends Component<Props, State> {
 
     if (contactInput === this.props.viewerId) {
       return ERRORS.YOU
-    }
-
-    if (
-      this.props.contacts.filter(({ profile }) => profile.id === contactInput)
-        .length
-    ) {
-      return ERRORS.CONTACT_ALREADY
     }
 
     return ''

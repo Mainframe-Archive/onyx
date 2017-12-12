@@ -122,7 +122,12 @@ class App extends Component<Props, State> {
   }
 
   onPressAddContact = (id: string) => {
-    if (id !== this.props.data.viewer.profile.id) {
+    const contactWithId = this.props.data.viewer.contacts.filter(
+      ({ profile }) => profile.id === id,
+    )
+    if (contactWithId.length) {
+      this.setOpenContact(contactWithId[0].profile)
+    } else if (id !== this.props.data.viewer.profile.id) {
       this.props.requestContact(id)
     }
     this.setState({ openModal: undefined })
@@ -162,7 +167,6 @@ class App extends Component<Props, State> {
         isOpen={openModal === 'contact'}
         onPressAddContact={this.onPressAddContact}
         onCloseModal={this.onCloseModal}
-        contacts={data.viewer.contacts}
         viewerId={data.viewer.profile.id}
       />
     )
