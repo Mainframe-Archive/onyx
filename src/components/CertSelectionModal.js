@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react'
 import { View, StyleSheet } from 'react-native'
-import path from 'path'
+import path, { dirname as getDirName } from 'path'
 
 import Modal from './Modal'
 import Text from './Text'
@@ -13,6 +13,7 @@ import { BASIC_SPACING } from '../styles'
 
 const Store = window.require('electron-store')
 const fs = window.require('fs')
+const mkdirp = window.require('mkdirp')
 const { app } = window.require('electron').remote
 const { is } = window.require('electron-util')
 
@@ -32,7 +33,7 @@ type Props = {
 }
 
 export default class CertificateSelection extends Component<State> {
-  
+
   constructor (props: Props) {
     super(props)
     const requiredFiles = [
@@ -45,11 +46,11 @@ export default class CertificateSelection extends Component<State> {
       requiredFiles: new Map(requiredFiles),
     }
   }
-  
+
   bindFileInput = e => {
     this.fileInput = e
   }
-  
+
   onDragOver = (event: SyntheticDragEvent<HTMLHeadingElement>) => {
     event.preventDefault()
     event.stopPropagation()
@@ -63,12 +64,12 @@ export default class CertificateSelection extends Component<State> {
       this.handleSelectedFiles(Array.from(event.dataTransfer.files))
     }
   }
-  
+
   onFileInputChange = () => {
     const files = [...this.fileInput.files]
     this.handleSelectedFiles(files)
   }
-  
+
   handleSelectedFiles (files: Array<Object>) {
     files.forEach(f => {
       const requiredFile = this.state.requiredFiles.get(f.name)
@@ -76,6 +77,7 @@ export default class CertificateSelection extends Component<State> {
         const userDataPath = app.getPath('userData')
         const destPath = path.join(userDataPath, 'certs', f.name)
         try {
+          mkdirp(getDirName(destPath))
           fs.createReadStream(f.path).pipe(fs.createWriteStream(destPath))
           const requiredFile = this.state.requiredFiles.get(f.name)
           requiredFile.path = destPath
@@ -98,11 +100,11 @@ export default class CertificateSelection extends Component<State> {
       this.props.onCopiedCerts()
     }
   }
-  
+
   onPressBrowse = () => {
     this.fileInput.click()
   }
-  
+
   renderFileList = () => {
     const rows = []
     this.state.requiredFiles.forEach((f, name) => {
@@ -122,8 +124,8 @@ export default class CertificateSelection extends Component<State> {
       )
     })
     return rows
-  }  
-    
+  }
+
   render() {
     const message = 'Please import the client SSL certificate files that were generated when you deployed your Onyx server.'
     return (
@@ -146,7 +148,7 @@ export default class CertificateSelection extends Component<State> {
               Drag and drop or browse
             </Text>
             <Button
-              onPress={this.onPressBrowse} 
+              onPress={this.onPressBrowse}
               title="Choose Files"
               style={styles.button}
               textStyle={styles.buttonText}
