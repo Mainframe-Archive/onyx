@@ -1,6 +1,6 @@
 const { spawn } = require('child_process')
 const Conf = require('conf')
-const { remove } = require('fs-extra')
+const { remove, writeFile } = require('fs-extra')
 const getPort = require('get-port')
 const execa = require('execa')
 const createServer = require('onyx-server').default
@@ -65,6 +65,9 @@ const createAccount = async () => {
   ])
   return res.slice(10, -1)
 }
+
+const createPassword = (password = 'onyx') =>
+  writeFile(getPath('swarm.pwd'), password)
 
 const startSwarmProc = attach => {
   const proc = spawn(
@@ -176,6 +179,7 @@ module.exports = {
   gitFetch,
   buildBin,
   createAccount,
+  createPassword,
   startSwarm,
   stopSwarm,
   cleanSwarm,

@@ -1,5 +1,5 @@
 const execa = require('execa')
-const { ensureDir, pathExists, writeFile } = require('fs-extra')
+const { ensureDir, pathExists } = require('fs-extra')
 const Listr = require('listr')
 
 const {
@@ -8,6 +8,7 @@ const {
   checkGo,
   cleanSwarm,
   createAccount,
+  createPassword,
   gitClone,
   gitFetch,
   startSwarm,
@@ -101,7 +102,7 @@ const setupSwarmTask = new Listr([
   },
   {
     title: 'Create password file',
-    task: () => writeFile(getPath('swarm.pwd'), 'onyx'),
+    task: () => createPassword(),
     skip: async () => {
       if (await pathExists(getPath('swarm.pwd'))) {
         return 'Password file is already created'
