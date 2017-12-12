@@ -4,6 +4,7 @@ const execa = require('execa')
 const {
   createWriteStream,
   ensureDir,
+  pathExists,
   readdir,
   readJson,
   remove,
@@ -32,12 +33,20 @@ const swarmPath = getBinPath('swarm')
 let proc
 
 const setup = async () => {
+  if (await pathExists(keystorePath)) {
+    console.log('keystore exists, skip setup')
+    return
+  }
+
   await ensureDir(dataDir)
   await writeFile(pwdPath, 'secret')
   await execa(gethPath, [
-    '--datadir',  dataDir,
-    '--password', pwdPath,
-    'account', 'new',
+    '--datadir',
+    dataDir,
+    '--password',
+    pwdPath,
+    'account',
+    'new',
   ])
 }
 
@@ -48,16 +57,24 @@ const start = async () => {
 
   return new Promise((resolve, reject) => {
     proc = execa(swarmPath, [
-      '--datadir', dataDir,
-      '--password', pwdPath,
-      '--bzzaccount', keystore.address,
+      '--datadir',
+      dataDir,
+      '--password',
+      pwdPath,
+      '--bzzaccount',
+      keystore.address,
       '--pss',
-      '--verbosity', '4',
-      '--bzznetworkid', '922',
-      '--bootnodes', 'enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@52.51.239.180:30399',
+      '--verbosity',
+      '4',
+      '--bzznetworkid',
+      '922',
+      '--bootnodes',
+      'enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@52.51.239.180:30399',
       '--ws',
-      '--wsorigins', '*',
-      '--ens-api', '',
+      '--wsorigins',
+      '*',
+      '--ens-api',
+      '',
     ])
 
     proc.catch(error => {
