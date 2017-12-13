@@ -53,7 +53,7 @@ export default (
       server = http.createServer(app)
     }
 
-    server.listen(port, 'localhost', err => {
+    server.listen(port, useTLS ? '0.0.0.0' : 'localhost', err => {
       if (err) {
         reject(err)
       } else {
