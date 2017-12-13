@@ -168,6 +168,7 @@ const start = async () => {
     appPort = appServer.port
   }
   let appUrl = `http://localhost:${appPort}`
+  let urlParams
 
   const storedWsUrl = store.get('wsUrl')
   if (storedWsUrl) {
@@ -197,9 +198,7 @@ const start = async () => {
       if (!errorMsg) {
         try {
           const serverPort = await startLocalOnyxServer(appPort)
-          const wsUrl = `ws://localhost:${serverPort}/graphql`
-          const httpUrl = `http://localhost:${serverPort}`
-          appUrl += `/?${querystring.stringify({ wsUrl, httpUrl })}`
+          urlParams = { wsUrl: `ws://localhost:${serverPort}/graphql` }
         } catch (e) {
           console.log(e.stack)
           errorMsg =
@@ -211,10 +210,10 @@ const start = async () => {
       }
 
       if (errorMsg) {
-        appUrl += `/?${querystring.stringify({
+        urlParams = {
           wsUrl: storedWsUrl,
           connectionError: errorMsg,
-        })}`
+        }
         if (appServer != null) {
           appServer.stop()
         }
@@ -227,16 +226,15 @@ const start = async () => {
       } else if (storedWsUrl.indexOf('/') !== -1) {
         domain = storedWsUrl.split('/')[0]
       }
-      appUrl += domain
-        ? `/?${querystring.stringify({
-            wsUrl: storedWsUrl,
-            httpUrl: `http://${domain}`,
-          })}`
-        : `/?${querystring.stringify({
-            wsUrl: storedWsUrl,
-            connectionError: 'Invalid ws url',
-          })}`
+      urlParams = { wsUrl: storedWsUrl }
+      if (!domain) {
+        urlParams.connectionError = 'Invalid ws url'
+      }
     }
+  }
+
+  if (urlParams != null) {
+    appUrl += '?' + querystring.stringify(urlParams)
   }
 
   if (mainWindow == null) {
