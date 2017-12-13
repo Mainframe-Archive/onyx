@@ -157,13 +157,14 @@ export class EditProfile extends Component<Props, State> {
             <TouchableOpacity
               style={styles.avatarUpload}
               onPress={this.onPressAvatar}
-          >
-              <Icon name="camera" />
-              <Text style={styles.avatarUploadText}>Upload photo</Text>
+            >
+              <View style={styles.avatar}>
+                {<Avatar size="xx-large" profile={profile} />}
+              </View>
+              <View style={styles.avatarUploadOver}>
+                <Icon name="camera" />
+              </View>
             </TouchableOpacity>
-            <View style={styles.avatar}>
-              <Avatar size="large" profile={profile} />
-            </View>
           </View>
           <FileSelector
             onFilesSelected={this.onFilesSelected}
@@ -235,13 +236,16 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     borderRadius: 80,
   },
-  avatarUploadText: {
-    color: COLORS.PRIMARY_RED,
-  },
-  avatar: {
+  avatarUploadOver: {
     position: 'absolute',
     right: -10,
     bottom: 10,
+    width: 48,
+    height: 48,
+    backgroundColor: COLORS.GRAY_E6,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })
 
