@@ -53,6 +53,7 @@ const menu = Menu.buildFromTemplate([
             async index => {
               if (index === 1) {
                 store.delete('wsUrl')
+                store.delete('cert-file-paths')
                 await swarm.reset()
                 start()
               }
