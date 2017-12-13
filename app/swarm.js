@@ -82,7 +82,7 @@ const start = async () => {
       reject(error.stderr)
     })
 
-    proc.stderr.pipe(createWriteStream(logPath, { flags: 'a' }))
+    proc.stderr.pipe(createWriteStream(logPath))
 
     proc.stdout.on('data', data => {
       const dataStr = data.toString()
