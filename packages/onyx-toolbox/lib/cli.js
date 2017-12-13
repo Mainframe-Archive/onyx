@@ -5,6 +5,7 @@ const { startSwarm, startServer } = require('./api')
 const { conf } = require('./config')
 const {
   checkEnvironmentTask,
+  checkStatus,
   cleanSwarmTask,
   resetSwarmTask,
   setupSwarmTask,
@@ -25,6 +26,7 @@ const helpTexts = {
     reset - Reset the environment, same as clean + setup
     setup - Setup the environment
     start - Start the Onyx server
+    status - Display the environment and processes status
     stop - Stop the Onyx server
     swarm <action> - Swarm commands
   `,
@@ -56,6 +58,12 @@ const helpTexts = {
     --attach, -a - Attach to the Onyx process, useful for debugging using the DEBUG environment variable, ex: DEBUG='onyx*' onyx start --attach
     --port, -p - Server port
     --unsecure, -u - Run the server without TLS
+  `,
+  status: `
+  Display the environment and processes status.
+
+  Usage
+    onyx status
   `,
   stop: `
   Stop the Onyx server.
@@ -134,6 +142,9 @@ const commands = {
     } else {
       startServerTask.run({ options })
     }
+  },
+  status: () => {
+    checkStatus()
   },
   stop: () => {
     stopServerTask.run()

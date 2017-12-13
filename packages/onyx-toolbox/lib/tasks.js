@@ -1,6 +1,8 @@
 const execa = require('execa')
 const { ensureDir, pathExists } = require('fs-extra')
 const Listr = require('listr')
+const symbols = require('log-symbols')
+const ora = require('ora')
 
 const {
   buildBin,
@@ -9,15 +11,17 @@ const {
   cleanSwarm,
   createAccount,
   createPassword,
+  getServerStatus,
+  getSwarmStatus,
   gitClone,
   gitFetch,
+  isSetup,
   startSwarm,
   stopSwarm,
   startServer,
   stopServer,
 } = require('./api')
 const { conf, getPath } = require('./config')
-const { processIsRunning } = require('./utils')
 
 const checkEnvironmentTask = new Listr(
   [
@@ -150,10 +154,8 @@ const startSwarmTask = new Listr([
       }
     },
     skip: () => {
-      const pid = conf.get('swarmPid')
-      return pid && processIsRunning(pid)
-        ? `Swarm is already started with pid ${pid}`
-        : false
+      const swarm = getSwarmStatus()
+      return swarm ? `Swarm is already started with pid ${swarm.pid}` : false
     },
   },
 ])
@@ -227,8 +229,8 @@ const startServerTask = new Listr([
       }
     },
     skip: () => {
-      const server = conf.get('server')
-      return server && processIsRunning(server.pid)
+      const server = getServerStatus()
+      return server
         ? `Onyx server already started on ws://localhost:${
             server.port
           }/graphql with pid ${server.pid}`
@@ -237,7 +239,42 @@ const startServerTask = new Listr([
   },
 ])
 
+const checkStatus = () => {
+  const spinner = ora('Checking Onyx server...').start()
+
+  const server = getServerStatus()
+  if (server) {
+    spinner.succeed(
+      `Onyx server running on port ${server.port} with pid ${server.pid}`,
+    )
+    return
+  }
+
+  spinner.stopAndPersist({
+    symbol: symbols.warning,
+    text: 'The Onyx server is not running',
+  })
+
+  const swarm = getSwarmStatus()
+  if (swarm) {
+    spinner.succeed(`Swarm process is running with pid ${swarm.pid}`)
+    return
+  }
+
+  spinner.stopAndPersist({
+    symbol: symbols.warning,
+    text: 'The Swarm process is not running',
+  })
+
+  if (isSetup()) {
+    spinner.succeed('The environment is setup')
+  } else {
+    spinner.warn('The environment is not setup')
+  }
+}
+
 module.exports = {
+  checkStatus,
   checkEnvironmentTask,
   setupSwarmTask,
   startSwarmTask,

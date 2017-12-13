@@ -8,6 +8,8 @@ const createServer = require('onyx-server').default
 const { conf, getPath, gitTag, resetPaths } = require('./config')
 const { buildFlags, killProcess, processIsRunning, sleep } = require('./utils')
 
+const isSetup = () => conf.get('setup') === true
+
 const checkGit = async () => {
   try {
     await execa('git', ['version'])
@@ -68,6 +70,20 @@ const createAccount = async () => {
 
 const createPassword = (password = 'onyx') =>
   writeFile(getPath('swarm.pwd'), password)
+
+const getSwarmStatus = () => {
+  const pid = conf.get('swarmPid')
+  if (pid && processIsRunning(pid)) {
+    return { pid }
+  }
+}
+
+const getServerStatus = () => {
+  const server = conf.get('server')
+  if (server && processIsRunning(server.pid)) {
+    return server
+  }
+}
 
 const startSwarmProc = attach => {
   const proc = spawn(
@@ -173,6 +189,7 @@ const stopServer = async () => {
 }
 
 module.exports = {
+  isSetup,
   checkGit,
   checkGo,
   gitClone,
@@ -180,6 +197,8 @@ module.exports = {
   buildBin,
   createAccount,
   createPassword,
+  getSwarmStatus,
+  getServerStatus,
   startSwarm,
   stopSwarm,
   cleanSwarm,

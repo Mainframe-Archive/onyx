@@ -24,6 +24,7 @@ Commands
   reset - Reset the environment, same as clean + setup
   setup - Setup the environment
   start - Start the Onyx server
+  status - Display the environment and processes status
   stop - Stop the Onyx server
   swarm <action> - Swarm commands
 ```
@@ -64,6 +65,10 @@ Sets multiple paths. See above for the list of keys used by the toolbox.
 
 Resets the paths used by the toolbox.
 
+### isSetup(): boolean
+
+Returns whether the environment is setup or not.
+
 ### checkGit(): Promise<boolean>
 
 Checks if git is installed in the environment.
@@ -95,6 +100,14 @@ Creates a new BZZ account and returns its address.
 ### createPassword(password?: string): Promise<void>
 
 Creates a password file containing the provided password or a default one.
+
+### getServerStatus(): ?{ pid: number, port: number }
+
+If the Onyx server is running, returns an Object containing the process `pid` and server `port`.
+
+### getSwarmStatus(): ?{ pid: number }
+
+If Swarm is running, returns an Object containing the process `pid`.
 
 ### startSwarm(options = {}): Promise<false | number>
 
