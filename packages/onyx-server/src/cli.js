@@ -15,6 +15,7 @@ program
   )
   .option('-p, --port <port>', 'port for the GraphQL server, defaults to 5000')
   .option('-u, --unsecure', 'flag to dismiss using TLS')
+  .option('-c, --certs-dir <path>', 'set ssl certificates directory path')
   .parse(process.argv)
 
 start({
@@ -22,4 +23,5 @@ start({
   httpUrl: program.httpUrl,
   port: program.port ? parseInt(program.port, 10) : undefined,
   unsecure: program.unsecure,
+  certsDir: program.certsDir,
 })
