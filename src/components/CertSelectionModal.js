@@ -18,6 +18,8 @@ const { is } = window.require('electron-util')
 
 const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
+export const haveStoredCerts = () => store.has('cert-file-paths')
+
 type State = {
   inputValue: string,
   requiredFiles: { [string]: {
@@ -32,7 +34,7 @@ type Props = {
 }
 
 export default class CertificateSelection extends Component<State> {
-  
+
   constructor (props: Props) {
     super(props)
     const requiredFiles = [
@@ -45,11 +47,11 @@ export default class CertificateSelection extends Component<State> {
       requiredFiles: new Map(requiredFiles),
     }
   }
-  
+
   bindFileInput = e => {
     this.fileInput = e
   }
-  
+
   onDragOver = (event: SyntheticDragEvent<HTMLHeadingElement>) => {
     event.preventDefault()
     event.stopPropagation()
@@ -63,12 +65,12 @@ export default class CertificateSelection extends Component<State> {
       this.handleSelectedFiles(Array.from(event.dataTransfer.files))
     }
   }
-  
+
   onFileInputChange = () => {
     const files = [...this.fileInput.files]
     this.handleSelectedFiles(files)
   }
-  
+
   handleSelectedFiles (files: Array<Object>) {
     files.forEach(f => {
       const requiredFile = this.state.requiredFiles.get(f.name)
@@ -98,11 +100,11 @@ export default class CertificateSelection extends Component<State> {
       this.props.onCopiedCerts()
     }
   }
-  
+
   onPressBrowse = () => {
     this.fileInput.click()
   }
-  
+
   renderFileList = () => {
     const rows = []
     this.state.requiredFiles.forEach((f, name) => {
@@ -122,8 +124,8 @@ export default class CertificateSelection extends Component<State> {
       )
     })
     return rows
-  }  
-    
+  }
+
   render() {
     const message = 'Please import the client SSL certificate files that were generated when you deployed your Onyx server.'
     return (
@@ -146,7 +148,7 @@ export default class CertificateSelection extends Component<State> {
               Drag and drop or browse
             </Text>
             <Button
-              onPress={this.onPressBrowse} 
+              onPress={this.onPressBrowse}
               title="Choose Files"
               style={styles.button}
               textStyle={styles.buttonText}

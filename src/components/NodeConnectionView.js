@@ -7,7 +7,7 @@ import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
-import CertSelectionModal from './CertSelectionModal'
+import CertSelectionModal, { haveStoredCerts } from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
@@ -50,7 +50,7 @@ export default class NodeConnectionView extends Component {
     const { url } = this.state
     if (url && url.length) {
       const secure = url.split('://')[0] === 'wss'
-      if (secure) {
+      if (secure && !haveStoredCerts()) {
         this.setState({
           showCertsSelectModal: true,
         })
