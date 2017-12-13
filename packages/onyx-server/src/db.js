@@ -62,6 +62,7 @@ export type Conversation = {
   type: ConvoType,
   pointer: number,
   subject?: ?string,
+  dark: boolean,
 }
 
 export type ConversationData = {
@@ -74,6 +75,7 @@ export type ConversationData = {
   type: ConvoType,
   pointer: number,
   subject?: ?string,
+  dark: boolean,
 }
 
 export type ContactState = 'ACCEPTED' | 'RECEIVED' | 'SENT'

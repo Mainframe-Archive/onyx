@@ -67,19 +67,16 @@ export const subscribeToStoredConvos = async (pss: PSS, db: DB) => {
           subject: c.subject || '',
           topic: c.id,
           peers: [],
-          dark: true,
+          dark: c.dark,
         }
         const profile = db.getProfile()
         if (profile) {
           const peers = c.peers.reduce((acc, p) => {
             if (p.profile && p.profile.id !== profile.id) {
-              // Infer darkness from peer addresses - could be simpler to store the value
-              if (p.address && p.address !== '0x') {
-                channel.dark = false
-              }
+              const address = p.address || '0x'
               acc.push({
                 pubKey: p.profile.id,
-                address: p.address || '0x',
+                address: channel.dark ? '0x' : address,
               })
             }
             return acc
@@ -152,7 +149,7 @@ export const joinChannelTopic = async (
           profile: { id: p.pubKey },
         })
       }
-      await pss.setPeerPublicKey(p.pubKey, channel.topic)
+      await pss.setPeerPublicKey(p.pubKey, channel.topic, p.address)
       logClient('add peer', channel.topic, p.pubKey)
       topic.addPeer(p.pubKey)
       return p.pubKey
@@ -172,7 +169,7 @@ export const joinDirectTopic = async (
 ): Promise<TopicSubject> => {
   const [topic] = await Promise.all([
     createTopicSubject(pss, id),
-    pss.setPeerPublicKey(peer.pubKey, id),
+    pss.setPeerPublicKey(peer.pubKey, id, peer.address),
   ])
   topic.addPeer(peer.pubKey)
   addTopic(db, topic, 'DIRECT', [peer.pubKey])
