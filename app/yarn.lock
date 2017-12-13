@@ -490,6 +490,16 @@ mime@1.4.1, mime@^1.2.11:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.4.1.tgz#121f9ebc49e3766f311a76e1fa1c8003c4b03aa6"
 
+minimist@0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
+
+mkdirp@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903"
+  dependencies:
+    minimist "0.0.8"
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -521,9 +531,9 @@ on-finished@~2.3.0:
   dependencies:
     ee-first "1.1.1"
 
-onyx-server@^0.4.2:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/onyx-server/-/onyx-server-0.4.2.tgz#d829732657cb3c3ff66f1b68e3c7bce9a253f732"
+onyx-server@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/onyx-server/-/onyx-server-0.4.3.tgz#f4ec69119fc9909b3390b11451576aa53c0f922c"
   dependencies:
     apollo-server-express "^1.2.0"
     body-parser "^1.18.2"
