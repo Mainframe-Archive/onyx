@@ -67,7 +67,7 @@ export default class Avatar extends Component<Props, State> {
             resizeMode="cover"
             onError={this.setError}
             source={{
-              uri: `${this.context.httpServerUrl}/files/${profile.avatar}`,
+              uri: `${this.context.httpServerUrl}/bzzr:/${profile.avatar}`,
               width: avatarSize,
               height: avatarSize,
             }}

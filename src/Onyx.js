@@ -14,6 +14,7 @@ import createStore, { type Store } from './data/Store'
 
 type State = {
   client?: ApolloClient,
+  connectionError?: string,
   store?: Store,
   wsUrl?: string,
 }
@@ -24,11 +25,9 @@ export default class Onyx extends Component<{}, State> {
     wsConnected$: PropTypes.object.isRequired,
   }
 
-  httpServerUrl: string
-
   getChildContext() {
     return {
-      httpServerUrl: this.httpServerUrl,
+      httpServerUrl: 'https://onyx-storage.mainframe.com',
       wsConnected$: this.wsConnected$,
     }
   }
@@ -37,27 +36,21 @@ export default class Onyx extends Component<{}, State> {
     super(props)
 
     const params = parse(document.location.search)
-    let state = {}
+    const state = {}
 
-    if (
-      params.wsUrl && params.wsUrl !== 'undefined' &&
-      params.httpUrl && params.httpUrl !== 'undefined'
-    ) {
-      this.wsServerUrl = params.wsUrl
-      this.httpServerUrl = params.httpUrl
-
-      state.wsUrl = params.wsUrl
-    }
     if (params.connectionError) {
       state.connectionError = params.connectionError
     }
-    this.state = state
+    if (params.wsUrl && params.wsUrl !== 'undefined') {
+      state.wsUrl = params.wsUrl
+    }
 
+    this.state = state
     this.wsConnected$ = new BehaviorSubject(false)
   }
 
   componentDidMount() {
-    if (this.wsServerUrl) {
+    if (this.state.wsUrl) {
       this.loadStore()
     }
   }
@@ -83,7 +76,7 @@ export default class Onyx extends Component<{}, State> {
   async loadStore() {
     try {
       const client = createClient(
-        this.wsServerUrl,
+        this.state.wsUrl,
         this.onDisconnected,
         this.onConnected,
       )
