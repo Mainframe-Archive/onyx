@@ -1,5 +1,6 @@
 // @flow
 
+import debug from 'debug'
 import { randomBytes } from 'crypto'
 import { decodeHex, encodeHex, type hex } from 'erebos'
 import { isObject, isString } from 'lodash'
@@ -8,6 +9,7 @@ import type { MessageBlock, Profile } from '../db'
 
 const NONCE_SIZE = 8
 const receivedNonces: Set<string> = new Set()
+const log = debug('onyx:pss:protocol')
 
 const createNonce = () => Buffer.from(randomBytes(NONCE_SIZE)).toString('hex')
 
@@ -82,16 +84,16 @@ export const decodeProtocol = (msg: string): ?ProtocolEvent<*, *> => {
       isString(envelope.payload.type)
     ) {
       if (receivedNonces.has(envelope.nonce)) {
-        console.warn('Duplicate message:', envelope)
+        log('Duplicate message:', envelope)
       } else {
         receivedNonces.add(envelope.nonce)
         return envelope.payload
       }
     } else {
-      console.warn('Unrecognised message format:', envelope)
+      log('Unrecognised message format:', envelope)
     }
   } catch (err) {
-    console.warn('Failed to decode protocol message:', msg, err)
+    log('Failed to decode protocol message:', msg, err)
   }
 }
 
