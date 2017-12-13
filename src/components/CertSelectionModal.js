@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react'
 import { View, StyleSheet } from 'react-native'
-import path from 'path'
+import path, { dirname as getDirName } from 'path'
 
 import Modal from './Modal'
 import Text from './Text'
@@ -13,6 +13,7 @@ import { BASIC_SPACING } from '../styles'
 
 const Store = window.require('electron-store')
 const fs = window.require('fs')
+const mkdirp = window.require('mkdirp')
 const { app } = window.require('electron').remote
 const { is } = window.require('electron-util')
 
@@ -78,6 +79,7 @@ export default class CertificateSelection extends Component<State> {
         const userDataPath = app.getPath('userData')
         const destPath = path.join(userDataPath, 'certs', f.name)
         try {
+          mkdirp(getDirName(destPath))
           fs.createReadStream(f.path).pipe(fs.createWriteStream(destPath))
           const requiredFile = this.state.requiredFiles.get(f.name)
           requiredFile.path = destPath
