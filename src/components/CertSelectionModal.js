@@ -19,7 +19,7 @@ const { is } = window.require('electron-util')
 
 const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
-export const haveStoredCerts = () => store.has('cert-file-paths')
+export const storedCerts = () => store.get('certs')
 
 type State = {
   inputValue: string,
@@ -30,6 +30,7 @@ type State = {
 }
 
 type Props = {
+  wsUrl: string,
   onRequestClose: () => void,
   onCopiedCerts: () => void,
 }
@@ -98,7 +99,10 @@ export default class CertificateSelection extends Component<State> {
       values.forEach((rf, key) => {
         certs[rf.key] = rf.path
       })
-      store.set('cert-file-paths', certs)
+      store.set('certs', {
+        filePaths: certs,
+        wsUrl: this.props.wsUrl,
+      })
       this.props.onCopiedCerts()
     }
   }
