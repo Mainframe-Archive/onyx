@@ -125,6 +125,7 @@ const createMainWindow = async url => {
   })
   mainWindow.on('closed', () => {
     swarm.stop()
+    app.quit()
     mainWindow = null
   })
 }
