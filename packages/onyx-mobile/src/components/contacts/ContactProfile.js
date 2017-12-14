@@ -1,0 +1,60 @@
+// @flow
+import React, { Component } from 'react'
+import { View, StyleSheet } from 'react-native'
+import QRCode from 'react-native-qrcode'
+
+import Modal from '../shared/Modal'
+import Text from '../shared/Text'
+import Avatar from '../shared/Avatar'
+import COLORS from '../colors'
+import { BASIC_SPACING } from '../styles'
+
+type Props = {
+  title: ?string,
+  profile: Object,
+  onRequestClose: () => void,
+}
+
+export default class ContactProfile extends Component<Props> {
+
+  render() {
+    const { title, profile } = this.props
+    return (
+      <Modal
+        title={title || profile.name || 'Contact'}
+        onRequestClose={this.props.onRequestClose}>
+        <View style={styles.container}>
+          <Avatar size={140} profile={profile} />
+          <View style={styles.bottom}>
+            <View style={styles.codeContainer}>
+              <QRCode
+                value={profile.id}
+                size={150}
+                bgColor='black'
+                fgColor='white'/>
+            </View>
+            <Text style={styles.idLabel}>{profile.id}</Text>
+          </View>
+        </View>
+      </Modal>
+    )
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+  },
+  idLabel: {
+    marginTop: BASIC_SPACING,
+  },
+  bottom: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.GRAY_E6,
+    paddingTop: BASIC_SPACING,
+    marginTop: BASIC_SPACING,
+  },
+  codeContainer: {
+    alignItems: 'center',
+  },
+})

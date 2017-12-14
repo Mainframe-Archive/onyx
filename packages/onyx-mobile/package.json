@@ -1,0 +1,44 @@
+{
+  "name": "onyx-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "flow-bin": "^0.57.3",
+    "prettier": "^1.7.4"
+  },
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "test": "node node_modules/jest/bin/jest.js --watch"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "apollo-client": "^1.9.3",
+    "babel-preset-react-native-stage-0": "^1.0.1",
+    "graphql": "^0.11.7",
+    "lodash": "^4.17.4",
+    "moment": "^2.19.1",
+    "prop-types": "^15.6.0",
+    "react": "16.0.0",
+    "react-apollo": "^1.4.16",
+    "react-native": "0.50.3",
+    "react-native-blockies": "^1.0.0",
+    "react-native-qrcode": "^0.2.6",
+    "react-native-vector-icons": "^4.4.2",
+    "react-navigation": "^1.0.0-beta.15",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "redux-logger": "^3.0.6",
+    "redux-persist": "^4.10.1",
+    "rxjs": "^5.5.5",
+    "subscriptions-transport-ws": "^0.8.3"
+  },
+  "rnpm": {
+    "assets": [
+      "./assets/fonts"
+    ]
+  }
+}
