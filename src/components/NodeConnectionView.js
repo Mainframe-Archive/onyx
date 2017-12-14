@@ -78,33 +78,44 @@ export default class NodeConnectionView extends Component {
 
   renderLocalConnectButton() {
     const { loadingLocal } = this.state
-    return loadingLocal ? (
-      <Icon name="rolling" />
-    ) : (
-      <TouchableOpacity
-        onPress={this.onPressConnectDefault}
-        style={styles.defaultNodeButton}
-      >
-        <View style={styles.buttonText}>
-          <Text style={styles.defaultNodeButtonTitle}>
-            Start local onyx server
-          </Text>
+    const loadingStyles = loadingLocal ? null : styles.hide
+    const buttonStyles = loadingLocal ? styles.hide : null
+    return (
+      <View>
+        <TouchableOpacity
+          onPress={this.onPressConnectDefault}
+          style={[styles.defaultNodeButton, buttonStyles]}
+        >
+          <View style={styles.buttonText}>
+            <Text style={styles.defaultNodeButtonTitle}>
+              Start local onyx server
+            </Text>
+          </View>
+          <Icon name="arrow-right" />
+        </TouchableOpacity>
+        <View style={loadingStyles}>
+          <Icon name="rolling" />
         </View>
-        <Icon name="arrow-right" />
-      </TouchableOpacity>
+      </View>
     )
   }
 
   renderRemoteConnectButton() {
     const { loadingRemote } = this.state
-    return loadingRemote ? (
-      <Icon name="rolling" />
-    ) : (
-      <Button
-        outlineStyle
-        title="Connect to remote server"
-        onPress={this.onPressConnect}
-      />
+    const loadingStyles = loadingRemote ? null : styles.hide
+    const buttonStyles = loadingRemote ? styles.hide : null
+    return (
+      <View>
+        <Button
+          style={buttonStyles}
+          outlineStyle
+          title="Connect to remote server"
+          onPress={this.onPressConnect}
+        />
+        <View style={loadingStyles}>
+          <Icon name="rolling" />
+        </View>
+      </View>
     )
   }
 
@@ -223,5 +234,8 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     textAlign: 'center',
+  },
+  hide: {
+    display: 'none',
   },
 })
