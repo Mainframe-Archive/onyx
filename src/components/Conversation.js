@@ -294,7 +294,7 @@ class Conversation extends Component<Props, State> {
       .subscribe({
         query: gql`
           ${ProfileData}
-          subscription TypingsChangedSubscription ($id: ID!) {
+          subscription TypingsChangedSubscription($id: ID!) {
             typingsChanged(id: $id) {
               ...ProfileData
             }
@@ -641,7 +641,7 @@ class Conversation extends Component<Props, State> {
                 : 'Direct Message'}
             </Text>
           </View>
-          <View style={styles.participants}>
+          <View className="participants-list" style={styles.participants}>
             <TouchableOpacity
               onPress={this.showMyProfile}
               style={styles.avatar}
@@ -764,6 +764,8 @@ const styles = StyleSheet.create({
   },
   participants: {
     flexDirection: 'row',
+    overflowX: 'auto',
+    flex: '10 0 auto',
   },
   avatar: {
     marginLeft: BASIC_SPACING,
@@ -920,33 +922,33 @@ const styles = StyleSheet.create({
 
 const ConvoQuery = graphql(
   gql`
-  ${MessageData}
-  ${ProfileData}
-  query ConversationQuery ($id: ID!) {
-    conversation(id: $id) {
-      type
-      subject
-      messages {
-        ...MessageData
+    ${MessageData}
+    ${ProfileData}
+    query ConversationQuery($id: ID!) {
+      conversation(id: $id) {
+        type
+        subject
+        messages {
+          ...MessageData
+        }
+        peers {
+          profile {
+            ...ProfileData
+          }
+          state
+        }
+        pointer
+        lastActiveTimestamp
+        dark
       }
-      peers {
+
+      viewer {
         profile {
           ...ProfileData
         }
-        state
-      }
-      pointer
-      lastActiveTimestamp
-      dark
-    }
-
-    viewer {
-      profile {
-        ...ProfileData
       }
     }
-  }
-`,
+  `,
   {
     options: props => ({
       fetchPolicy: 'network-only',
@@ -960,7 +962,7 @@ const ConvoQuery = graphql(
         data.subscribeToMore({
           document: gql`
             ${MessageData}
-            subscription MessageAddedSubscription ($id: ID!) {
+            subscription MessageAddedSubscription($id: ID!) {
               messageAdded(id: $id) {
                 conversation {
                   pointer

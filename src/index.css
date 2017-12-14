@@ -108,3 +108,17 @@ img {
   font-family: 'Muli';
   font-size: 14px;
 }
+.participants-list {
+  padding-bottom: 10px;
+  margin-left: 20px;
+}
+
+.participants-list::-webkit-scrollbar {
+  width: 1px;
+  height: 1px;
+}
+
+.participants-list::-webkit-scrollbar-thumb {
+  background-color: #e6e6e6;
+  outline: 1px solid #e6e6e6;
+}
