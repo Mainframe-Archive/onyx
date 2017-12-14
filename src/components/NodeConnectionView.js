@@ -7,7 +7,7 @@ import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
-import CertSelectionModal, { haveStoredCerts } from './CertSelectionModal'
+import CertSelectionModal, { storedCerts } from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
@@ -50,7 +50,8 @@ export default class NodeConnectionView extends Component {
     const { url } = this.state
     if (url && url.length) {
       const secure = url.split('://')[0] === 'wss'
-      if (secure && !haveStoredCerts()) {
+      const certs = storedCerts()
+      if (secure && (!certs || certs.wsUrl !== url)) {
         this.setState({
           showCertsSelectModal: true,
         })
@@ -128,6 +129,7 @@ export default class NodeConnectionView extends Component {
 
     const certSelectionModal = this.state.showCertsSelectModal ? (
       <CertSelectionModal
+        wsUrl={this.state.url}
         onRequestClose={this.onRequestClose}
         onCopiedCerts={this.onCopiedCerts}
       />

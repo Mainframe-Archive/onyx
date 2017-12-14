@@ -39,7 +39,7 @@ export default (
   onDisconnected: () => void,
   onConnected: () => void,
 ) => {
-  const certPaths = store.get('cert-file-paths')
+  const certPaths = store.get('certs.filePaths')
   const certFiles = {}
   try {
     if (!certPaths) throw new Error('missing tls creds')
