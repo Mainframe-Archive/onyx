@@ -27,7 +27,7 @@ We would also love to chat with you on the Mainframe app! To converse with us th
 * Adam Clarke: pubkey
 * Austin Craig: pubkey
 * Brad Hagen: pubkey
-* Carl Youngblood: pubkey
+* Carl Youngblood: `0x04247be9d69b6e48f81f1b59bcb4cd13474d708e37d13952e5c89de39e2797eec1f0295a0140f29278d5363c07b2ebf9e5b4b821dccdbc453d3bc516df3ba8538f`
 * Clement Jaquier: pubkey
 * Diogo Perillo: pubkey
 * Jacek Królikowski: pubkey
