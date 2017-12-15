@@ -55,10 +55,6 @@ export default class Onyx extends Component<{}, State> {
     }
   }
 
-  onConnected = () => {
-    this.wsConnected$.next(true)
-  }
-
   onDisconnected = () => {
     if (!this.state.connectionError) {
       const message = this.wsConnected$.value
@@ -73,12 +69,33 @@ export default class Onyx extends Component<{}, State> {
     }
   }
 
+  onConnecting = () => {
+    this.setState({
+      connectionError: undefined,
+    })
+  }
+
+  connectionCallback = (error) => {
+    let connectionError
+    if (error) {
+      connectionError = 'Error connecting to websocket, please check you entered a valid URL\nDEBUG: ' + error.toString()
+    } else {
+      this.wsConnected$.next(true)
+    }
+
+    this.setState({ connectionError })
+  }
+
   async loadStore() {
     try {
       const client = createClient(
         this.state.wsUrl,
-        this.onDisconnected,
-        this.onConnected,
+        this.connectionCallback,
+        {
+          onDisconnected: this.onDisconnected,
+          onConnecting: this.onConnecting,
+          onReconnecting: this.onConnecting,
+        },
       )
       const store = await createStore(client)
       this.setState({ client, store })
