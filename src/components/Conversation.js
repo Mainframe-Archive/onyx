@@ -286,36 +286,38 @@ class Conversation extends Component<Props, State> {
     this.list = list
   }
 
-  componentDidMount() {
-    this.unsubscribeMessageAdded = this.props.subscribeToMessageAdded(
-      this.props.id,
-    )
-    this.unsubscribeTypingsChanged = this.context.client
-      .subscribe({
-        query: gql`
-          ${ProfileData}
-          subscription TypingsChangedSubscription($id: ID!) {
-            typingsChanged(id: $id) {
-              ...ProfileData
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data && !this.unsubscribeMessageAdded) {
+      this.unsubscribeMessageAdded = this.props.subscribeToMessageAdded(
+        this.props.id,
+      )
+      this.unsubscribeTypingsChanged = this.context.client
+        .subscribe({
+          query: gql`
+            ${ProfileData}
+            subscription TypingsChangedSubscription($id: ID!) {
+              typingsChanged(id: $id) {
+                ...ProfileData
+              }
             }
-          }
-        `,
-        variables: { id: this.props.id },
-      })
-      .subscribe({
-        next: ({ typingsChanged }) => {
-          const toBe = typingsChanged.length > 1 ? 'are' : 'is'
-          const typingText =
-            typingsChanged.length > 0
-              ? typingsChanged
-                  .map(p => p.name || p.id.substr(0, 8))
-                  .join(' and ') + ` ${toBe} typing`
-              : ''
-          this.setState(
-            s => (s.typingText === typingText ? null : { typingText }),
-          )
-        },
-      }).unsubscribe
+          `,
+          variables: { id: this.props.id },
+        })
+        .subscribe({
+          next: ({ typingsChanged }) => {
+            const toBe = typingsChanged.length > 1 ? 'are' : 'is'
+            const typingText =
+              typingsChanged.length > 0
+                ? typingsChanged
+                    .map(p => p.name || p.id.substr(0, 8))
+                    .join(' and ') + ` ${toBe} typing`
+                : ''
+            this.setState(
+              s => (s.typingText === typingText ? null : { typingText }),
+            )
+          },
+        }).unsubscribe
+    }
   }
 
   componentWillUnmount() {
