@@ -24,17 +24,18 @@ Although this release is not officially supported, we really want to hear your f
 
 We would also love to chat with you on the Mainframe app! To converse with us there, add any member of the Mainframe team and send us ideas:
 
-* Adam Clarke: pubkey
-* Austin Craig: pubkey
-* Brad Hagen: pubkey
+* Adam Clarke: `0x0477eaa897f071943fc0be577eee161dcc06a72e785437ce14f2d9acbc829885f0cd6db9e3ee21cb2b660cb191877808288168f4ebc4a2cdafb6490e54f9302ba8`
+* Austin Craig: `0x049b12d92928e83c5813e7f6e87b25c3d3d13750d26eb42a4205b7752a1d3f8f3e7f09d455741b9198d15ed8eaa40b2c477901a96c6f861b7f46cc5b38a91e7bba`
+* Brad Hagen: `0x047d7e236d470739b173d06e7d602020104dcc17e172fc1a87b23d802a66c78e1d5edb2c8b0bcaf8a51aab1dfccd17a79956368d541712045972b740dd2add417f`
 * Carl Youngblood: `0x04247be9d69b6e48f81f1b59bcb4cd13474d708e37d13952e5c89de39e2797eec1f0295a0140f29278d5363c07b2ebf9e5b4b821dccdbc453d3bc516df3ba8538f`
-* Clement Jaquier: pubkey
-* Diogo Perillo: pubkey
-* Jacek Królikowski: pubkey
-* Luca Tavazzani: pubkey
-* Mick Hagen: pubkey
-* Miloš Mošić: pubkey
-* Shane Howley: pubkey
+* Clement Jaquier: `0x04a5e89b2a943981c78c391e10cf937fec8c0d5d8f979f24b794ae5758d3b4ec7495686b056485539ea7f367827da08252ee59de7bef7e26e750ae2815a7a05c31`
+* Diogo Perillo: `0x0432145fbf8bdc9ee9cdfaf9f09c1c9cfbf03d746ed8995c0f0b1b13b981b6623768f3098f95101da5243fb5bfbb6a7197c5fe4279235a718de227a3259d827bb1`
+* Jacek Królikowski: `0x04e6d33cc247a26498acd4a16a52914b93c2d0a97984f4a05bb08461b46e0cee975a3f6196458b17272747558f989c7389fb41bc9cfe1ddfbc7ec1215d9a92f936`
+* Luca Tavazzani: `0x047c32067adf821dd855af247c87d4ef16e083a8bff507849e5347c90b90c77cad6eca4b8a05f744c29827b76ce208e67ad84dcb0a39e190eace1aa1f06e5fa067`
+* Mick Hagen: `0x04de5bc3ce9c1b229ccd194592b476950815c81dfb105a7fa8981a222d4be7b79f0921858f96dcc6a88fe17c5cf68de4ddedb3e91dba07a91661e10f162e0ee19b`
+* Miloš Mošić: `0x04a6535173ed708a043e0a35223f52a380c9052a15309c45e63ad603de2b9800b435359f235c7463dfb1e77278eb81e7347881a3b4156eb6d0bee06302fdf79fb2`
+* Paul Le Cam: `0x045d750ff03b4809304f7a201398c845568e55e6c516c7ca2cfcc7f2b0c04f52fda6164539988bf0447df57bf4671958cccbaad92353f9346920e2084451f7a830`
+* Shane Howley: `0x04eecabffd2b9cf84e03cf46b720200752375c08e20cf1275af8064e8624ef912b8c8e0f89b376c18c5ac317eb5cbe98fdf59ac0b746322570119eb63e3cce073e`
 
 ## Architecture
 
