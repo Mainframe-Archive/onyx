@@ -410,7 +410,7 @@ export const createChannel = async (
 
 export const resendInvites = async (
   db: DB,
-  channelId: string,
+  topic: hex,
   dark: boolean,
   subject: string,
   channelPeers: Array<hex>,
@@ -421,8 +421,7 @@ export const resendInvites = async (
   }
   const peerContacts = channelPeers.map(id => db.getContact(id)).filter(Boolean)
   const channel = {
-    // $FlowFixMe
-    topic: hexToArray(channelId),
+    topic,
     peers: [
       { pubKey: profile.id, address: dark ? '0x' : db.getAddress() },
       ...formatPSSPeers(peerContacts, dark),
