@@ -49,12 +49,12 @@ PSS is a connectionless communication protocol that provides dark routing capabi
 
 ## Development
 
-You need a running Swarm node serving a WebSocket server on `localhost:8546` for PSS and a HTTP server on `localhost:8500`.  
+You need a running Swarm node serving a WebSocket server on `localhost:8546` for PSS and a HTTP server on `localhost:8500`.
 These values can be changed using the environment variables `SWARM_WS_URL` and `SWARM_HTTP_URL`.
 
 After you pull this repository, run `yarn` to install all the dependencies.
 
-Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.  
+Run `yarn start` to start the development server for the frontend. It will serve it on `localhost:3000`.
 Once ready, you can run `yarn electron` to start the electron app, connecting to Swarm and creating a GraphQL server for the frontend.
 
 ### Project structure
@@ -69,7 +69,7 @@ Once ready, you can run `yarn electron` to start the electron app, connecting to
 
 Thanks for your interest in our project! Feel free to examine our list of potential enhancements on our [issues page](https://github.com/thusfresh/onyx/issues) and help us implement them. Feel free to submit an feature request or bug report yourself as well.
 
-## Acknowledgements
+## Acknowledgments
 
 Mainframe wishes to thank the Swarm core team, including Viktor Tron, Louis Holbrook, and Lewis Marshall, as well as the JAAK team, who helped us test the group messaging features for our presentation at Devcon3 on November 4, 2017 in Cancun, Mexico.
 
