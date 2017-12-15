@@ -36,8 +36,8 @@ const fragmentMatcher = new IntrospectionFragmentMatcher({
 
 export default (
   url: string,
-  onDisconnected: () => void,
-  onConnected: () => void,
+  connectionCallback: (error) => void,
+  events,
 ) => {
   const certPaths = store.get('certs.filePaths')
   const certFiles = {}
@@ -69,12 +69,31 @@ export default (
     url,
     {
       reconnect: true,
+      connectionCallback,
     },
     OnyxWebSocket,
   )
 
-  subClient.onDisconnected(() => onDisconnected())
-  subClient.onConnected(() => onConnected())
+  if (events.onDisconnected) {
+    subClient.onDisconnected(() => events.onDisconnected())
+  }
+
+  if (events.onConnected) {
+    subClient.onConnected(() => events.onConnected())
+  }
+
+  if (events.onReconnected) {
+    subClient.onReconnected(() => events.onReconnected())
+  }
+
+  if (events.onConnecting) {
+    subClient.onConnecting(() => events.onConnecting())
+  }
+
+  if (events.onReconnecting) {
+    subClient.onReconnecting(() => events.onReconnecting())
+  }
+
   return new ApolloClient({
     fragmentMatcher,
     networkInterface: subClient,
