@@ -18,6 +18,96 @@ This application is an alpha product and is currently suitable for testing purpo
 - **Reliability**: PSS does not provide deliverability guarantees. When remotely installed, however, the [onyx-server](https://github.com/MainframeHQ/onyx-server) is designed to store messages sent to you while you are offline. As long as PSS delivers them successfully to your Mainframe mailboxing service, they should be waiting for you when you open your desktop or mobile app again. If you are running in the default mode, which runs the mailbox service only locally, any messages sent to you while your app is not running will be lost.
 - **Performance**: We have not sufficiently tested this version for large-scale use. All messages are stored in a global state file that gets updated with each new message that is received. We anticipate that this will not scale well. The message store was created quickly for the alpha, and will require a more robust implementation in our next phase of development.
 
+## Setting up an [Onyx Server](https://github.com/MainframeHQ/onyx-server) on AWS
+
+For best experience, you might want to set up your own mailboxing server in the
+cloud instead of running it together with your client.
+
+Make sure you have an AWS account and your AWS CLI is configured to use the
+`eu-west-1` (Ireland) region as default. We're going to assume you have a
+[VPC](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#)
+configured (created and connected to an Internet Gateway) in this region.
+
+### 1. Create a security group for your Onyx Server
+
+Go to [security group management](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#SecurityGroups:sort=groupId)
+in the AWS dashboard and create a new security group. Make sure you're creating
+it in the right vpc. Set the following group rules:
+
+**Inbound**
+
+| Type            | Protocol | Port Range | Source    | Description           |
+| ---             | ---      |        --- | ---       | ---                   |
+| SSH (22)        | TCP      |         22 | 0.0.0.0/0 | SSH                   |
+| Custom TCP Rule | TCP      |      30399 | 0.0.0.0/0 | swarm TCP             |
+| Custom TCP Rule | TCP      |       5000 | 0.0.0.0/0 | onyx server interface |
+| Custom UDP Rule | UDP      |      30399 | 0.0.0.0/0 | swarm UDP             |
+
+**Outbound**
+
+| Type        | Protocol | Port Range | Source    | Description |
+| ---         | ---      | ---        | ---       | ---         |
+| ALL Traffic | ALL      | ALL        | 0.0.0.0/0 | ALL Traffic |
+
+### 2. Create a subnet for your Onyx Server
+
+Go to [subnet management](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#subnets:)
+in the AWS dashboard and create a new subnet in your VPC. Make sure it's within
+the vpc CIDR range. For example if the VPC CIDR is `10.0.0.0/16`, the sg
+IPv4 CIDR block can be `10.0.0.1/24`.
+
+### 3. Create an SSH key
+You're going to use it to connect to the Onyx Server EC2 node.
+
+```bash
+$ mkdir ~/ssh
+$ aws ec2 create-key-pair --key-name my_key --output text --query KeyMaterial > ~/ssh/my_key.pem
+```
+
+### 4. Launch the Onyx Server
+
+Make sure you have [AWS CLI](https://aws.amazon.com/cli/) installed and configured.
+In terminal, run the following command:
+
+Find your security group and subnet ids, which should be something like `sg-XXXXXXXX`
+and `subnet-XXXXXXXX`, respectively. Use them in the following command
+
+```bash
+$ aws ec2 run-instances \
+    --image-id ami-e3a4239a \
+    --instance-type t2.micro \
+    --key-name my_key \
+    --security-group-ids <SG ID HERE> \
+    --subnet-id <SUBNET ID HERE> \
+    --tag-specification "ResourceType=instance,Tags=[{Key=Name,Value=my_onyx_node}]" \
+    --associate-public-ip-address
+```
+
+This will launch your personal Onyx mailboxing server. It will generate an
+account for you.
+
+### 5. Fetch the certificates from the node
+
+In order to connect to the server, the client will need to use the right
+certificates - otherwise the connection will be rejected. They are generated on
+the server and you need to fetch them first.
+
+Find the public IP of the node you created
+[here](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId)
+and copy the relevant files from it:
+
+```bash
+$ scp -i ~/ssh/my_key.pem ubuntu@<NODE PUBLIC IP HERE>:"~/certs/ca-crt.pem ~/certs/client-crt.pem ~/certs/client-key.pem" .
+```
+
+### 6. Connect to your Onyx Server
+
+Launch Onyx and as the `Onyx server websocket url` use
+`wss://<NODE PUBLIC IP HERE>:5000/graphql`. When prompted for the certificates
+use the one you downloaded in the previous step.
+
+You're connected!
+
 ## Get in touch!
 
 Although this release is not officially supported, we really want to hear your feedback. If you become aware of a bug or have a great idea about a feature that would make Mainframe more awesome, please submit an issue on our [issues page](https://github.com/thusfresh/onyx/issues).
