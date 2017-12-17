@@ -36,16 +36,18 @@ class Contact extends Component<Props> {
     wsConnected$: PropTypes.object.isRequired,
   }
 
-  unsubscribeContactChanged: UnsubscribeFunc
+  unsubscribeContactChanged: ?UnsubscribeFunc
 
-  componentDidMount() {
-    this.unsubscribeContactChanged = this.props.subscribeToContactChanged(
-      this.props.id,
-    )
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data && !this.unsubscribeContactChanged) {
+      this.unsubscribeContactChanged = this.props.subscribeToContactChanged(
+        this.props.id,
+      )
+    }
   }
 
   componentWillUnmount() {
-    if (this.context.wsConnected$.value) {
+    if (this.context.wsConnected$.value && this.unsubscribeContactChanged) {
       this.unsubscribeContactChanged()
     }
   }
