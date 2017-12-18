@@ -34,6 +34,106 @@ The `DEBUG` environment variable can be used to activate logs, ex:
 DEBUG="onyx*" onyx-server
 ```
 
+### Setting up an Onyx Server on AWS
+
+You can use a pre-built [AMI](https://en.wikipedia.org/wiki/Amazon_Machine_Image)
+to conveniently set up an onyx-server on AWS.
+
+To do it, make sure you have an AWS account and your AWS CLI is configured to 
+use the `eu-west-1` (Ireland) region as default. We're going to assume you have a
+[VPC](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#)
+configured in that region.
+
+Aside from a VPC and an Internet Gateway, the 
+[Route Table](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#routetables:)
+has to be configured for this VPC, with routes set like these:
+
+| Destination | Target                      | Status | Propagated |
+| ---         | ----                        | ---    | ---        |
+| 10.0.0.0/16 | local                       | Active | No         |
+| 0.0.0.0/0   | \<INTERNET GATEWAY ID HERE> | Active | No         |
+
+#### 1. Create a security group for your Onyx Server
+
+Go to [security group management](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#SecurityGroups:sort=groupId)
+in the AWS dashboard and create a new security group. Make sure you're creating
+it in the right vpc. Set the following group rules:
+
+**Inbound**
+
+| Type            | Protocol | Port Range | Source    | Description           |
+| ---             | ---      |        --- | ---       | ---                   |
+| SSH (22)        | TCP      |         22 | 0.0.0.0/0 | SSH                   |
+| Custom TCP Rule | TCP      |      30399 | 0.0.0.0/0 | swarm TCP             |
+| Custom TCP Rule | TCP      |       5000 | 0.0.0.0/0 | onyx server interface |
+| Custom UDP Rule | UDP      |      30399 | 0.0.0.0/0 | swarm UDP             |
+
+**Outbound**
+
+| Type        | Protocol | Port Range | Source    | Description |
+| ---         | ---      | ---        | ---       | ---         |
+| ALL Traffic | ALL      | ALL        | 0.0.0.0/0 | ALL Traffic |
+
+#### 2. Create a subnet for your Onyx Server
+
+Go to [subnet management](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#subnets:)
+in the AWS dashboard and create a new subnet in your VPC. Make sure it's within
+the vpc CIDR range. For example if the VPC CIDR is `10.0.0.0/16`, the sg
+IPv4 CIDR block can be `10.0.1.0/24`.
+
+#### 3. Create an SSH key
+You're going to use it to connect to the Onyx Server EC2 node.
+
+```bash
+$ mkdir ~/ssh
+$ aws ec2 create-key-pair --key-name my_key --output text --query KeyMaterial > ~/ssh/my_key.pem
+$ chmod 400 ~/ssh/my_key.pem
+```
+
+#### 4. Launch the Onyx Server
+
+Make sure you have [AWS CLI](https://aws.amazon.com/cli/) installed and configured.
+In terminal, run the following command:
+
+Find your security group and subnet ids, which should be something like `sg-XXXXXXXX`
+and `subnet-XXXXXXXX`, respectively. Use them in the following command
+
+```bash
+$ aws ec2 run-instances \
+    --image-id ami-e3a4239a \
+    --instance-type t2.micro \
+    --key-name my_key \
+    --security-group-ids <SG ID HERE> \
+    --subnet-id <SUBNET ID HERE> \
+    --tag-specification "ResourceType=instance,Tags=[{Key=Name,Value=my_onyx_node}]" \
+    --associate-public-ip-address
+```
+
+This will launch your personal Onyx mailboxing server. It will generate an
+account for you.
+
+#### 5. Fetch the certificates from the node
+
+In order to connect to the server, the client will need to use the right
+certificates - otherwise the connection will be rejected. They are generated on
+the server and you need to fetch them first.
+
+Find the public IP of the node you created
+[here](https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId)
+and copy the relevant files from it:
+
+```bash
+$ scp -i ~/ssh/my_key.pem ubuntu@<NODE PUBLIC IP HERE>:"~/certs/ca-crt.pem ~/certs/client-crt.pem ~/certs/client-key.pem" .
+```
+
+#### 6. Connect to your Onyx Server
+
+Launch Onyx and as the `Onyx server websocket url` use
+`wss://<NODE PUBLIC IP HERE>:5000/graphql`. When prompted for the certificates
+use the one you downloaded in the previous step.
+
+You're connected!
+
 ### Development
 
 To build local version run `yarn start`. Afterwards you can start the built server
