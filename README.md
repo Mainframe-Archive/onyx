@@ -8,7 +8,11 @@ Onyx is the beginning of our next phase of development on a fully-decentralized 
 
 ## Installing
 
-To install Onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/thusfresh/onyx/releases). If you wish to install the mailboxing service remotely, follow the instructions on its [README](https://github.com/MainframeHQ/onyx-server).
+To install Onyx, download and install the latest release binaries for your 
+platform from our [releases page](https://github.com/thusfresh/onyx/releases). 
+
+If you wish to install the mailboxing service remotely, follow the instructions
+[tutorial in onyx-server README](https://github.com/MainframeHQ/onyx-server#setting-up-an-onyx-server-on-aws).
 
 ## Known issues
 
@@ -17,15 +21,6 @@ This application is an alpha product and is currently suitable for testing purpo
 - **Security**: Our codebase is not fully tested. We authenticate both the client app and the Mainframe mailboxing service and use TLS between the two, but any intruder who succeeded in accessing a remotely-installed service could read your messages, as they are stored in plaintext. Messages are transmitted via [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss), which is intended to be highly secure but is still beta software.
 - **Reliability**: PSS does not provide deliverability guarantees. When remotely installed, however, the [onyx-server](https://github.com/MainframeHQ/onyx-server) is designed to store messages sent to you while you are offline. As long as PSS delivers them successfully to your Mainframe mailboxing service, they should be waiting for you when you open your desktop or mobile app again. If you are running in the default mode, which runs the mailbox service only locally, any messages sent to you while your app is not running will be lost.
 - **Performance**: We have not sufficiently tested this version for large-scale use. All messages are stored in a global state file that gets updated with each new message that is received. We anticipate that this will not scale well. The message store was created quickly for the alpha, and will require a more robust implementation in our next phase of development.
-
-
-## Setting up an [Onyx Server](https://github.com/MainframeHQ/onyx-server) on AWS
-
-For best experience, you might want to set up your own mailboxing server in the
-cloud instead of running it together with your client.
-
-You can do it by following the 
-[tutorial in onyx-server README](https://github.com/MainframeHQ/onyx-server#setting-up-an-onyx-server-on-aws).
 
 ## Get in touch!
 
