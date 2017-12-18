@@ -8,7 +8,11 @@ Onyx is the beginning of our next phase of development on a fully-decentralized 
 
 ## Installing
 
-To install Onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/thusfresh/onyx/releases). If you wish to install the mailboxing service remotely, follow the instructions on its [README](https://github.com/MainframeHQ/onyx-server).
+To install Onyx, download and install the latest release binaries for your 
+platform from our [releases page](https://github.com/thusfresh/onyx/releases). 
+
+If you wish to install the mailboxing service remotely, follow the instructions
+[tutorial in onyx-server README](https://github.com/MainframeHQ/onyx-server#setting-up-an-onyx-server-on-aws).
 
 ## Known issues
 
