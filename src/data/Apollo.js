@@ -49,7 +49,7 @@ export default (
   } catch (err) {
     console.warn(
       `Error reading SSL certs, please make sure you've generated client
-      and server ssl certificates using the script provided in Onyx server. `,
+      and server ssl certificates using the script provided in onyx-server. `,
       err,
     )
   }
