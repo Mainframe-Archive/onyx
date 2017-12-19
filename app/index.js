@@ -36,8 +36,15 @@ const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
 const menu = Menu.buildFromTemplate([
   {
-    label: is.macos ? 'Onyx' : 'File',
+    label: is.macos ? app.getName() : 'File',
     submenu: [
+      {
+        label: 'v' + app.getVersion(),
+        enabled: false,
+      },
+      {
+        type: 'separator',
+      },
       {
         label: 'Reset',
         click: (item, focusedWindow) => {
