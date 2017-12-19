@@ -1,6 +1,6 @@
 {
   "name": "Mainframe-Alpha",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Decentralized messaging application based on PSS",
   "main": "index.js",
   "author": "Mainframe",
