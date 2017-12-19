@@ -4,15 +4,13 @@ Decentralized messaging application based on PSS.
 
 ## Introduction
 
-Onyx is the beginning of our next phase of development on a fully-decentralized messaging platform. It relies on a secure messaging protocol in the Ethereum core called [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss).
+Mainframe Onyx is the beginning of our next phase of development on a fully-decentralized messaging platform. It relies on a secure messaging protocol in the Ethereum core called [PSS](https://github.com/ethersphere/go-ethereum/tree/swarm-network-rewrite/swarm/pss).
 
 ## Installation
 
-To install Onyx, download and install the latest release binaries for your 
-platform from our [releases page](https://github.com/thusfresh/onyx/releases). 
+To install Mainframe Onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/MainframeHQ/onyx/releases).
 
-If you wish to install the mailboxing service remotely, follow the instructions
-[tutorial in onyx-server README](https://github.com/MainframeHQ/onyx-server#setting-up-an-onyx-server-on-aws).
+If you wish to install the mailboxing service remotely, follow the instructions in the [onyx-server](https://github.com/MainframeHQ/onyx-server) repo.
 
 ## Known issues
 
@@ -30,7 +28,7 @@ PSS & Swarm are currently in rapid development and as such, the build of swarm t
 
 ## Get in touch!
 
-Although this release is not officially supported, we really want to hear your feedback. If you become aware of a bug or have a great idea about a feature that would make Mainframe more awesome, please submit an issue on our [issues page](https://github.com/thusfresh/onyx/issues).
+Although this release is not officially supported, we really want to hear your feedback. If you become aware of a bug or have a great idea about a feature that would make Mainframe more awesome, please submit an issue on our [issues page](https://github.com/MainframeHQ/onyx/issues).
 
 We would also love to chat with you on the Mainframe app! To converse with us there, add any member of the Mainframe team and send us ideas:
 
@@ -104,11 +102,11 @@ yarn dist -mwl
 
 ## Contributing
 
-Thanks for your interest in our project! Feel free to examine our list of potential enhancements on our [issues page](https://github.com/thusfresh/onyx/issues) and help us implement them. Feel free to submit an feature request or bug report yourself as well.
+Thanks for your interest in our project! Feel free to examine our list of potential enhancements on our [issues page](https://github.com/MainframeHQ/onyx/issues) and help us implement them. Feel free to submit an feature request or bug report yourself as well.
 
 ## Acknowledgments
 
-Mainframe wishes to thank the Swarm core team, including Viktor Tron, Louis Holbrook, and Lewis Marshall, as well as the JAAK team, who helped us test the group messaging features for our presentation at Devcon3 on November 4, 2017 in Cancun, Mexico.
+Mainframe wishes to thank the Swarm core team, including Viktor Trón, Louis Holbrook, and Lewis Marshall, as well as the JAAK team, who helped us test the group messaging features for our presentation at Devcon3 on November 4, 2017 in Cancun, Mexico.
 
 ## License
 
