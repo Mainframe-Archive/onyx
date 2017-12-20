@@ -13,8 +13,8 @@ import { BASIC_SPACING } from '../styles'
 type Props = {
   title: string,
   children?: Node,
-  visible: boolean,
-  darkStyle: boolean,
+  visible?: boolean,
+  darkStyle?: boolean,
   onRequestClose: () => void,
 }
 

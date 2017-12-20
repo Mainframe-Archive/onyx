@@ -4,7 +4,7 @@ import { TextInput as RNTextInput, StyleSheet } from 'react-native'
 import colors from '../colors'
 
 type Props = {
-  value: string,
+  value?: string,
   placeholder: string,
   style: number | Object | Array<number | Object>,
   onChangeText: (value: string) => void

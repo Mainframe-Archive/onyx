@@ -8,9 +8,9 @@ import type ApolloClient, { createNetworkInterface } from 'apollo-client'
 import createClient from './src/data/Apollo'
 // import { Font } from 'expo'
 import {
-	applyMiddleware,
-	combineReducers,
-	type Store as ReduxStore,
+  applyMiddleware,
+  combineReducers,
+  type Store as ReduxStore,
 } from 'redux'
 
 import createStore, { type Store } from './src/data/Store'
@@ -22,7 +22,7 @@ type State = {
   client?: ApolloClient,
   store?: Store,
   selectedNode?: string,
-  connectionError?: ?string,
+  connectionState?: ?string,
 }
 
 export default class App extends Component<State> {
@@ -40,14 +40,35 @@ export default class App extends Component<State> {
     }
   }
 
-  async loadStore(nodeUrl: string) {
+  onConnected = () => {
+    this.wsConnected$.next(true)
+		console.log('on connected.....')
+  }
+
+  onDisconnected = () => {
+    console.log('disconnected...')
+    setTimeout(() => {
+      this.wsConnected$.next(false)
+      this.setState({ connectionState: 'disconnected' })
+    }, 100)
+  }
+
+  onSelectNode = async (
+    nodeUrl: string,
+    certFilePath: string,
+    certPassword: string,
+  ) => {
     console.log('connecting to url: ', nodeUrl)
-    this.setState({ connectionError: undefined })
-    const client = await createClient(nodeUrl, this.onDisconnected)
+    const client = await createClient(
+      nodeUrl,
+      certFilePath,
+      certPassword,
+      this.onDisconnected
+    )
     console.log('created client: ', client)
     if (client && client.networkInterface.client) {
       const store = await createStore(client)
-      this.setState({ client, store })
+      this.setState({ client, store, connectionState: 'connected' })
     } else {
       Alert.alert(
         `Error connecting to GraphQL server`,
@@ -57,23 +78,10 @@ export default class App extends Component<State> {
     }
   }
 
-  onConnected = () => {
-    this.wsConnected$.next(true)
-  }
-
-  onDisconnected = () => {
-    console.log('disconnected...')
-    this.wsConnected$.next(false)
-    this.setState({ connectionError: 'disconnected' })
-  }
-
-  onSelectNode = (nodeUrl: string) => {
-    this.loadStore(nodeUrl)
-  }
-
   render() {
-    const { client, store, connectionError } = this.state
-    const content = client && store && !connectionError ? (
+    const { client, store, connectionState } = this.state
+		console.log('rendering, connection error: ', connectionState)
+    const content = client && store && connectionState === 'connected' ? (
       <ApolloProvider store={store} client={client}>
         <Navigator />
       </ApolloProvider>

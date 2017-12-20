@@ -1,7 +1,18 @@
 // @flow
 
 import React, { Component } from 'react'
-import { View, StyleSheet, TouchableOpacity, AsyncStorage, Image, Dimensions } from 'react-native'
+import RNFS from 'react-native-fs'
+
+import {
+  Platform,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  AsyncStorage,
+  Image,
+  Dimensions,
+  ActivityIndicator,
+} from 'react-native'
 import Text from './shared/Text'
 import TextInput from "./shared/TextInput"
 import ColoredLine from './shared/ColoredLine'
@@ -9,14 +20,23 @@ import CodeScanner from './shared/CodeScanner'
 import Icon from './shared/Icon'
 import Button from './shared/Button'
 import colors from './colors'
+import Modal from './shared/Modal'
 import { BASIC_SPACING } from './styles'
 
 type Props = {
-  onSelectNode: (nodeUrl: string) => void
+  onSelectNode: (
+    nodeUrl: string,
+    certFilePath: string,
+    certPassword: string,
+  ) => void
 }
 
 type State = {
   selectedNodeUrl?: string,
+  certPassword?: string,
+  certFilePath?: string,
+  certFetchErr?: string,
+  showCertsImport?: boolean,
   previousUrls: Array<string>
 }
 
@@ -62,8 +82,17 @@ export default class NodeSelectionScreen extends Component<Props, State> {
 
   onPress = () => {
     if (this.state.selectedNodeUrl) {
-      this.persistUrl(this.state.selectedNodeUrl)
-      this.props.onSelectNode(this.state.selectedNodeUrl)
+      const protocol = this.state.selectedNodeUrl.split('://')[0]
+      if (protocol === 'wss') {
+        this.setState({
+          showCertsImport: true,
+        })
+        this.fetchCerts()
+      } else {
+        this.setState({
+          certFetchErr: 'secure web socket url required',
+        })
+      }
     }
   }
 
@@ -92,6 +121,54 @@ export default class NodeSelectionScreen extends Component<Props, State> {
     })
   }
 
+  onCloseModal = () => {
+    this.setState({
+      showCertsImport: false,
+    })
+  }
+
+  onChangeCertPassword = (value) => {
+    this.setState({
+      certPassword: value,
+    })
+  }
+
+  onSubmitPassword = () => {
+    this.onCloseModal()
+    this.persistUrl(this.state.selectedNodeUrl)
+    this.props.onSelectNode(
+      this.state.selectedNodeUrl,
+      this.state.certFilePath,
+      this.state.certPassword,
+    )
+  }
+
+  async fetchCerts () {
+    console.log('fetching certs: ', RNFS.MainBundlePath)
+    const dirPath = Platform.OS === 'ios'
+      ? RNFS.DocumentDirectoryPath + '/attachments'
+      : RNFS.ExternalStorageDirectoryPath + '/attachments'
+    try {
+      await RNFS.mkdir(dirPath, { RNFSURLIsExcludedFromBackupKey: true })
+      const fileDirPath = dirPath + '/' + 'client.p12'
+      const bg = false
+      const file = RNFS.downloadFile({
+        fromUrl: 'http://localhost:5002/mobile_client_cert',
+        toFile: fileDirPath,
+        bg,
+      })
+      console.log('file: ', file)
+      this.setState({
+        certFilePath: fileDirPath,
+      })
+    } catch (err) {
+      console.log('err: ', err)
+      this.setState({
+        certFetchErr: 'Error fetching client ssl certificate, please ensure you enetered the correct server url'
+      })
+    }
+  }
+
   // RENDER
 
   renderScanner () {
@@ -100,12 +177,46 @@ export default class NodeSelectionScreen extends Component<Props, State> {
     ) : null
   }
 
+  renderCertImport () {
+    if (this.state.showCertsImport) {
+      const content = this.state.certFilePath ? (
+        <View>
+          <TextInput
+            onChangeText={this.onChangeCertPassword}
+            placeholder="password"
+            value={this.state.certPassword}
+            style={styles.passwordInput}
+          />
+          <Button
+            title="Done"
+            style={styles.passwordButton}
+            onPress={this.onSubmitPassword}
+            />
+        </View>
+      ) : (
+        <ActivityIndicator />
+      )
+      return (
+        <Modal
+          title="SSL Certificate"
+          onRequestClose={this.onCloseModal}
+          >
+          <View>
+            {content}
+          </View>
+        </Modal>
+      )
+    }
+    return null
+  }
+
   render() {
     const dims = Dimensions.get('window')
     const imageHeight = 314 / 800 * (dims.width - (BASIC_SPACING * 4))
     const imageContainerStyles = [styles.imageContainer, {height: imageHeight}]
     return (
       <View style={styles.container}>
+        {this.renderCertImport()}
         <View style={styles.header}>
           <Text style={styles.title} fontStyle="bold">Connect</Text>
           <ColoredLine />
@@ -190,5 +301,11 @@ const styles = StyleSheet.create({
     flex: 1,
     height: undefined,
     width: undefined,
-  }
+  },
+  passwordInput: {
+    backgroundColor: colors.LIGHT_GRAY,
+  },
+  passwordButton: {
+    marginTop: BASIC_SPACING,
+  },
 })
