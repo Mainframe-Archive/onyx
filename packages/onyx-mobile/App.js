@@ -31,6 +31,7 @@ const CERT_PATH_KEY = 'CERT_PATH'
 
 export default class App extends Component<State> {
   static childContextTypes = {
+    httpServerUrl: PropTypes.string.isRequired,
     wsConnected$: PropTypes.object.isRequired,
   }
 
@@ -43,6 +44,7 @@ export default class App extends Component<State> {
   getChildContext() {
     return {
       wsConnected$: this.wsConnected$,
+      httpServerUrl: 'https://onyx-storage.mainframe.com',
     }
   }
 

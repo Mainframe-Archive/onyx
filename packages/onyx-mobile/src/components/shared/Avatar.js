@@ -1,5 +1,5 @@
 // @flow
-
+import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { Image, View, StyleSheet } from 'react-native'
 import Blockies from 'react-native-blockies'
@@ -19,9 +19,13 @@ const AVATAR_SIZE = {
 }
 
 export default class Avatar extends Component<Props> {
-  static defaultProps = {
-    size: 40,
+  static contextTypes = {
+    httpServerUrl: PropTypes.string.isRequired,
   }
+  static defaultProps = {
+    size: AVATAR_SIZE.small,
+  }
+
   render() {
     const { profile, large, size } = this.props
     const containerStyles = [styles.container]
@@ -41,7 +45,7 @@ export default class Avatar extends Component<Props> {
           style={containerStyles}
           resizeMode="cover"
           source={{
-            uri: profile.avatar,
+            uri: `${this.context.httpServerUrl}/bzzr:/${profile.avatar}`,
             width: size,
             height: size,
           }}
