@@ -30,6 +30,16 @@ export default (
     const graphql = graphqlServer(pss, db, port, app)
     createBzzRoutes(httpUrl, app)
 
+    const unsecureApp = express()
+    unsecureApp.get(
+      '/mobile_client_cert',
+      (req: express$Request, res: express$Response) => {
+      	res.download(path.join(certsDir, 'client.p12'))
+    })
+
+    const unsecureServer = http.createServer(unsecureApp)
+    unsecureServer.listen(5002)
+
     let server
     if (useTLS) {
       const options: { [string]: any } = {
