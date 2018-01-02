@@ -35,27 +35,29 @@ export default async (
   url: string,
   certFilePath: string,
   certPassword: string,
-  onDisconnected: () => void
+  onDisconnected: () => void,
+  onConnected: (url: string, certPath: string, certPassword: string) => void,
 ) => {
-	let certBase64
-	try {
-		certBase64 = await RNFS.readFile(certFilePath, 'base64')
-	} catch (err) {
-		console.log('cert read err: ', err)
-		throw(err)
-	}
+  let certBase64
+  try {
+    certBase64 = await RNFS.readFile(certFilePath, 'base64')
+  } catch (err) {
+    console.log('cert read err: ', err)
+    throw(err)
+  }
 
-	class CustomWebSocket extends OnyxWebSocket {
-		constructor (url, protocol) {
-			super(url, protocol, {}, certBase64, certPassword)
-		}
-	}
+  class CustomWebSocket extends OnyxWebSocket {
+    constructor (url, protocol) {
+      super(url, protocol, {}, certBase64, certPassword)
+    }
+  }
 
-	const wsClient = new SubscriptionClient(url, {}, CustomWebSocket)
+  const wsClient = new SubscriptionClient(url, {}, CustomWebSocket)
 
-	wsClient.onDisconnected(() => onDisconnected())
-	return new ApolloClient({
-		fragmentMatcher,
-		networkInterface: wsClient,
-	})
+  wsClient.onDisconnected(() => onDisconnected())
+  wsClient.onConnected(() => onConnected(url, certFilePath, certPassword))
+  return new ApolloClient({
+    fragmentMatcher,
+    networkInterface: wsClient,
+  })
 }

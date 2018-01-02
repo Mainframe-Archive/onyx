@@ -6,7 +6,8 @@ import { StyleSheet, Text, View, AsyncStorage, Alert, StatusBar } from 'react-na
 import { ApolloProvider } from 'react-apollo'
 import type ApolloClient, { createNetworkInterface } from 'apollo-client'
 import createClient from './src/data/Apollo'
-// import { Font } from 'expo'
+import * as Keychain from 'react-native-keychain'
+
 import {
   applyMiddleware,
   combineReducers,
@@ -25,12 +26,17 @@ type State = {
   connectionState?: ?string,
 }
 
+const SERVER_URL_KEY = 'SERVER_URL'
+const CERT_PATH_KEY = 'CERT_PATH'
+
 export default class App extends Component<State> {
   static childContextTypes = {
     wsConnected$: PropTypes.object.isRequired,
   }
 
-  state: State = {}
+  state: State = {
+    connectionState: 'initializing',
+  }
 
   wsConnected$ = new BehaviorSubject(false)
 
@@ -40,13 +46,44 @@ export default class App extends Component<State> {
     }
   }
 
-  onConnected = () => {
+  componentDidMount () {
+    this.fetchStoredCreds()
+  }
+
+  async fetchStoredCreds () {
+    try {
+      const serverUrl = await AsyncStorage.getItem(SERVER_URL_KEY)
+      const certPath = await AsyncStorage.getItem(CERT_PATH_KEY)
+      if (serverUrl && certPath){
+        Keychain
+          .getGenericPassword()
+          .then((credentials) => {
+            this.onSelectNode(serverUrl, certPath, credentials.password)
+          }).catch((error) => {
+            console.warn(error)
+          })
+      }
+    } catch (error) {
+      console.log('creds error: ', error)
+    }
+  }
+
+  async saveServerCreds (url: string, certPath: string, password: string) {
+    try {
+      await AsyncStorage.setItem(SERVER_URL_KEY, url)
+      await AsyncStorage.setItem(CERT_PATH_KEY, certPath)
+      Keychain.setGenericPassword(url, password)
+    } catch (error) {
+      console.warn(error)
+    }
+  }
+
+  onConnected = async (url: string, certPath: string, certPassword: string) => {
     this.wsConnected$.next(true)
-		console.log('on connected.....')
+    this.saveServerCreds(url, certPath, certPassword)
   }
 
   onDisconnected = () => {
-    console.log('disconnected...')
     setTimeout(() => {
       this.wsConnected$.next(false)
       this.setState({ connectionState: 'disconnected' })
@@ -58,14 +95,13 @@ export default class App extends Component<State> {
     certFilePath: string,
     certPassword: string,
   ) => {
-    console.log('connecting to url: ', nodeUrl)
     const client = await createClient(
       nodeUrl,
       certFilePath,
       certPassword,
-      this.onDisconnected
+      this.onDisconnected,
+      this.onConnected,
     )
-    console.log('created client: ', client)
     if (client && client.networkInterface.client) {
       const store = await createStore(client)
       this.setState({ client, store, connectionState: 'connected' })
@@ -80,7 +116,6 @@ export default class App extends Component<State> {
 
   render() {
     const { client, store, connectionState } = this.state
-		console.log('rendering, connection error: ', connectionState)
     const content = client && store && connectionState === 'connected' ? (
       <ApolloProvider store={store} client={client}>
         <Navigator />

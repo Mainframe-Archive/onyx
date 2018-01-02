@@ -27,6 +27,7 @@
     "react-native": "0.50.3",
     "react-native-blockies": "^1.0.0",
     "react-native-fs": "^2.9.2",
+    "react-native-keychain": "^1.2.1",
     "react-native-qrcode": "^0.2.6",
     "react-native-vector-icons": "^4.4.2",
     "react-navigation": "^1.0.0-beta.15",
