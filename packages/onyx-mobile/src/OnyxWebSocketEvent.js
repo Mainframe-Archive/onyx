@@ -9,6 +9,9 @@
  * @providesModule OnyxWebSocketEvent
  */
 
+ //  Modified by Adam Clarke on 22/02/2017.
+ //  Copyright © 2017 ThusFresh, Inc. All rights reserved.
+
 'use strict';
 
 /**

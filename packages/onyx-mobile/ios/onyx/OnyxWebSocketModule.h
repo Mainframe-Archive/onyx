@@ -1,10 +1,14 @@
-//
-//  OnyxWebSocketModule.h
-//  onyx
-//
-//  Created by Adam Clarke on 18/12/2017.
-//  Copyright © 2017 Facebook. All rights reserved.
-//
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
+//  Modified by Adam Clarke on 22/02/2017.
+//  Copyright © 2017 ThusFresh, Inc. All rights reserved.
 
 #import <React/RCTEventEmitter.h>
 

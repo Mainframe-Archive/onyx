@@ -7,6 +7,9 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+//  Modified by Adam Clarke on 22/02/2017.
+//  Copyright © 2017 ThusFresh, Inc. All rights reserved.
+
 #import "OnyxWebSocketModule.h"
 
 #import <objc/runtime.h>
@@ -82,7 +85,6 @@ RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(N
     [request addValue:[RCTConvert NSString:value] forHTTPHeaderField:key];
   }];
   
-  NSLog(@"---- INIT FROM MODULE 1 ----");
   OnyxWebSocket *webSocket = [[OnyxWebSocket alloc] initWithURLRequest:request protocols:protocols];
   webSocket.delegate = self;
   webSocket.reactTag = socketID;
@@ -113,7 +115,6 @@ RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(N
   [options[@"headers"] enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
     [request addValue:[RCTConvert NSString:value] forHTTPHeaderField:key];
   }];
-  NSLog(@"---- INIT FROM MODULE 2 ----");
   OnyxWebSocket *webSocket = [[OnyxWebSocket alloc] initWithURLRequest:request protocols:protocols certData:certData certificatePassword:password];
   webSocket.delegate = self;
   webSocket.reactTag = socketID;

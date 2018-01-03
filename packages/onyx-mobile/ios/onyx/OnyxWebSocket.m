@@ -14,6 +14,9 @@
 //   limitations under the License.
 //
 
+//  Modified by Adam Clarke on 22/02/2017.
+//  Copyright © 2017 ThusFresh, Inc. All rights reserved.
+
 #import "OnyxWebSocket.h"
 
 #import <Availability.h>
@@ -261,7 +264,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (instancetype)initWithURL:(NSURL *)URL protocols:(NSArray<NSString *> *)protocols;
 {
   NSMutableURLRequest *request;
-  NSLog(@"INIT NEW!!!!!!! %@", URL);
 
   if (URL) {
     // Build a mutable request so we can fill the cookie header.
@@ -284,7 +286,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols certData:(NSString *)certData certificatePassword:(NSString *)certPassword
 {
-  NSLog(@">>>>> INIT WITH CERTS <<<<<<");
   _clientCertificateData = [[NSData alloc] initWithBase64EncodedString:certData options:0];
   
   _clientCertificateCipher = certPassword;
@@ -334,7 +335,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)dealloc
 {
-  NSLog(@"******DEALLOC ONYX******");
   _inputStream.delegate = nil;
   _outputStream.delegate = nil;
   
@@ -536,22 +536,15 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     RCTLogInfo(@"SocketRocket: In debug mode.  Allowing connection to any root cert");
 #endif
     
-//    NSString *path = [[NSBundle mainBundle] pathForResource:@"client" ofType:@"p12"];
-//    _clientCertificateData = [[NSData alloc] initWithContentsOfFile:path];
     // For client SSL authentication.
     if (_clientCertificateData != nil) {
-//      NSLog(@"cert data: %@, %@", _clientCertificateData, _clientCertificateCipher);
-
-      // Import .p12 data
       CFArrayRef keyref = NULL;
       OSStatus status = SecPKCS12Import((__bridge CFDataRef)_clientCertificateData,
                                         (__bridge CFDictionaryRef)[NSDictionary
                                                                    dictionaryWithObject:_clientCertificateCipher
                                                                    forKey:(__bridge id)kSecImportExportPassphrase],
                                         &keyref);
-      NSLog(@"status: %i", status);
       if (status != noErr) {
-        NSLog(@"FAILING...");
         [self _failWithError:[NSError errorWithDomain:@"org.lolrus.SocketRocket" code:23556 userInfo:[NSDictionary dictionaryWithObject:@"Error importing pkcs12 data" forKey:NSLocalizedDescriptionKey]]];
         return;
       }

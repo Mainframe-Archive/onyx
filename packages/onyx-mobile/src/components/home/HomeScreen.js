@@ -48,9 +48,9 @@ type State = {
 }
 
 export class HomeScreen extends Component<Props, State> {
-	static contextTypes = {
-		wsConnected$: PropTypes.object.isRequired,
-	}
+  static contextTypes = {
+    wsConnected$: PropTypes.object.isRequired,
+  }
   state: State = {
     openModal: undefined
   }
@@ -65,9 +65,9 @@ export class HomeScreen extends Component<Props, State> {
 
   componentWillUnmount() {
     if (this.context.wsConnected) {
-			this.unsubscribeChannelsChanged()
-			this.unsubscribeContactsChanged()
-		}
+      this.unsubscribeChannelsChanged()
+      this.unsubscribeContactsChanged()
+    }
   }
 
   // HANDLERS
@@ -113,7 +113,6 @@ export class HomeScreen extends Component<Props, State> {
   // RENDER
 
   mapContacts = c => {
-    console.log('c: ', c)
     return (
       <HomeContactView
         key={c.profile.id}
@@ -141,14 +140,13 @@ export class HomeScreen extends Component<Props, State> {
   renderContactProfile() {
     const { openModal } = this.state
     if (openModal && openModal.type === 'profile') {
-      let title
-      if (openModal.data.id === this.props.data.viewer.profile.id) {
-        title = 'Your Profile'
-      }
+      const isSelf = openModal.data.id === this.props.data.viewer.profile.id
+      const title = isSelf ? 'Your Profile' : undefined
       return (
         <ContactProfile
           onRequestClose={this.onCloseModal}
           profile={openModal.data}
+          isMe={openModal.data.id === this.props.data.viewer.profile.id}
           title={title}
         />
       )

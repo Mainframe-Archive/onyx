@@ -1,6 +1,7 @@
 // @flow
+import PropTypes from 'prop-types'
 import React, { Component } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, StyleSheet, TouchableOpacity } from 'react-native'
 import QRCode from 'react-native-qrcode'
 
 import Modal from '../shared/Modal'
@@ -11,20 +12,34 @@ import { BASIC_SPACING } from '../styles'
 
 type Props = {
   title: ?string,
+  isMe: boolean,
   profile: Object,
   onRequestClose: () => void,
 }
 
 export default class ContactProfile extends Component<Props> {
+  static contextTypes = {
+    logout: PropTypes.func.isRequired,
+  }
+
+  logout = () => {
+    this.context.logout()
+  }
 
   render() {
-    const { title, profile } = this.props
+    const { title, profile, isMe } = this.props
+    const logout = isMe ? (
+      <TouchableOpacity onPress={this.logout} style={styles.logout}>
+        <Text style={styles.logoutText} fontStyle={'semi-bold'}>Logout</Text>
+      </TouchableOpacity>
+    ) : null
     return (
       <Modal
         title={title || profile.name || 'Contact'}
         onRequestClose={this.props.onRequestClose}>
         <View style={styles.container}>
           <Avatar size={140} profile={profile} />
+          {logout}
           <View style={styles.bottom}>
             <View style={styles.codeContainer}>
               <QRCode
@@ -41,6 +56,8 @@ export default class ContactProfile extends Component<Props> {
   }
 }
 
+const BUTTON_SIZE = 36
+
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
@@ -56,5 +73,16 @@ const styles = StyleSheet.create({
   },
   codeContainer: {
     alignItems: 'center',
+  },
+  logout: {
+    borderRadius: BUTTON_SIZE / 2,
+    height: BUTTON_SIZE,
+    backgroundColor: COLORS.LIGHT_GRAY,
+    justifyContent: 'center',
+    paddingHorizontal: BUTTON_SIZE,
+    marginVertical: BASIC_SPACING,
+  },
+  logoutText: {
+    color: COLORS.PRIMARY_RED,
   },
 })

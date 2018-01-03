@@ -12,11 +12,11 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
+  Alert,
 } from 'react-native'
 import Text from './shared/Text'
 import TextInput from "./shared/TextInput"
 import ColoredLine from './shared/ColoredLine'
-import CodeScanner from './shared/CodeScanner'
 import Icon from './shared/Icon'
 import Button from './shared/Button'
 import colors from './colors'
@@ -35,7 +35,6 @@ type State = {
   selectedNodeUrl?: string,
   certPassword?: string,
   certFilePath?: string,
-  certFetchErr?: string,
   showCertsImport?: boolean,
   previousUrls: Array<string>
 }
@@ -89,9 +88,11 @@ export default class NodeSelectionScreen extends Component<Props, State> {
         })
         this.fetchCerts()
       } else {
-        this.setState({
-          certFetchErr: 'secure web socket url required',
-        })
+        Alert.alert(
+          `Invalid WebSocket URL`,
+          `Please enter a secure websocket url (wss://)`,
+          [{text: 'OK'}],
+        )
       }
     }
   }
@@ -99,25 +100,6 @@ export default class NodeSelectionScreen extends Component<Props, State> {
   onChangeInput = (value: string) => {
     this.setState({
       selectedNodeUrl: value
-    })
-  }
-
-  onPressScanQR = () => {
-    this.setState({
-      openScanner: true,
-    })
-  }
-
-  onScanQR = (value: string) => {
-    this.setState({
-      openScanner: false,
-      selectedNodeUrl: value,
-    })
-  }
-
-  closeScanner = () => {
-    this.setState({
-      openScanner: false,
     })
   }
 
@@ -134,6 +116,13 @@ export default class NodeSelectionScreen extends Component<Props, State> {
   }
 
   onSubmitPassword = () => {
+    if (!this.state.certPassword || !this.state.certPassword.length) {
+      Alert.alert(
+        'Please enter the certificate password generated when you deployed the Mainframe Mailbox server',
+        [{text: 'OK'}],
+      )
+      return
+    }
     this.onCloseModal()
     this.persistUrl(this.state.selectedNodeUrl)
     this.props.onSelectNode(
@@ -144,38 +133,45 @@ export default class NodeSelectionScreen extends Component<Props, State> {
   }
 
   async fetchCerts () {
-    console.log('fetching certs: ', RNFS.MainBundlePath)
+    const { selectedNodeUrl } = this.state
     const dirPath = Platform.OS === 'ios'
       ? RNFS.DocumentDirectoryPath + '/attachments'
       : RNFS.ExternalStorageDirectoryPath + '/attachments'
+    const url = selectedNodeUrl
+      .replace('wss', 'http')
+      .substring(0, selectedNodeUrl.lastIndexOf(':') + 1)
     try {
       await RNFS.mkdir(dirPath, { RNFSURLIsExcludedFromBackupKey: true })
-      const fileDirPath = dirPath + '/' + 'client.p12'
+      const fileDirPath = dirPath + '/' + `${url.replace(/\//g, '')}-client.p12`
       const bg = false
-      const file = RNFS.downloadFile({
-        fromUrl: 'http://localhost:5002/mobile_client_cert',
+      RNFS.downloadFile({
+        fromUrl: `${url}:5002/mobile_client_cert`,
         toFile: fileDirPath,
         bg,
-      })
-      console.log('file: ', file)
-      this.setState({
-        certFilePath: fileDirPath,
+      }).promise.then(res => {
+        this.setState({
+          certFilePath: fileDirPath,
+        })
+      }).catch((err) => {
+        this.setState({
+          showCertsImport: false,
+        }, () => {
+          // Add timeout to avoid Modal conflicts
+          const alertTimeout = setTimeout(() => {
+            Alert.alert(
+              `Error fetching client ssl certificate`,
+              `please ensure you enetered the correct server url.`,
+              [{text: 'OK'}],
+            )
+          }, 500)
+        })
       })
     } catch (err) {
-      console.log('err: ', err)
-      this.setState({
-        certFetchErr: 'Error fetching client ssl certificate, please ensure you enetered the correct server url'
-      })
+      console.warn('err: ', err)
     }
   }
 
   // RENDER
-
-  renderScanner () {
-    return this.state.openScanner ? (
-      <CodeScanner onScanQR={this.onScanQR} onRequestClose={this.closeScanner}/>
-    ) : null
-  }
 
   renderCertImport () {
     if (this.state.showCertsImport) {
@@ -231,12 +227,8 @@ export default class NodeSelectionScreen extends Component<Props, State> {
             value={this.state.selectedNodeUrl}
             underlineColorAndroid="transparent"
           />
-          <TouchableOpacity onPress={this.onPressScanQR} style={styles.scanButton}>
-            <Icon name="md-qr-scanner" size={22} color={colors.WHITE} />
-          </TouchableOpacity>
         </View>
         <Button onPress={this.onPress} style={styles.button} title="Connect" />
-        {this.renderScanner()}
         <View style={imageContainerStyles}>
           <Image
             style={styles.image}
@@ -276,17 +268,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.WHITE,
     fontSize: 14,
     paddingRight: 50,
-  },
-  scanButton: {
-    position: 'absolute',
-    top: 7,
-    right: 7,
-    backgroundColor: colors.PRIMARY_RED,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
   },
   button: {
     marginTop: 20,

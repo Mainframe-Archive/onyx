@@ -1,3 +1,6 @@
+//  Created by Adam Clarke on 20/12/2017.
+//  Copyright © 2017 ThusFresh, Inc. All rights reserved.
+
 //
 //   Copyright 2012 Square Inc.
 //
@@ -13,6 +16,9 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 //
+
+//  Modified by Adam Clarke on 22/02/2017.
+//  Copyright © 2017 ThusFresh, Inc. All rights reserved.
 
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
