@@ -14,6 +14,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
+import * as Keychain from 'react-native-keychain'
+
 import Text from './shared/Text'
 import TextInput from "./shared/TextInput"
 import ColoredLine from './shared/ColoredLine'
@@ -22,6 +24,7 @@ import Button from './shared/Button'
 import colors from './colors'
 import Modal from './shared/Modal'
 import { BASIC_SPACING } from './styles'
+import { SERVER_URL_KEY, CERT_PATH_KEY } from '../../App'
 
 type Props = {
   onSelectNode: (
@@ -44,8 +47,14 @@ export default class NodeSelectionScreen extends Component<Props, State> {
     previousUrls: []
   }
 
+  alertTimeout: ?number
+
   componentDidMount() {
     this.fetchStoredNodes()
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.alertTimeout)
   }
 
   async fetchStoredNodes() {
@@ -79,7 +88,7 @@ export default class NodeSelectionScreen extends Component<Props, State> {
     }
   }
 
-  onPress = () => {
+  onPress = async () => {
     if (this.state.selectedNodeUrl) {
       const protocol = this.state.selectedNodeUrl.split('://')[0]
       if (protocol === 'wss') {
@@ -87,6 +96,20 @@ export default class NodeSelectionScreen extends Component<Props, State> {
           showCertsImport: true,
         })
         this.fetchCerts()
+        try {
+          // Check if we already have password stored to populate
+          const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CERT_PATH_KEY])
+          const serverUrl = stored[0][1]
+          const certPath = stored[1][1]
+          if (serverUrl && certPath && serverUrl === this.state.selectedNodeUrl){
+            const credentials = await Keychain.getGenericPassword()
+            this.setState({
+              certPassword: credentials.password,
+            })
+          }
+        } catch (error) {
+          console.warn(error)
+        }
       } else {
         Alert.alert(
           `Invalid WebSocket URL`,
@@ -144,30 +167,28 @@ export default class NodeSelectionScreen extends Component<Props, State> {
       await RNFS.mkdir(dirPath, { RNFSURLIsExcludedFromBackupKey: true })
       const fileDirPath = dirPath + '/' + `${url.replace(/\//g, '')}-client.p12`
       const bg = false
-      RNFS.downloadFile({
+      await RNFS.downloadFile({
         fromUrl: `${url}:5002/mobile_client_cert`,
         toFile: fileDirPath,
         bg,
-      }).promise.then(res => {
-        this.setState({
-          certFilePath: fileDirPath,
-        })
-      }).catch((err) => {
-        this.setState({
-          showCertsImport: false,
-        }, () => {
-          // Add timeout to avoid Modal conflicts
-          const alertTimeout = setTimeout(() => {
-            Alert.alert(
-              `Error fetching client ssl certificate`,
-              `please ensure you enetered the correct server url.`,
-              [{text: 'OK'}],
-            )
-          }, 500)
-        })
+      }).promise
+      this.setState({
+        certFilePath: fileDirPath,
       })
     } catch (err) {
       console.warn('err: ', err)
+      this.setState({
+        showCertsImport: false,
+      }, () => {
+        // Add timeout to avoid Modal conflicts
+        this.alertTimeout = setTimeout(() => {
+          Alert.alert(
+            `Error fetching client ssl certificate`,
+            `please ensure you enetered the correct server url.`,
+            [{text: 'OK'}],
+          )
+        }, 500)
+      })
     }
   }
 

@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-//  Modified by Adam Clarke on 22/02/2017.
+//  Modified by Adam Clarke on 22/12/2017.
 //  Copyright © 2017 ThusFresh, Inc. All rights reserved.
 
 #import <React/RCTEventEmitter.h>

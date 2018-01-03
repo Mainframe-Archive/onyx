@@ -14,7 +14,7 @@
 //   limitations under the License.
 //
 
-//  Modified by Adam Clarke on 22/02/2017.
+//  Modified by Adam Clarke on 22/12/2017.
 //  Copyright © 2017 ThusFresh, Inc. All rights reserved.
 
 #import "OnyxWebSocket.h"
@@ -536,6 +536,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     RCTLogInfo(@"SocketRocket: In debug mode.  Allowing connection to any root cert");
 #endif
     
+    //************** ADDED CODE **************//
+    
     // For client SSL authentication.
     if (_clientCertificateData != nil) {
       CFArrayRef keyref = NULL;
@@ -565,10 +567,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
       // The certificates array, containing the identity then the certificate
       NSArray *myCerts = [[NSArray alloc] initWithObjects:(__bridge id)identityRef, (__bridge id)cert, nil];
       
-      //
-      //          [SSLOptions setObject:[NSNumber numberWithBool:YES] forKey:(NSString *)kCFStreamSSLAllowsExpiredRoots];
-      //          [SSLOptions setObject:[NSNumber numberWithBool:YES] forKey:(NSString *)kCFStreamSSLAllowsExpiredCertificates];
-      //          [SSLOptions setObject:[NSNumber numberWithBool:YES] forKey:(NSString *)kCFStreamSSLAllowsAnyRoot];
       [SSLOptions setObject:[NSNumber numberWithBool:NO] forKey:(NSString *)kCFStreamSSLValidatesCertificateChain];
       [SSLOptions setObject:[NSString stringWithFormat:@"%@:%d", host, port] forKey:(NSString *)kCFStreamSSLPeerName];
       [SSLOptions setObject:(NSString *)kCFStreamSocketSecurityLevelNegotiatedSSL forKey:(NSString*)kCFStreamSSLLevel];
@@ -581,6 +579,8 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
     [_outputStream setProperty:SSLOptions
                         forKey:(__bridge id)kCFStreamPropertySSLSettings];
   }
+  
+  //************** ADDED CODE END **************//
   
   _inputStream.delegate = self;
   _outputStream.delegate = self;

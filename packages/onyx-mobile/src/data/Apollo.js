@@ -43,7 +43,7 @@ export default async (
     certBase64 = await RNFS.readFile(certFilePath, 'base64')
   } catch (err) {
     console.log('cert read err: ', err)
-    throw(err)
+    throw err
   }
 
   class CustomWebSocket extends OnyxWebSocket {

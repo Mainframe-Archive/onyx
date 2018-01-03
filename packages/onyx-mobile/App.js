@@ -27,11 +27,13 @@ import AppReducer from './src/data/reducers'
 import NodeSelectionScreen from './src/components/NodeSelectionScreen'
 import Loader from './src/components/shared/Loader'
 
+type ConnectionState = 'initializing' | 'connecting' | 'disconnected' | 'connected'
+
 type State = {
   client?: ApolloClient,
   store?: Store,
   selectedNode?: string,
-  connectionState?: ?string,
+  connectionState?: ?ConnectionState,
 }
 
 const CONNECTION_STATES = {
@@ -41,8 +43,8 @@ const CONNECTION_STATES = {
   connected: 'connected',
 }
 
-const SERVER_URL_KEY = 'SERVER_URL'
-const CERT_PATH_KEY = 'CERT_PATH'
+export const SERVER_URL_KEY = 'SERVER_URL'
+export const CERT_PATH_KEY = 'CERT_PATH'
 
 export default class App extends Component<State> {
   static childContextTypes = {
@@ -56,6 +58,7 @@ export default class App extends Component<State> {
   }
 
   wsConnected$ = new BehaviorSubject(false)
+  disconnectedTimer: ?number
 
   getChildContext() {
     return {
@@ -67,6 +70,10 @@ export default class App extends Component<State> {
     }
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.disconnectedTimer)
+  }
+
   componentDidMount () {
     this.fetchStoredCreds()
   }
@@ -76,15 +83,15 @@ export default class App extends Component<State> {
   }
 
   clearCreds = async () => {
-    await AsyncStorage.removeItem(SERVER_URL_KEY)
-    await AsyncStorage.removeItem(CERT_PATH_KEY)
+    await AsyncStorage.multiRemove([SERVER_URL_KEY, CERT_PATH_KEY])
     this.setState({ connectionState: CONNECTION_STATES.disconnected })
   }
 
   async fetchStoredCreds () {
     try {
-      const serverUrl = await AsyncStorage.getItem(SERVER_URL_KEY)
-      const certPath = await AsyncStorage.getItem(CERT_PATH_KEY)
+      const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CERT_PATH_KEY])
+      const serverUrl = stored[0][1]
+      const certPath = stored[1][1]
       if (serverUrl && certPath){
         const credentials = await Keychain.getGenericPassword()
         this.onSelectNode(serverUrl, certPath, credentials.password)
@@ -98,8 +105,7 @@ export default class App extends Component<State> {
 
   async saveServerCreds (url: string, certPath: string, password: string) {
     try {
-      await AsyncStorage.setItem(SERVER_URL_KEY, url)
-      await AsyncStorage.setItem(CERT_PATH_KEY, certPath)
+      await AsyncStorage.multiSet([[SERVER_URL_KEY, url], [CERT_PATH_KEY, certPath]])
       Keychain.setGenericPassword(url, password)
     } catch (error) {
       console.warn(error)
@@ -112,7 +118,7 @@ export default class App extends Component<State> {
   }
 
   onDisconnected = () => {
-    setTimeout(() => {
+    this.disconnectedTimer = setTimeout(() => {
       this.wsConnected$.next(false)
       this.setDisconnected()
     }, 100)

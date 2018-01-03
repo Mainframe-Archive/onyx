@@ -10,7 +10,7 @@
  * @flow
  */
 
- //  Modified by Adam Clarke on 22/02/2017.
+ //  Modified by Adam Clarke on 22/12/2017.
  //  Copyright © 2017 ThusFresh, Inc. All rights reserved.
 
 'use strict';
@@ -30,7 +30,6 @@ const binaryToBase64 = require('binaryToBase64');
 const invariant = require('fbjs/lib/invariant');
 
 const {OnyxWebSocketModule} = NativeModules;
-console.log('native modules: ', NativeModules)
 
 import type EventSubscription from 'EventSubscription';
 
