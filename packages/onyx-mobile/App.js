@@ -33,14 +33,7 @@ type State = {
   client?: ApolloClient,
   store?: Store,
   selectedNode?: string,
-  connectionState?: ?ConnectionState,
-}
-
-const CONNECTION_STATES = {
-  initializing: 'initializing',
-  connecting: 'connecting',
-  disconnected: 'disconnected',
-  connected: 'connected',
+  connectionState?: ConnectionState,
 }
 
 export const SERVER_URL_KEY = 'SERVER_URL'
@@ -54,7 +47,7 @@ export default class App extends Component<State> {
   }
 
   state: State = {
-    connectionState: CONNECTION_STATES.initializing,
+    connectionState: 'initializing',
   }
 
   wsConnected$ = new BehaviorSubject(false)
@@ -84,7 +77,7 @@ export default class App extends Component<State> {
 
   clearCreds = async () => {
     await AsyncStorage.multiRemove([SERVER_URL_KEY, CERT_PATH_KEY])
-    this.setState({ connectionState: CONNECTION_STATES.disconnected })
+    this.setState({ connectionState: 'disconnected' })
   }
 
   async fetchStoredCreds () {
@@ -126,7 +119,7 @@ export default class App extends Component<State> {
 
   setDisconnected () {
     this.setState({
-      connectionState: CONNECTION_STATES.disconnected,
+      connectionState: 'disconnected',
     })
   }
 
@@ -145,7 +138,7 @@ export default class App extends Component<State> {
       )
       if (client && client.networkInterface.client) {
         const store = await createStore(client)
-        this.setState({ client, store, connectionState: CONNECTION_STATES.connected })
+        this.setState({ client, store, connectionState: 'connected' })
       } else {
         throw new Error('connection error')
       }
@@ -161,14 +154,14 @@ export default class App extends Component<State> {
 
   render() {
     const { client, store, connectionState } = this.state
-    if (connectionState === CONNECTION_STATES.initializing) {
+    if (connectionState === 'initializing') {
       return (
         <View style={styles.flex1}>
           <Loader />
         </View>
       )
     }
-    const content = client && store && connectionState === CONNECTION_STATES.connected ? (
+    const content = client && store && connectionState === 'connected' ? (
       <ApolloProvider store={store} client={client}>
         <Navigator />
       </ApolloProvider>
