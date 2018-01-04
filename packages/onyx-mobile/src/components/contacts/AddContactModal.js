@@ -1,14 +1,15 @@
 // @flow
 import React, { Component } from 'react'
-import { StyleSheet, Alert, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Alert, TouchableOpacity, View, Modal as RNModal } from 'react-native'
 import { compose, gql, graphql } from 'react-apollo'
-// import { BarCodeScanner, Permissions } from 'expo'
+import QRCodeScanner from 'react-native-qrcode-scanner'
 
 import Modal from '../shared/Modal'
 import TextInput from '../shared/TextInput'
 import Button from '../shared/Button'
 import colors from '../colors'
 import Icon from '../shared/Icon'
+import Text from '../shared/Text'
 import { RequestContactMutation } from '../../data/graphql/mutations'
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
 }
 
 type State = {
+  scanOpen: boolean,
   contactInput: string,
   hasCameraPermission?: boolean,
 }
@@ -27,18 +29,7 @@ export class AddContactModal extends Component<Props, State> {
     contactInput: '',
   }
 
-  componentDidMount () {
-    this.requestCameraPermission()
-  }
-
   // HANDLERS
-
-  requestCameraPermission = async () => {
-    // const { status } = await Permissions.askAsync(Permissions.CAMERA)
-    // this.setState({
-    //   hasCameraPermission: status === 'granted',
-    // })
-  }
 
   onPressAddContact = async () => {
     const { contactInput } = this.state
@@ -54,14 +45,14 @@ export class AddContactModal extends Component<Props, State> {
     }
   }
 
-  handleQRCodeRead = (data) => {
+  handleQRCodeRead = (data: Object) => {
     this.setState({
       contactInput: data.data,
       scanOpen: false,
     })
   }
 
-  onChangeContactInput = (value) => {
+  onChangeContactInput = (value: string) => {
     this.setState({
       contactInput: value,
     })
@@ -73,16 +64,29 @@ export class AddContactModal extends Component<Props, State> {
     })
   }
 
+	onCloseScanner = () => {
+		this.setState({
+			scanOpen: false,
+		})
+	}
+
   // RENDER
 
   renderScanner () {
     return (
       <View style={styles.scannerContainer}>
       {
-        // <BarCodeScanner
-        //   onBarCodeRead={this.handleQRCodeRead}
-        //   style={{ height: 250, width: 250 }}
-        // />
+        <QRCodeScanner
+          onRead={this.handleQRCodeRead}
+          style={{ height: 250, width: 250 }}
+          topViewStyle={styles.scannerTop}
+					bottomViewStyle={styles.scannerTop}
+					topContent={(
+						<TouchableOpacity onPress={this.onCloseScanner} style={styles.scanClose}>
+							<Icon name="times-circle" iconSet="awesome" size={30} color={colors.WHITE} />
+						</TouchableOpacity>
+					)}
+        />
       }
       </View>
     )
@@ -96,7 +100,6 @@ export class AddContactModal extends Component<Props, State> {
           <TextInput
             onChangeText={this.onChangeContactInput}
             placeholder="Contact public key"
-
             style={styles.input}
             value={contactInput}
           />
@@ -116,17 +119,21 @@ export class AddContactModal extends Component<Props, State> {
   }
 
   render () {
-    const shouldRenderScanner = this.state.scanOpen && this.state.hasCameraPermission
-    if (this.state.scanOpen && !this.state.hasCameraPermission) {
-      this.requestCameraPermission()
-    }
-    return(
+    const shouldRenderScanner = this.state.scanOpen
+
+    return shouldRenderScanner ? (
+      <RNModal
+        onRequestClose={this.onCloseScanner}
+      >
+      	{this.renderScanner()}
+      </RNModal>
+    ) : (
       <Modal
         title="Add a contact"
         visible={this.props.visible}
         onRequestClose={this.props.onRequestClose}
         >
-        {shouldRenderScanner ? this.renderScanner() : this.renderForm()}
+        {this.renderForm()}
       </Modal>
     )
   }
@@ -154,7 +161,21 @@ const styles = StyleSheet.create({
   },
   scannerContainer: {
     alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
+  scannerTop: {
+    flex: 1,
+    backgroundColor: colors.BLACK,
+  },
+	scanClose: {
+		position: 'absolute',
+		top: 30,
+		right: 20,
+	},
 })
 
 export default compose(

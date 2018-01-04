@@ -76,5 +76,7 @@
 		<string>Poppins-Regular.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Please allow camera access for QR code scanning</string>
 </dict>
 </plist>

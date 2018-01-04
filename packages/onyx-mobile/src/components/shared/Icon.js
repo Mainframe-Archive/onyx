@@ -6,7 +6,7 @@ import Entypo from 'react-native-vector-icons/Entypo'
 import Zocial from 'react-native-vector-icons/Zocial'
 
 type Props = {
-  iconSet: string,
+  iconSet?: string,
   name: string,
   size: number,
   color: string,

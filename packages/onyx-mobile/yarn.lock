@@ -3063,6 +3063,12 @@ react-native-blockies@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/react-native-blockies/-/react-native-blockies-1.0.2.tgz#fd6d3992e2a2677269adcd92187d609518af2305"
 
+react-native-camera@^0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-0.12.0.tgz#51afa8acf1696d9d973074b6454c5ba2cce6ac18"
+  dependencies:
+    prop-types "^15.5.10"
+
 react-native-dismiss-keyboard@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/react-native-dismiss-keyboard/-/react-native-dismiss-keyboard-1.0.0.tgz#32886242b3f2317e121f3aeb9b0a585e2b879b49"
@@ -3089,6 +3095,12 @@ react-native-fs@^2.9.2:
 react-native-keychain@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/react-native-keychain/-/react-native-keychain-1.2.1.tgz#6b2bed32ca0460d641974193715d18c808b0f12f"
+
+react-native-qrcode-scanner@^0.0.28:
+  version "0.0.28"
+  resolved "https://registry.yarnpkg.com/react-native-qrcode-scanner/-/react-native-qrcode-scanner-0.0.28.tgz#c9d2d40ff5594e5515c51fcd8faf2fdfeb69a092"
+  dependencies:
+    prop-types "^15.5.10"
 
 react-native-qrcode@^0.2.6:
   version "0.2.6"
