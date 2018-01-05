@@ -37,6 +37,7 @@ export default async (
   certPassword: string,
   onDisconnected: () => void,
   onConnected: (url: string, certPath: string, certPassword: string) => void,
+  onError?: (err: Object) => void,
 ) => {
   let certBase64
   try {
@@ -56,8 +57,14 @@ export default async (
 
   wsClient.onDisconnected(() => onDisconnected())
   wsClient.onConnected(() => onConnected(url, certFilePath, certPassword))
-  return new ApolloClient({
+  const client = new ApolloClient({
     fragmentMatcher,
     networkInterface: wsClient,
   })
+  if (onError) {
+    wsClient.client.onerror = (err: Object) => {
+      onError(err)
+    }
+  }
+  return client
 }

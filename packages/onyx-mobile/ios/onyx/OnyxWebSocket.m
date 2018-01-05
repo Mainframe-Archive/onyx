@@ -547,7 +547,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
                                                                    forKey:(__bridge id)kSecImportExportPassphrase],
                                         &keyref);
       if (status != noErr) {
-        [self _failWithError:[NSError errorWithDomain:@"org.lolrus.SocketRocket" code:23556 userInfo:[NSDictionary dictionaryWithObject:@"Error importing pkcs12 data" forKey:NSLocalizedDescriptionKey]]];
+        [self _failWithError:[NSError errorWithDomain:@"org.lolrus.SocketRocket" code:23556 userInfo:[NSDictionary dictionaryWithObject:@"Error importing certificate, please check you entered the correct password" forKey:NSLocalizedDescriptionKey]]];
         return;
       }
       

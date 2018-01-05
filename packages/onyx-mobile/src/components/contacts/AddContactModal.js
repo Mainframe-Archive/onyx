@@ -64,11 +64,11 @@ export class AddContactModal extends Component<Props, State> {
     })
   }
 
-	onCloseScanner = () => {
-		this.setState({
-			scanOpen: false,
-		})
-	}
+  onCloseScanner = () => {
+    this.setState({
+      scanOpen: false,
+    })
+  }
 
   // RENDER
 
@@ -80,12 +80,12 @@ export class AddContactModal extends Component<Props, State> {
           onRead={this.handleQRCodeRead}
           style={{ height: 250, width: 250 }}
           topViewStyle={styles.scannerTop}
-					bottomViewStyle={styles.scannerTop}
-					topContent={(
-						<TouchableOpacity onPress={this.onCloseScanner} style={styles.scanClose}>
-							<Icon name="times-circle" iconSet="awesome" size={30} color={colors.WHITE} />
-						</TouchableOpacity>
-					)}
+          bottomViewStyle={styles.scannerTop}
+          topContent={(
+            <TouchableOpacity onPress={this.onCloseScanner} style={styles.scanClose}>
+              <Icon name="times-circle" iconSet="awesome" size={30} color={colors.WHITE} />
+            </TouchableOpacity>
+          )}
         />
       }
       </View>
@@ -171,11 +171,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.BLACK,
   },
-	scanClose: {
-		position: 'absolute',
-		top: 30,
-		right: 20,
-	},
+  scanClose: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+  },
 })
 
 export default compose(

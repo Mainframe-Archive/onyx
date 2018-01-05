@@ -14,6 +14,7 @@ import { ApolloProvider } from 'react-apollo'
 import type ApolloClient, { createNetworkInterface } from 'apollo-client'
 import createClient from './src/data/Apollo'
 import * as Keychain from 'react-native-keychain'
+import RNFS from 'react-native-fs'
 
 import {
   applyMiddleware,
@@ -85,6 +86,13 @@ export default class App extends Component<State> {
       const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CERT_PATH_KEY])
       const serverUrl = stored[0][1]
       const certPath = stored[1][1]
+      try {
+        console.log(RNFS.DocumentDirectoryPath + '/certs')
+        const fileExists = await RNFS.exists(certPath)
+        const files = await RNFS.readdir(RNFS.DocumentDirectoryPath + '/certs')
+      } catch (err) {
+        throw err
+      }
       if (serverUrl && certPath){
         const credentials = await Keychain.getGenericPassword()
         this.onSelectNode(serverUrl, certPath, credentials.password)
@@ -105,16 +113,34 @@ export default class App extends Component<State> {
     }
   }
 
-  onConnected = async (url: string, certPath: string, certPassword: string) => {
+  onConnected = (url: string, certPath: string, certPassword: string) => {
     this.wsConnected$.next(true)
     this.saveServerCreds(url, certPath, certPassword)
+    if (this.state.client && this.state.client.networkInterface) {
+      // Only set reconnect after successfully connected
+      this.state.client.networkInterface.reconnect = true
+    }
+    this.setState({
+      connectionState: 'connected',
+    })
   }
 
   onDisconnected = () => {
     this.disconnectedTimer = setTimeout(() => {
       this.wsConnected$.next(false)
-      this.setDisconnected()
+      // Only show node selection if not already connected
+      if (this.state.connectionState !== 'connected' ) {
+        this.setDisconnected()
+      }
     }, 100)
+  }
+
+  onConnectionError = (err: Object) => {
+    Alert.alert(
+      `Connection Error`,
+      err.message,
+      [{text: 'OK'}],
+    )
   }
 
   setDisconnected () {
@@ -135,10 +161,11 @@ export default class App extends Component<State> {
         certPassword,
         this.onDisconnected,
         this.onConnected,
+        this.onConnectionError,
       )
       if (client && client.networkInterface.client) {
         const store = await createStore(client)
-        this.setState({ client, store, connectionState: 'connected' })
+        this.setState({ client, store })
       } else {
         throw new Error('connection error')
       }
@@ -161,7 +188,7 @@ export default class App extends Component<State> {
         </View>
       )
     }
-    const content = client && store && connectionState === 'connected' ? (
+    const content = client && store && connectionState !== 'disconnected' ? (
       <ApolloProvider store={store} client={client}>
         <Navigator />
       </ApolloProvider>

@@ -158,8 +158,8 @@ export default class NodeSelectionScreen extends Component<Props, State> {
   async fetchCerts () {
     const { selectedNodeUrl } = this.state
     const dirPath = Platform.OS === 'ios'
-      ? RNFS.DocumentDirectoryPath + '/attachments'
-      : RNFS.ExternalStorageDirectoryPath + '/attachments'
+      ? RNFS.DocumentDirectoryPath + '/certs'
+      : RNFS.ExternalStorageDirectoryPath + '/certs'
     const url = selectedNodeUrl
       .replace('wss', 'http')
       .substring(0, selectedNodeUrl.lastIndexOf(':') + 1)
