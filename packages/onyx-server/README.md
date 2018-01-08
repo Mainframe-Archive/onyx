@@ -67,6 +67,7 @@ it in the right vpc. Set the following group rules:
 | Custom TCP Rule | TCP      |      30399 | 0.0.0.0/0 | swarm TCP                    |
 | Custom TCP Rule | TCP      |       5000 | 0.0.0.0/0 | Mailboxing service interface |
 | Custom UDP Rule | UDP      |      30399 | 0.0.0.0/0 | swarm UDP                    |
+| Custom TCP Rule | TCP      |       5002 | 0.0.0.0/0 | cert endpoint                |
 
 **Outbound**
 
@@ -100,7 +101,7 @@ and `subnet-XXXXXXXX`, respectively. Use them in the following command
 
 ```bash
 $ aws ec2 run-instances \
-    --image-id ami-e3a4239a \
+    --image-id ami-6d41d414 \
     --instance-type t2.micro \
     --key-name my_key \
     --security-group-ids <SG ID HERE> \
