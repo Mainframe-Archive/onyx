@@ -1495,6 +1495,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mainframe.onyx;
 				PRODUCT_NAME = onyx;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -1521,6 +1522,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mainframe.onyx;
 				PRODUCT_NAME = onyx;
 				VERSIONING_SYSTEM = "apple-generic";
 			};

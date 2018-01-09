@@ -143,7 +143,6 @@ class OnyxWebSocket extends EventTarget(...WEBSOCKET_EVENTS) {
     this._eventEmitter = new NativeEventEmitter(OnyxWebSocketModule);
     this._socketId = nextWebSocketId++;
     this._registerEvents();
-		console.log('********* CONNECT')
     OnyxWebSocketModule.connect(url, protocols, { headers }, this._socketId, clientCertData, certPassword);
   }
 
