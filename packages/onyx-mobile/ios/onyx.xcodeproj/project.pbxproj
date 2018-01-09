@@ -43,6 +43,8 @@
 		47723D95558B4BB98894C257 /* SimpleLineIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 8377EE9D70024D20AAA1A9C5 /* SimpleLineIcons.ttf */; };
 		4D69BB5187A341E38D6B1D0A /* Feather.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A66D7A0650A64A8DB11D4675 /* Feather.ttf */; };
 		5222010C1FDEADC700A10A4A /* client.p12 in Resources */ = {isa = PBXBuildFile; fileRef = 522200E71FDEADC700A10A4A /* client.p12 */; };
+		523C8437200521E600E2953C /* onyx_logo@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 523C840D200521E600E2953C /* onyx_logo@3x.png */; };
+		523C8438200521E600E2953C /* onyx_logo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 523C8436200521E600E2953C /* onyx_logo@2x.png */; };
 		52D1C4811FE8160E00570997 /* OnyxWebSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 52D1C4801FE8160E00570997 /* OnyxWebSocket.m */; };
 		52D1C4841FE8367500570997 /* OnyxWebSocketModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 52D1C4831FE8367500570997 /* OnyxWebSocketModule.m */; };
 		5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E9157331DD0AC6500FF2AA8 /* libRCTAnimation.a */; };
@@ -394,6 +396,8 @@
 		4C66B52E8FAD48FF8846C391 /* Poppins-Italic.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Poppins-Italic.ttf"; path = "../assets/fonts/Poppins-Italic.ttf"; sourceTree = "<group>"; };
 		522200E71FDEADC700A10A4A /* client.p12 */ = {isa = PBXFileReference; lastKnownFileType = file; name = client.p12; path = onyx/client.p12; sourceTree = "<group>"; };
 		522DE0371FFBA1710004D47C /* onyx.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = onyx.entitlements; path = onyx/onyx.entitlements; sourceTree = "<group>"; };
+		523C840D200521E600E2953C /* onyx_logo@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "onyx_logo@3x.png"; path = "onyx/images/onyx_logo@3x.png"; sourceTree = "<group>"; };
+		523C8436200521E600E2953C /* onyx_logo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "onyx_logo@2x.png"; path = "onyx/images/onyx_logo@2x.png"; sourceTree = "<group>"; };
 		52D1C45B1FE8155800570997 /* OnyxWebSocket.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OnyxWebSocket.h; path = onyx/OnyxWebSocket.h; sourceTree = "<group>"; };
 		52D1C4801FE8160E00570997 /* OnyxWebSocket.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = OnyxWebSocket.m; path = onyx/OnyxWebSocket.m; sourceTree = "<group>"; };
 		52D1C4821FE8366200570997 /* OnyxWebSocketModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OnyxWebSocketModule.h; path = onyx/OnyxWebSocketModule.h; sourceTree = "<group>"; };
@@ -577,6 +581,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB11A68108700A75B9A /* LaunchScreen.xib */,
 				13B07FB71A68108700A75B9A /* main.m */,
+				523C8439200521FA00E2953C /* Images */,
 			);
 			name = onyx;
 			sourceTree = "<group>";
@@ -644,6 +649,15 @@
 				5230A2131FE937E9003AAC70 /* libRNFS.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		523C8439200521FA00E2953C /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				523C8436200521E600E2953C /* onyx_logo@2x.png */,
+				523C840D200521E600E2953C /* onyx_logo@3x.png */,
+			);
+			name = Images;
 			sourceTree = "<group>";
 		};
 		5E91572E1DD0AC6500FF2AA8 /* Products */ = {
@@ -1261,9 +1275,11 @@
 				D484309475A9417DADE2006F /* MaterialIcons.ttf in Resources */,
 				391340C5FFA24E5CABD7BFC5 /* Octicons.ttf in Resources */,
 				47723D95558B4BB98894C257 /* SimpleLineIcons.ttf in Resources */,
+				523C8437200521E600E2953C /* onyx_logo@3x.png in Resources */,
 				85832C65846846248667416F /* Zocial.ttf in Resources */,
 				C2AB3A8DCD3D47A3870F8D09 /* Poppins-Black.ttf in Resources */,
 				B3E7F4BBD1DD4C008FFAA7E8 /* Poppins-BlackItalic.ttf in Resources */,
+				523C8438200521E600E2953C /* onyx_logo@2x.png in Resources */,
 				D6BDA5832DA1494B85323CFA /* Poppins-Bold.ttf in Resources */,
 				03BFC44F87CF4A6885AAE214 /* Poppins-BoldItalic.ttf in Resources */,
 				3DB20434B5BD410DB8F639E3 /* Poppins-Italic.ttf in Resources */,
