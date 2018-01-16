@@ -1,6 +1,6 @@
 {
   "name": "onyx-server",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "PSS mailboxing service",
   "repository": "git@github.com:MainframeHQ/onyx-server.git",
   "author": "Mainframe",
