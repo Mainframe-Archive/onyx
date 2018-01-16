@@ -34,7 +34,13 @@ export default (
     unsecureApp.get(
       '/mobile_client_cert',
       (req: express$Request, res: express$Response) => {
-      	res.download(path.join(certsDir, 'client.p12'))
+        res.download(path.join(certsDir, 'client.p12'))
+    })
+
+    unsecureApp.get(
+      '/ca_cert',
+      (req: express$Request, res: express$Response) => {
+        res.download(path.join(certsDir, 'ca.crt'))
     })
 
     const unsecureServer = http.createServer(unsecureApp)
