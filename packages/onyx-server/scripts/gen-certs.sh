@@ -49,3 +49,4 @@ openssl genrsa -out ./certs/client-key.pem 4096
 openssl req -new -config $CERT_CONFIG_DIR/client.cnf -key ./certs/client-key.pem -out ./certs/client-csr.pem
 openssl x509 -req -extfile $CERT_CONFIG_DIR/client.cnf -days 999 -in ./certs/client-csr.pem -CA ./certs/ca-crt.pem -CAkey ./certs/ca-key.pem -CAcreateserial -out ./certs/client-crt.pem -passin pass:$PASSWORD
 openssl pkcs12 -export -out ./certs/client.p12 -inkey certs/client-key.pem -in certs/client-crt.pem -passout pass:$PASSWORD -passin pass:$PASSWORD
+openssl x509 -outform der -in ./certs/ca-crt.pem -out ./certs/ca.crt
