@@ -55,9 +55,9 @@
     "prettier": "^1.9.1"
   },
   "files": [
-    "./bin/*",
-    "./lib/*",
-    "./scripts/*",
-    "./cert-configs/*"
+    "bin/*",
+    "lib/*",
+    "scripts/*",
+    "cert-configs/*"
   ]
 }
