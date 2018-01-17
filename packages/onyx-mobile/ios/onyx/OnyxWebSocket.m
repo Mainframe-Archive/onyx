@@ -284,10 +284,9 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   return [self initWithURLRequest:request protocols:protocols];
 }
 
-- (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols certData:(NSString *)certData certificatePassword:(NSString *)certPassword
+- (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols certFilePath:(NSString *)certFilePath certificatePassword:(NSString *)certPassword
 {
-  _clientCertificateData = [[NSData alloc] initWithBase64EncodedString:certData options:0];
-  
+  _clientCertificateData = [[NSFileManager defaultManager] contentsAtPath:certFilePath];
   _clientCertificateCipher = certPassword;
   return [self initWithURLRequest:request protocols:protocols];
 }

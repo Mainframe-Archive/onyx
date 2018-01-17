@@ -9,6 +9,7 @@ import {
   AsyncStorage,
   Alert,
   StatusBar,
+  Platform,
 } from 'react-native'
 import { ApolloProvider } from 'react-apollo'
 import type ApolloClient, { createNetworkInterface } from 'apollo-client'
@@ -37,7 +38,8 @@ type State = {
 }
 
 export const SERVER_URL_KEY = 'SERVER_URL'
-export const CERT_PATH_KEY = 'CERT_PATH'
+export const CLIENT_CERT_PATH_KEY = 'CLIENT_CERT_PATH'
+export const CA_CERT_PATH_KEY = 'CA_CERT_PATH'
 
 export default class App extends Component<State> {
   static childContextTypes = {
@@ -76,19 +78,34 @@ export default class App extends Component<State> {
   }
 
   clearCreds = async () => {
-    await AsyncStorage.multiRemove([SERVER_URL_KEY, CERT_PATH_KEY])
+    await AsyncStorage.multiRemove([SERVER_URL_KEY, CLIENT_CERT_PATH_KEY, CA_CERT_PATH_KEY])
     this.setState({ connectionState: 'disconnected' })
   }
 
   async fetchStoredCreds () {
     try {
-      const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CERT_PATH_KEY])
-      const serverUrl = stored[0][1]
-      const certPath = stored[1][1]
-      if (serverUrl && certPath){
-        const credentials = await Keychain.getGenericPassword()
-        this.onSelectNode(serverUrl, certPath, credentials.password)
-        return
+      const storedValues = await AsyncStorage.multiGet([
+        SERVER_URL_KEY,
+        CLIENT_CERT_PATH_KEY,
+        CA_CERT_PATH_KEY,
+      ])
+      let caCertPath // Android only
+      if (storedValues.length) {
+        const serverUrl = storedValues[0][1]
+        const clientCertPath = storedValues[1][1]
+        if (Platform.OS === 'android') {
+          caCertPath = storedValues[2][1]
+        }
+        if (serverUrl && clientCertPath){
+          const credentials = await Keychain.getGenericPassword()
+          this.onSelectNode(
+            serverUrl,
+            clientCertPath,
+            credentials.password,
+            caCertPath
+          )
+          return
+        }
       }
     } catch (error) {
       console.warn(error)
@@ -96,18 +113,27 @@ export default class App extends Component<State> {
     this.setDisconnected()
   }
 
-  async saveServerCreds (url: string, certPath: string, password: string) {
+  async saveServerCreds (
+    url: string,
+    clientCertPath: string,
+    password: string,
+    caCertPath: string,
+  ) {
     try {
-      await AsyncStorage.multiSet([[SERVER_URL_KEY, url], [CERT_PATH_KEY, certPath]])
+      await AsyncStorage.multiSet([
+        [SERVER_URL_KEY, url],
+        [CLIENT_CERT_PATH_KEY, clientCertPath],
+        [CA_CERT_PATH_KEY, caCertPath],
+      ])
       Keychain.setGenericPassword(url, password)
     } catch (error) {
       console.warn(error)
     }
   }
 
-  onConnected = (url: string, certPath: string, certPassword: string) => {
+  onConnected = (url: string, clientCertPath: string, certPassword: string, caCertPath: string) => {
     this.wsConnected$.next(true)
-    this.saveServerCreds(url, certPath, certPassword)
+    this.saveServerCreds(url, clientCertPath, certPassword, caCertPath)
     if (this.state.client && this.state.client.networkInterface) {
       // Only set reconnect after successfully connected
       this.state.client.networkInterface.reconnect = true
@@ -144,14 +170,16 @@ export default class App extends Component<State> {
 
   onSelectNode = async (
     nodeUrl: string,
-    certFilePath: string,
-    certPassword: string,
+    clientCertFilePath: string,
+    clientCertPassword: string,
+    caCertFilePath: string,
   ) => {
     try {
       const client = await createClient(
         nodeUrl,
-        certFilePath,
-        certPassword,
+        clientCertFilePath,
+        clientCertPassword,
+        caCertFilePath,
         this.onDisconnected,
         this.onConnected,
         this.onConnectionError,
@@ -163,6 +191,7 @@ export default class App extends Component<State> {
         throw new Error('connection error')
       }
     } catch (err) {
+      console.warn('error: ', err)
       Alert.alert(
         `Error connecting to GraphQL server`,
         `Please check you entered a valid url.`,

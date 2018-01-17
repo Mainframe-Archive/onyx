@@ -95,7 +95,7 @@ RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(N
   [webSocket open];
 }
 
-RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(NSDictionary *)options socketID:(nonnull NSNumber *)socketID certData:(NSString *)certData password:(NSString *)password)
+RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(NSDictionary *)options socketID:(nonnull NSNumber *)socketID certFilePath:(NSString *)certFilePath password:(NSString *)password)
 {
   NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:URL];
   
@@ -115,7 +115,7 @@ RCT_EXPORT_METHOD(connect:(NSURL *)URL protocols:(NSArray *)protocols options:(N
   [options[@"headers"] enumerateKeysAndObjectsUsingBlock:^(NSString *key, id value, BOOL *stop) {
     [request addValue:[RCTConvert NSString:value] forHTTPHeaderField:key];
   }];
-  OnyxWebSocket *webSocket = [[OnyxWebSocket alloc] initWithURLRequest:request protocols:protocols certData:certData certificatePassword:password];
+  OnyxWebSocket *webSocket = [[OnyxWebSocket alloc] initWithURLRequest:request protocols:protocols certFilePath:certFilePath certificatePassword:password];
   webSocket.delegate = self;
   webSocket.reactTag = socketID;
   if (!_sockets) {

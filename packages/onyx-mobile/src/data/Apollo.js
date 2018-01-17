@@ -33,30 +33,30 @@ const fragmentMatcher = new IntrospectionFragmentMatcher({
 
 export default async (
   url: string,
-  certFilePath: string,
-  certPassword: string,
+  clientCertFilePath: string,
+  clientCertPassword: string,
+  caCertFilePath: string,
   onDisconnected: () => void,
-  onConnected: (url: string, certPath: string, certPassword: string) => void,
+  onConnected: (
+    url: string,
+    clientCertFilePath: string,
+    certPassword: string,
+    caCertFilePath: string
+  ) => void,
   onError?: (err: Object) => void,
 ) => {
-  let certBase64
-  try {
-    certBase64 = await RNFS.readFile(certFilePath, 'base64')
-  } catch (err) {
-    console.log('cert read err: ', err)
-    throw err
-  }
-
   class CustomWebSocket extends OnyxWebSocket {
     constructor (url, protocol) {
-      super(url, protocol, {}, certBase64, certPassword)
+      super(url, protocol, {}, clientCertFilePath, clientCertPassword, caCertFilePath)
     }
   }
 
-  const wsClient = new SubscriptionClient(url, {}, CustomWebSocket)
+  const wsClient = new SubscriptionClient(url, {
+    wsTimeout: 5000,
+  }, CustomWebSocket)
 
   wsClient.onDisconnected(() => onDisconnected())
-  wsClient.onConnected(() => onConnected(url, certFilePath, certPassword))
+  wsClient.onConnected(() => onConnected(url, clientCertFilePath, clientCertPassword, caCertFilePath))
   const client = new ApolloClient({
     fragmentMatcher,
     networkInterface: wsClient,

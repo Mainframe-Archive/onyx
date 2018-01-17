@@ -24,20 +24,22 @@ import Button from './shared/Button'
 import colors from './colors'
 import Modal from './shared/Modal'
 import { BASIC_SPACING } from './styles'
-import { SERVER_URL_KEY, CERT_PATH_KEY } from '../../App'
+import { SERVER_URL_KEY, CLIENT_CERT_PATH_KEY } from '../../App'
 
 type Props = {
   onSelectNode: (
     nodeUrl: string,
-    certFilePath: string,
+    clientCertFilePath: string,
     certPassword: string,
+    caCertFilePath?: string,
   ) => void
 }
 
 type State = {
   selectedNodeUrl?: string,
   certPassword?: string,
-  certFilePath?: string,
+  clientCertFilePath?: string,
+  caCertFilePath?: string,
   showCertsImport?: boolean,
   previousUrls: Array<string>
 }
@@ -98,7 +100,7 @@ export default class NodeSelectionScreen extends Component<Props, State> {
         this.fetchCerts()
         try {
           // Check if we already have password stored to populate
-          const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CERT_PATH_KEY])
+          const stored = await AsyncStorage.multiGet([SERVER_URL_KEY, CLIENT_CERT_PATH_KEY])
           const serverUrl = stored[0][1]
           const certPath = stored[1][1]
           if (serverUrl && certPath && serverUrl === this.state.selectedNodeUrl){
@@ -150,30 +152,38 @@ export default class NodeSelectionScreen extends Component<Props, State> {
     this.persistUrl(this.state.selectedNodeUrl)
     this.props.onSelectNode(
       this.state.selectedNodeUrl,
-      this.state.certFilePath,
+      this.state.clientCertFilePath,
       this.state.certPassword,
+      this.state.caCertFilePath,
     )
   }
 
   async fetchCerts () {
     const { selectedNodeUrl } = this.state
-    const dirPath = Platform.OS === 'ios'
-      ? RNFS.DocumentDirectoryPath + '/certs'
-      : RNFS.ExternalStorageDirectoryPath + '/certs'
+    const dirPath = RNFS.DocumentDirectoryPath + '/certs'
     const url = selectedNodeUrl
       .replace('wss', 'http')
       .substring(0, selectedNodeUrl.lastIndexOf(':') + 1)
     try {
       await RNFS.mkdir(dirPath, { RNFSURLIsExcludedFromBackupKey: true })
-      const fileDirPath = dirPath + '/' + `${url.replace(/\//g, '')}-client.p12`
+      const p12DirPath = dirPath + '/' + `${url.replace(/[\/.:]/g, '')}-client.p12`
+      const caDirPath = dirPath + '/' + `${url.replace(/[\/.:]/g, '')}-ca.crt`
       const bg = false
       await RNFS.downloadFile({
         fromUrl: `${url}:5002/mobile_client_cert`,
-        toFile: fileDirPath,
+        toFile: p12DirPath,
         bg,
       }).promise
+      if (Platform.OS === 'android') {
+        await RNFS.downloadFile({
+          fromUrl: `${url}:5002/ca_cert`,
+          toFile: caDirPath,
+          bg,
+        }).promise
+      }
       this.setState({
-        certFilePath: fileDirPath,
+        clientCertFilePath: p12DirPath,
+        caCertFilePath: caDirPath,
       })
     } catch (err) {
       console.warn('err: ', err)
@@ -196,7 +206,7 @@ export default class NodeSelectionScreen extends Component<Props, State> {
 
   renderCertImport () {
     if (this.state.showCertsImport) {
-      const content = this.state.certFilePath ? (
+      const content = this.state.clientCertFilePath ? (
         <View>
           <TextInput
             onChangeText={this.onChangeCertPassword}

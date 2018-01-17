@@ -103,8 +103,9 @@ class OnyxWebSocket extends EventTarget(...WEBSOCKET_EVENTS) {
   constructor(
     url: string, protocols: ?string | ?Array<string>,
     options: ?{headers?: {origin?: string}},
-    clientCertData: string,
+    clientCertFilePath: string,
     certPassword: string,
+    caCertFilePath: string,
   ) {
     super();
     if (typeof protocols === 'string') {
@@ -143,7 +144,12 @@ class OnyxWebSocket extends EventTarget(...WEBSOCKET_EVENTS) {
     this._eventEmitter = new NativeEventEmitter(OnyxWebSocketModule);
     this._socketId = nextWebSocketId++;
     this._registerEvents();
-    OnyxWebSocketModule.connect(url, protocols, { headers }, this._socketId, clientCertData, certPassword);
+    if (Platform.OS === 'ios') {
+      OnyxWebSocketModule.connect(url, protocols, { headers }, this._socketId, clientCertFilePath, certPassword);
+    } else {
+      // Android requires CA cert
+      OnyxWebSocketModule.connect(url, protocols, { headers }, this._socketId, clientCertFilePath, certPassword, caCertFilePath);
+    }
   }
 
   get binaryType(): ?BinaryType {

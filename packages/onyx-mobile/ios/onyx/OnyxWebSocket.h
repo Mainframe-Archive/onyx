@@ -66,7 +66,7 @@ extern NSString *const RCTSRHTTPResponseErrorKey;
 @property (nonatomic, readonly, copy) NSString *protocol;
 
 // Protocols should be an array of strings that turn into Sec-WebSocket-Protocol.
-- (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols certData:(NSString *)certData certificatePassword:(NSString*)certPassword;
+- (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols certFilePath:(NSString *)certFilePath certificatePassword:(NSString*)certPassword;
 - (instancetype)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray<NSString *> *)protocols NS_DESIGNATED_INITIALIZER;
 - (instancetype)initWithURLRequest:(NSURLRequest *)request;
 

@@ -17,3 +17,11 @@ yarn-debug.log*
 yarn-error.log*
 
 *.xcuserstate
+
+# Android
+.idea
+.gradle
+local.properties
+*.iml
+/android/build/
+/android/app/build/

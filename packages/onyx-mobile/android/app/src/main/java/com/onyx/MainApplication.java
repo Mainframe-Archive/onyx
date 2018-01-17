@@ -3,6 +3,8 @@ package com.onyx;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.facebook.react.bridge.NativeModule;
+import com.facebook.react.bridge.ReactApplicationContext;
 import com.lwansbrough.RCTCamera.RCTCameraPackage;
 import com.oblador.keychain.KeychainPackage;
 import com.rnfs.RNFSPackage;
@@ -12,6 +14,7 @@ import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,7 +33,8 @@ public class MainApplication extends Application implements ReactApplication {
             new RCTCameraPackage(),
             new KeychainPackage(),
             new RNFSPackage(),
-            new VectorIconsPackage()
+            new VectorIconsPackage(),
+            new OnyxWebSocketPackage()
       );
     }
 
@@ -50,4 +54,5 @@ public class MainApplication extends Application implements ReactApplication {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
   }
+
 }
