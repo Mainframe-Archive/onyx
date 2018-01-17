@@ -17,7 +17,8 @@ import {
   StatusBar,
   Dimensions,
   Alert,
-  Image
+  Image,
+  Platform,
 } from 'react-native'
 
 import { navBack } from '../../data/actions/navigation'
@@ -476,8 +477,8 @@ class ConversationScreen extends Component<Props, State> {
       headerStyles.push(styles.darkHeader)
     }
 
-    return (
-      <KeyboardAvoidingView behavior="padding" style={containerStyles}>
+    const content = (
+      <View style={containerStyles}>
         <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
         {this.renderProfileModal()}
         {this.renderParticipantsModal()}
@@ -536,7 +537,17 @@ class ConversationScreen extends Component<Props, State> {
             </TouchableOpacity>
           </View>
         </View>
+      </View>
+    )
+
+    return Platform.OS === 'ios' ? (
+      <KeyboardAvoidingView behavior="padding" style={containerStyles}>
+        {content}
       </KeyboardAvoidingView>
+    ) : (
+      <View style={containerStyles}>
+        {content}
+      </View>
     )
   }
 }
