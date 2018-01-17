@@ -101,7 +101,7 @@ and `subnet-XXXXXXXX`, respectively. Use them in the following command
 
 ```bash
 $ aws ec2 run-instances \
-    --image-id ami-6d41d414 \
+    --image-id ami-196af460 \
     --instance-type t2.micro \
     --key-name my_key \
     --security-group-ids <SG ID HERE> \
