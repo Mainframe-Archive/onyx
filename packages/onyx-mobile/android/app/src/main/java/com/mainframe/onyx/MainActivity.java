@@ -1,4 +1,4 @@
-package com.onyx;
+package com.mainframe.onyx;
 
 import com.facebook.react.ReactActivity;
 

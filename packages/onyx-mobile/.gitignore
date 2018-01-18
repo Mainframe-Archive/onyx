@@ -23,5 +23,6 @@ yarn-error.log*
 .gradle
 local.properties
 *.iml
+fabric.properties
 /android/build/
 /android/app/build/

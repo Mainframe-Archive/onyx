@@ -10,7 +10,7 @@
 //  Modified by Adam Clarke on 17/01/2018.
 //  Copyright © 2018 ThusFresh, Inc. All rights reserved.
 
-package com.onyx;
+package com.mainframe.onyx;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.react.bridge.Arguments;
