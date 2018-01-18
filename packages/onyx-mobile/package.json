@@ -9,6 +9,8 @@
   "scripts": {
     "start": "react-native start",
     "android": "react-native run-android",
+    "android:crashlytics":
+      "cd android && ./gradlew assembleRelease crashlyticsUploadDistributionRelease",
     "ios": "react-native run-ios",
     "test": "node node_modules/jest/bin/jest.js --watch"
   },

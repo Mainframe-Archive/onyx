@@ -24,5 +24,6 @@ yarn-error.log*
 local.properties
 *.iml
 fabric.properties
+*.keystore
 /android/build/
 /android/app/build/
