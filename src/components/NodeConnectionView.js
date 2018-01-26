@@ -89,7 +89,7 @@ export default class NodeConnectionView extends Component {
         >
           <View style={styles.buttonText}>
             <Text style={styles.defaultNodeButtonTitle}>
-              Start local Mainframe node
+              Start local Onyx server
             </Text>
           </View>
           <Icon name="arrow-right" />
@@ -110,7 +110,7 @@ export default class NodeConnectionView extends Component {
         <Button
           style={buttonStyles}
           outlineStyle
-          title="Connect to remote node"
+          title="Connect to remote server"
           onPress={this.onPressConnect}
         />
         <View style={loadingStyles}>
@@ -153,7 +153,7 @@ export default class NodeConnectionView extends Component {
             <TextInput
               white
               value={this.state.url}
-              placeholder="Mainframe node websocket url"
+              placeholder="Onyx server websocket url"
               onChangeText={this.onChangeUrl}
             />
             {this.renderRemoteConnectButton()}
