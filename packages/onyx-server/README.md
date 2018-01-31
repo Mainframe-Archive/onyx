@@ -1,6 +1,6 @@
-# Mainframe node
+# Onyx Server
 
-A Mainframe node consists of a blockchain node plus additional services required for reliable messaging, including mailboxing and contact management.
+Mailboxing & data service for the [Onyx](https://github.com/MainframeHQ/onyx) app.
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_WS_URL` or its defaults
 (WebSocket on `ws://localhost:8546`, HTTP on `http://localhost:8500` and port
 5000).
 
-Additionally you can pass `-u` or `--unsecure` to dismiss using tls, only recommended
+Additionally you can pass `-u` or `--unsecure` to dismiss using TLS, only recommended
 for when connecting client and server over a local connection
 
 The `DEBUG` environment variable can be used to activate logs, ex:
@@ -34,10 +34,21 @@ The `DEBUG` environment variable can be used to activate logs, ex:
 DEBUG="onyx*" onyx-server
 ```
 
-### Setting up a Mainframe Node on AWS
+### Connection security
+
+The Onyx client connects to Onyx server using a WebSocket, and so uses TLS certificates to authenticate and encrypt the connection.
+Use of client certificates is enforced so that only your clients with the correct certificate will be allowed to connect to the server, others are rejected.
+For mobile clients, where it can be more difficult to handle cert files, the server allows clients accessing the cert endpoint to download a password-encrypted p12 client cert.
+For convenience, you can use the provided script to generate a set of unique self-signed certificates.
+
+```sh
+./scripts/gen-certs.sh -p <certificate-password> -i <ip-address-to-certify> -d <domain-to-certify>
+```
+
+### Setting up an Onyx server on AWS
 
 You can use a pre-built [AMI](https://en.wikipedia.org/wiki/Amazon_Machine_Image)
-to conveniently set up a Mainframe node on AWS.
+to conveniently set up an Onyx server on AWS.
 
 To do it, make sure you have an AWS account and your AWS CLI is configured to
 use the `eu-west-1` (Ireland) region as default. We're going to assume you have a
@@ -61,13 +72,13 @@ it in the right vpc. Set the following group rules:
 
 **Inbound**
 
-| Type            | Protocol | Port Range | Source    | Description                  |
-| ---             | ---      |        --- | ---       | ---                          |
-| SSH (22)        | TCP      |         22 | 0.0.0.0/0 | SSH                          |
-| Custom TCP Rule | TCP      |      30399 | 0.0.0.0/0 | swarm TCP                    |
-| Custom TCP Rule | TCP      |       5000 | 0.0.0.0/0 | Mailboxing service interface |
-| Custom UDP Rule | UDP      |      30399 | 0.0.0.0/0 | swarm UDP                    |
-| Custom TCP Rule | TCP      |       5002 | 0.0.0.0/0 | cert endpoint                |
+| Type            | Protocol | Port Range | Source    | Description    |
+| ---             | ---      |        --- | ---       | ---            |
+| SSH (22)        | TCP      |         22 | 0.0.0.0/0 | SSH            |
+| Custom TCP Rule | TCP      |      30399 | 0.0.0.0/0 | swarm TCP      |
+| Custom UDP Rule | UDP      |      30399 | 0.0.0.0/0 | swarm UDP      |
+| Custom TCP Rule | TCP      |       5000 | 0.0.0.0/0 | Onyx interface |
+| Custom TCP Rule | TCP      |       5002 | 0.0.0.0/0 | cert endpoint  |
 
 **Outbound**
 
@@ -75,7 +86,7 @@ it in the right vpc. Set the following group rules:
 | ---         | ---      | ---        | ---       | ---         |
 | ALL Traffic | ALL      | ALL        | 0.0.0.0/0 | ALL Traffic |
 
-#### 2. Create a subnet for your Mainframe node
+#### 2. Create a subnet for your Onyx server
 
 Go to [subnet management](https://eu-west-1.console.aws.amazon.com/vpc/home?region=eu-west-1#subnets:)
 in the AWS dashboard and create a new subnet in your VPC. Make sure it's within
@@ -83,7 +94,7 @@ the vpc CIDR range. For example if the VPC CIDR is `10.0.0.0/16`, the sg
 IPv4 CIDR block can be `10.0.1.0/24`.
 
 #### 3. Create an SSH key
-You're going to use it to connect to the Mainframe Node EC2 node.
+You're going to use it to connect to the Onyx server EC2 node.
 
 ```bash
 $ mkdir ~/ssh
@@ -91,7 +102,7 @@ $ aws ec2 create-key-pair --key-name my_key --output text --query KeyMaterial > 
 $ chmod 400 ~/ssh/my_key.pem
 ```
 
-#### 4. Launch the Mainframe Node
+#### 4. Launch the Onyx server
 
 Make sure you have [AWS CLI](https://aws.amazon.com/cli/) installed and configured.
 In terminal, run the following command:
@@ -110,7 +121,7 @@ $ aws ec2 run-instances \
     --associate-public-ip-address
 ```
 
-This will launch your personal Mainframe node. It will generate an
+This will launch your personal Onyx server. It will generate an
 account for you.
 
 #### 5. Fetch the certificates from the node
@@ -127,7 +138,7 @@ and copy the relevant files from it:
 $ scp -i ~/ssh/my_key.pem ubuntu@<NODE PUBLIC IP HERE>:"~/certs/ca-crt.pem ~/certs/client-crt.pem ~/certs/client-key.pem" .
 ```
 
-#### 6. Connect to your Mainframe node
+#### 6. Connect to your Onyx server
 
 Launch Onyx and as the `Onyx server websocket url` use
 `wss://<NODE PUBLIC IP HERE>:5000/graphql`. When prompted for the certificates
@@ -140,13 +151,13 @@ You're connected!
 To build local version run `yarn start`. Afterwards you can start the built server
 from `./bin/onyx-server`.
 
-A Mainframe node depends on having a local swarm node running. You can start it by running
+Onyx server depends on having a local swarm node running. You can start it by running
 the `start_swarm_node.sh` script. This should allow you to run `onyx-server` with
 no special arguments.
 
 in one shell:
 ```sh
-./start_swarm_node.sh <some_swarm_data_directory_here>
+./scripts/start_swarm_node.sh <some_swarm_data_directory_here>
 ```
 
 in another shell:
