@@ -133,7 +133,7 @@ export default class CertificateSelection extends Component<State> {
   }
 
   render() {
-    const message = 'Please import the client SSL certificate files that were generated when you deployed your Mainframe node.'
+    const message = 'Please import the client SSL certificate files that were generated when you deployed your Onyx server.'
     return (
       <Modal
         onRequestClose={this.props.onRequestClose}
