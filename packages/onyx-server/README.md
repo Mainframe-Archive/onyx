@@ -21,7 +21,7 @@ onyx-server --port 5000 --http-url http://localhost:8500 --ws-url ws://localhost
 ```
 
 All arguments are optional, when not provided the server will use environment
-variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_HTTP_URL` or its defaults
+variables `ONYX_PORT`, `SWARM_HTTP_URL` and `SWARM_WS_URL` or its defaults
 (WebSocket on `ws://localhost:8546`, HTTP on `http://localhost:8500` and port
 5000).
 
