@@ -32,17 +32,21 @@ type State = {
   loadingRemote: boolean,
   showCertsSelectModal?: boolean,
   stakeStep: number,
+  whitelistAddress: ?string,
 }
 
 export default class NodeConnectionView extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
+    const showStakingModal = props.connectionError.startsWith('You need to stake')
     this.state = {
       url: props.storedServerUrl,
       loadingLocal: false,
       loadingRemote: false,
       stakeStep: 1,
+      whitelistAddress: props.address,
+      showStakingModal,
     }
   }
 
@@ -120,7 +124,7 @@ export default class NodeConnectionView extends Component<Props, State> {
 
   onRequestCloseStake = () => {
     this.setState({
-      showStaking: false,
+      showStakingModal: false,
     })
   }
 
@@ -220,9 +224,9 @@ export default class NodeConnectionView extends Component<Props, State> {
     )
     return (
       <Modal
-        onRequestClose={this.props.onRequestCloseStake}
+        onRequestClose={this.onRequestCloseStake}
         title="Stake Mainframe Token"
-        isOpen={this.state.showStaking}
+        isOpen={this.state.showStakingModal}
       >
         {this.state.stakeStep === 1 ? step1 : step2}
       </Modal>
