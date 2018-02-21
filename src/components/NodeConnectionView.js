@@ -7,11 +7,17 @@ import Icon from './Icon'
 import Text from './Text'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
+import Modal from './Modal'
 import CertSelectionModal, { storedCerts } from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
+
+const shell = window.require('electron').shell
+
+const stakeAddress = '0x7e16016df8c3d0a944cf568309b4214ab9856bee'
+const tokenAddress = '0xb070079e7d689f96940155c5003587ecafd633d6'
 
 type Props = {
   defaultLocalhostUrl: string,
@@ -24,19 +30,18 @@ type State = {
   loadingLocal: boolean,
   loadingRemote: boolean,
   showCertsSelectModal?: boolean,
+  stakeStep: number,
 }
 
-export default class NodeConnectionView extends Component {
-  state: State = {
-    url: '',
-    loadingLocal: false,
-    loadingRemote: false,
-  }
+export default class NodeConnectionView extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
     this.state = {
       url: props.storedServerUrl,
+      loadingLocal: false,
+      loadingRemote: false,
+      stakeStep: 1,
     }
   }
 
@@ -76,6 +81,49 @@ export default class NodeConnectionView extends Component {
       showCertsSelectModal: false,
     })
   }
+
+  onPressApproveDeposit = () => {
+    const transactionData = '0x095ea7b30000000000000000000000007e16016df8c3d0a944cf568309b4214ab9856bee0000000000000000000000000000000000000000000000000de0b6b3a7640000'
+    const url = `https://www.myetherwallet.com/?to=${tokenAddress}&value=0&gaslimit=100000&data=${transactionData}#send-transaction`
+    shell.openExternal(url)
+    this.setState({
+      stakeStep: 2,
+    })
+  }
+
+  onChangeWhitelistAddress = (value) => {
+    this.setState({
+      whitelistAddress: value,
+    })
+  }
+
+  onPressDepositAndWhitelist = () => {
+    const { whitelistAddress } = this.state
+    if (
+      whitelistAddress.substring(0, 2) === '0x' &&
+      whitelistAddress.length === 42
+    ) {
+      this.setState({
+        showWhitelistError: false,
+      })
+      const trimmedAddress = whitelistAddress.substring(2, 42)
+      const transactionData = `0x959752980000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000${trimmedAddress}`
+      const url = `https://www.myetherwallet.com/?to=${stakeAddress}&value=0&gaslimit=200000&data=${transactionData}#send-transaction`
+      shell.openExternal(url)
+    } else {
+      this.setState({
+        showWhitelistError: true,
+      })
+    }
+  }
+
+  onRequestCloseStake = () => {
+    this.setState({
+      showStaking: false,
+    })
+  }
+
+  // RENDER
 
   renderLocalConnectButton() {
     const { loadingLocal } = this.state
@@ -120,6 +168,67 @@ export default class NodeConnectionView extends Component {
     )
   }
 
+  renderStakeRequiredModal() {
+    const showWhitelistError = this.state.showWhitelistError ? (
+      <Text style={styles.errorMessage}>
+        * Invalid ETH address
+      </Text>
+    ) : null
+    const step1 = (
+      <View>
+        <Text style={styles.stakeInfoText}>
+          To participate in the Mainframe network you are required to stake
+          one Mainframe token (1 MFT) to our staking contract.
+          This requires two transactions, one to approve the deposit and a second
+          to make the deposit and whitelist your ETH address
+        </Text>
+        <Text style={styles.stakeInfoHeader}>
+          Step 1
+        </Text>
+        <Text style={styles.stakeInfoText}>
+          Approve our staking contract to take your deposit
+        </Text>
+        <Button
+          title="Step 1 - Approve Deposit of 1 MFT"
+          onPress={this.onPressApproveDeposit}
+        />
+      </View>
+    )
+    const step2 = (
+      <View>
+        <Text style={styles.stakeInfoText}>
+          <Text style={styles.boldText}>IMPORTANT:</Text> Only continue with step 2 once the transaction from step 1 has been successfully mined,
+          you can check the state of the transaction from the tx hash provided by MyEtherWallet
+        </Text>
+        <Text style={styles.stakeInfoHeader}>
+          Step 2
+        </Text>
+        <Text style={styles.stakeInfoText}>
+          Whitelist the ETH address of the node you would like to stake for
+        </Text>
+        {showWhitelistError}
+        <TextInput
+          value={this.state.whitelistAddress}
+          placeholder="whitelist address"
+          onChangeText={this.onChangeWhitelistAddress}
+        />
+        <Button
+          title="Step 2 - Deposit 1 MFT and Whitelist"
+          onPress={this.onPressDepositAndWhitelist}
+        />
+      </View>
+    )
+    return (
+      <Modal
+        onRequestClose={this.props.onRequestCloseStake}
+        title="Stake Mainframe Token"
+        isOpen={this.state.showStaking}
+      >
+        {this.state.stakeStep === 1 ? step1 : step2}
+      </Modal>
+    )
+  }
+
   render() {
     const connectionErrorMessage = this.props.connectionError ? (
       <View style={styles.errorContainer}>
@@ -138,6 +247,7 @@ export default class NodeConnectionView extends Component {
     return (
       <View style={styles.outer}>
         {connectionErrorMessage}
+        {this.renderStakeRequiredModal()}
         <View style={styles.container}>
           {certSelectionModal}
           <View style={styles.innerContainer}>
@@ -239,5 +349,20 @@ const styles = StyleSheet.create({
   },
   hide: {
     display: 'none',
+  },
+  stakeInfoHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  stakeInfoText: {
+    paddingBottom: BASIC_SPACING,
+    color: COLORS.GRAY_47,
+  },
+  errorMessage: {
+    paddingVertical: BASIC_SPACING,
+    color: COLORS.PRIMARY_RED,
+  },
+  boldText: {
+    fontWeight: 'bold',
   },
 })
