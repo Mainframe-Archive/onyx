@@ -16,15 +16,14 @@ If you wish to install the mailboxing service remotely, follow the instructions 
 
 This application is an alpha product and is currently suitable for testing purposes only. As such, there is no guarantee of:
 
-- **Security**: Our codebase is not fully tested. We authenticate both the client app and the mailboxing service and use TLS between the two, but any intruder who succeeded in accessing a remotely-installed service could read your messages, as they are stored in plaintext. Messages are transmitted via [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss), which is intended to be highly secure but is still beta software.
-- **Reliability**: PSS does not provide deliverability guarantees. When remotely installed, however, the [onyx-server](https://github.com/MainframeHQ/onyx-server) is designed to store messages sent to you while you are offline. As long as PSS delivers them successfully to your mailboxing service, they should be waiting for you when you open your desktop or mobile app again. If you are running in the default mode, which runs the mailbox service only locally, any messages sent to you while your app is not running will be lost.
-- **Performance**: We have not sufficiently tested this version for large-scale use. All messages are stored in a global state file that gets updated with each new message that is received. We anticipate that this will not scale well. The message store was created quickly for the alpha, and will require a more robust implementation in our next phase of development.
-
+* **Security**: Our codebase is not fully tested. We authenticate both the client app and the mailboxing service and use TLS between the two, but any intruder who succeeded in accessing a remotely-installed service could read your messages, as they are stored in plaintext. Messages are transmitted via [PSS](https://github.com/ethersphere/go-ethereum/tree/pss/swarm/pss), which is intended to be highly secure but is still beta software.
+* **Reliability**: PSS does not provide deliverability guarantees. When remotely installed, however, the [onyx-server](https://github.com/MainframeHQ/onyx-server) is designed to store messages sent to you while you are offline. As long as PSS delivers them successfully to your mailboxing service, they should be waiting for you when you open your desktop or mobile app again. If you are running in the default mode, which runs the mailbox service only locally, any messages sent to you while your app is not running will be lost.
+* **Performance**: We have not sufficiently tested this version for large-scale use. All messages are stored in a global state file that gets updated with each new message that is received. We anticipate that this will not scale well. The message store was created quickly for the alpha, and will require a more robust implementation in our next phase of development.
 
 PSS & Swarm are currently in rapid development and as such, the build of swarm that we're currently using (to have a working PSS implementation) has the following known limitations from what is expected in the next release of swarm:
 
-- **Network Formation**: The network discovery protocol is not currently usable which means that the nodes in the network cannot optimise their routing tables to ensure good routing of messages. In order to ensure routing despite this, all "client" nodes are configured to connect to the network through the same permanent bootnode.
-- **File Storage**: The file storage functionality is not currently usable which means that files uploaded to swarm would not be fetchable later. In order to retain the file upload feature, we are running a separate swarm gateway on https://onyx-storage.mainframe.com using a different build of swarm with usable file storage.
+* **Network Formation**: The network discovery protocol is not currently usable which means that the nodes in the network cannot optimise their routing tables to ensure good routing of messages. In order to ensure routing despite this, all "client" nodes are configured to connect to the network through the same permanent bootnode.
+* **File Storage**: The file storage functionality is not currently usable which means that files uploaded to swarm would not be fetchable later. In order to retain the file upload feature, we are running a separate swarm gateway on https://onyx-storage.mainframe.com using a different build of swarm with usable file storage.
 
 ## Get in touch!
 
@@ -58,43 +57,50 @@ PSS is a connectionless communication protocol that provides dark routing capabi
 ## Development
 
 After you pull this repository, to install all the dependencies run
+
 ```
 yarn
 ```
 
 The app requires an [onyx-server](https://github.com/MainframeHQ/onyx-server) instance to connect to - you will be prompted when you state the app. This can be run separately, following the instructions in that repository, or can be run locally inside the electron process. To run locally, binaries for geth and swarm are required, and can be built from a known good version for the local architecture using the yarn task:
+
 ```
 yarn build:binaries
 ```
 
 Run
+
 ```
 yarn start
 ```
+
 to start the development server for the frontend. It will serve it on `localhost:3000`.
 
-Once ready, you can state the electron app with
+Once ready, you can start the electron app with
+
 ```
 yarn electron
 ```
 
 ### Project structure
 
-- `app`: electron app
-- `assets`: build assets (app icons)
-- `dist`: app builds
-- `public`: assets that will be added to the `build` folder
-- `src`: source code
+* `app`: electron app
+* `assets`: build assets (app icons)
+* `dist`: app builds
+* `public`: assets that will be added to the `build` folder
+* `src`: source code
 
 ### Releases
 
 To build a release for the local architecture, run
+
 ```
 yarn build:binaries
 yarn dist
 ```
 
 To cross-compile for MacOS, Windows, Linux, run
+
 ```
 yarn build:binaries:mwl
 yarn dist -mwl

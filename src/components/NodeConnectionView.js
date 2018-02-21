@@ -14,6 +14,7 @@ import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
 
 type Props = {
+  address: ?string,
   defaultLocalhostUrl: string,
   storedServerUrl: string,
   connectionError: string,
@@ -85,8 +86,7 @@ export default class NodeConnectionView extends Component {
       <View>
         <TouchableOpacity
           onPress={this.onPressConnectDefault}
-          style={[styles.defaultNodeButton, buttonStyles]}
-        >
+          style={[styles.defaultNodeButton, buttonStyles]}>
           <View style={styles.buttonText}>
             <Text style={styles.defaultNodeButtonTitle}>
               Start local Onyx server
