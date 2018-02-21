@@ -36,8 +36,15 @@ const store = new Store({ name: is.development ? 'onyx-dev' : 'onyx' })
 
 const menu = Menu.buildFromTemplate([
   {
-    label: is.macos ? 'Onyx' : 'File',
+    label: is.macos ? app.getName() : 'File',
     submenu: [
+      {
+        label: 'v' + app.getVersion(),
+        enabled: false,
+      },
+      {
+        type: 'separator',
+      },
       {
         label: 'Reset',
         click: (item, focusedWindow) => {
@@ -171,6 +178,7 @@ const start = async () => {
   }
   let appUrl = `http://localhost:${appPort}`
   let urlParams
+  let nodeAddress
 
   const storedWsUrl = store.get('wsUrl')
   if (storedWsUrl) {
@@ -203,16 +211,22 @@ const start = async () => {
           urlParams = { wsUrl: `ws://localhost:${serverPort}/graphql` }
         } catch (e) {
           console.log(e.stack)
-          errorMsg =
-            'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +
-            SWARM_WS_URL +
-            '\nDebug: ' +
-            e.toString()
+          if (e.message.startsWith('Missing stake')) {
+            nodeAddress = e.address
+            errorMsg = 'You need to stake Mainframe tokens for your node'
+          } else {
+            errorMsg =
+              'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +
+              SWARM_WS_URL +
+              '\nDebug: ' +
+              e.toString()
+          }
         }
       }
 
       if (errorMsg) {
         urlParams = {
+          address: nodeAddress,
           wsUrl: storedWsUrl,
           connectionError: errorMsg,
         }

@@ -47,7 +47,7 @@ export default class Input extends Component<Props, State> {
       fieldContainerStyles.push({ backgroundColor: COLORS.WHITE })
       fieldStyles.push({ backgroundColor: COLORS.WHITE })
     }
-    
+
     if (this.props.multiline) {
       fieldStyles.push(styles.multiline)
     } else {
@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginVertical: BASIC_SPACING,
+    flexShrink: 0,
   },
   field: {
     flex: 1,
@@ -97,6 +98,6 @@ const styles = StyleSheet.create({
     height: INPUT_HEIGHT,
   },
   multiline: {
-    paddingVertical: BASIC_SPACING * 2
+    paddingVertical: BASIC_SPACING * 2,
   },
 })

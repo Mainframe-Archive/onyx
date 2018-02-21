@@ -240,8 +240,8 @@ class Conversation extends Component<Props, State> {
   list: ?Element<typeof VirtualizedList>
   typing: boolean = false
   typingTimer: ?number
-  unsubscribeMessageAdded: UnsubscribeFunc
-  unsubscribeTypingsChanged: UnsubscribeFunc
+  unsubscribeMessageAdded: ?UnsubscribeFunc
+  unsubscribeTypingsChanged: ?UnsubscribeFunc
 
   cache: CellMeasurerCache
 
@@ -324,7 +324,7 @@ class Conversation extends Component<Props, State> {
     if (this.typingTimer != null) {
       clearTimeout(this.typingTimer)
     }
-    if (this.context.wsConnected$.value) {
+    if (this.context.wsConnected$.value && this.unsubscribeMessageAdded) {
       this.unsubscribeMessageAdded()
       this.unsubscribeTypingsChanged()
     }
@@ -333,8 +333,7 @@ class Conversation extends Component<Props, State> {
   componentDidUpdate(prevProps: Props) {
     //First time getting the conversation
     if (
-      prevProps.data &&
-      !prevProps.data.conversation &&
+      (prevProps.data && !prevProps.data.conversation) &&
       this.props.data.conversation
     ) {
       this.setFirstPointer(this.props)

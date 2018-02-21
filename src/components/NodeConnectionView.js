@@ -20,6 +20,7 @@ const stakeAddress = '0x7e16016df8c3d0a944cf568309b4214ab9856bee'
 const tokenAddress = '0xb070079e7d689f96940155c5003587ecafd633d6'
 
 type Props = {
+  address: ?string,
   defaultLocalhostUrl: string,
   storedServerUrl: string,
   connectionError: string,
@@ -133,11 +134,10 @@ export default class NodeConnectionView extends Component<Props, State> {
       <View>
         <TouchableOpacity
           onPress={this.onPressConnectDefault}
-          style={[styles.defaultNodeButton, buttonStyles]}
-        >
+          style={[styles.defaultNodeButton, buttonStyles]}>
           <View style={styles.buttonText}>
             <Text style={styles.defaultNodeButtonTitle}>
-              Start local onyx server
+              Start local Onyx server
             </Text>
           </View>
           <Icon name="arrow-right" />

@@ -24,7 +24,7 @@ export default class Button extends Component<Props> {
       title,
       outlineStyle,
       style,
-      textStyle
+      textStyle,
     } = this.props
 
     const containerStyles = [styles.container]
@@ -38,11 +38,11 @@ export default class Button extends Component<Props> {
     if (disabled) {
       containerStyles.push(styles.disabledContainer)
     }
-    
+
     if (style) {
       containerStyles.push(style)
     }
-    
+
     if (textStyle) {
       textStyles.push(textStyle)
     }
@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
     marginVertical: BASIC_SPACING,
     paddingHorizontal: BASIC_SPACING * 3,
     justifyContent: 'center',
+    flexShrink: 0,
   },
   outlineContainer: {
     borderWidth: 2,

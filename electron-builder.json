@@ -1,6 +1,6 @@
 {
   "appId": "com.mainframe.onyx",
-  "productName": "Onyx",
+  "productName": "Mainframe Alpha",
   "artifactName": "${productName}.${ext}",
   "directories": {
     "buildResources": "assets"
