@@ -211,6 +211,7 @@ const start = async () => {
           urlParams = { wsUrl: `ws://localhost:${serverPort}/graphql` }
         } catch (e) {
           console.log(e.stack)
+          swarm.stop()
           if (e.message.startsWith('Missing stake')) {
             nodeAddress = e.address
             errorMsg = 'You need to stake Mainframe tokens for your node'
