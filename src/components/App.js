@@ -57,6 +57,7 @@ type Props = {
 type ModalName = 'channel' | 'contact' | 'profile'
 
 type State = {
+  addContactError: ?string,
   openModal: ?ModalName,
   openProfile: ?Object,
 }
@@ -68,6 +69,7 @@ class App extends Component<Props, State> {
   }
 
   state = {
+    addContactError: undefined,
     openModal: undefined,
     openProfile: undefined,
   }
@@ -118,17 +120,32 @@ class App extends Component<Props, State> {
   }
 
   onCloseModal = () => {
-    this.setState({ openModal: undefined, openProfile: undefined })
+    this.setState({
+      addContactError: undefined,
+      openModal: undefined,
+      openProfile: undefined,
+    })
   }
 
-  onPressAddContact = (id: string) => {
+  onPressAddContact = async (id: string) => {
+    this.setState({ addContactError: undefined })
     const contactWithId = this.props.data.viewer.contacts.filter(
       ({ profile }) => profile.id === id,
     )
     if (contactWithId.length) {
       this.setOpenContact(contactWithId[0].profile)
     } else if (id !== this.props.data.viewer.profile.id) {
-      this.props.requestContact(id)
+      try {
+        await this.props.requestContact(id)
+      } catch (err) {
+        const addContactError =
+          (err.graphQLErrors &&
+            err.graphQLErrors[0] &&
+            err.graphQLErrors[0].message) ||
+          'Unknown error, please try again later'
+        this.setState({ addContactError })
+        return
+      }
     }
     this.setState({ openModal: undefined })
   }
@@ -159,7 +176,7 @@ class App extends Component<Props, State> {
   }
 
   renderAddContactModal() {
-    const { openModal } = this.state
+    const { addContactError, openModal } = this.state
     const { data } = this.props
 
     return (
@@ -167,6 +184,7 @@ class App extends Component<Props, State> {
         isOpen={openModal === 'contact'}
         onPressAddContact={this.onPressAddContact}
         onCloseModal={this.onCloseModal}
+        mutationError={addContactError}
         viewerId={data.viewer.profile.id}
       />
     )
