@@ -38,17 +38,18 @@ type State = {
 }
 
 export default class NodeConnectionView extends Component<Props, State> {
-
   constructor(props: Props) {
     super(props)
-    const showStakingModal = props.connectionError && props.connectionError.startsWith('You need to stake')
+
     this.state = {
       url: props.storedServerUrl,
       loadingLocal: false,
       loadingRemote: false,
       stakeStep: 1,
       whitelistAddress: props.address,
-      showStakingModal,
+      showStakingModal:
+        props.connectionError &&
+        props.connectionError.startsWith('You need to stake'),
     }
     this.resolveEns()
   }
@@ -128,7 +129,7 @@ export default class NodeConnectionView extends Component<Props, State> {
     })
   }
 
-  onChangeWhitelistAddress = (value) => {
+  onChangeWhitelistAddress = value => {
     this.setState({
       whitelistAddress: value,
     })
@@ -225,9 +226,7 @@ export default class NodeConnectionView extends Component<Props, State> {
 
   renderStakeRequiredModal() {
     const showWhitelistError = this.state.showWhitelistError ? (
-      <Text style={styles.errorMessage}>
-        * Invalid ETH address
-      </Text>
+      <Text style={styles.errorMessage}>* Invalid ETH address</Text>
     ) : null
     const step1Button = this.state.stakeAddress ? (
       <Button
@@ -240,14 +239,12 @@ export default class NodeConnectionView extends Component<Props, State> {
     const step1 = (
       <View>
         <Text style={styles.stakeInfoText}>
-          To participate in the Mainframe network you are required to stake
-          one Mainframe token (1 MFT) to our staking contract.
-          This requires two transactions, one to approve the deposit and a second
-          to make the deposit and whitelist your ETH address
+          To participate in the Mainframe network you are required to stake one
+          Mainframe token (1 MFT) to our staking contract. This requires two
+          transactions, one to approve the deposit and a second to make the
+          deposit and whitelist your ETH address
         </Text>
-        <Text style={styles.stakeInfoHeader}>
-          Step 1
-        </Text>
+        <Text style={styles.stakeInfoHeader}>Step 1</Text>
         <Text style={styles.stakeInfoText}>
           Approve our staking contract to take your deposit. You will need at least 1 MFT
           in your wallet and a small amount of ETH to cover transaction fees
@@ -258,12 +255,12 @@ export default class NodeConnectionView extends Component<Props, State> {
     const step2 = (
       <View>
         <Text style={styles.stakeInfoText}>
-          <Text style={styles.boldText}>IMPORTANT:</Text> Only continue with step 2 once the transaction from step 1 has been successfully mined,
-          you can check the state of the transaction from the tx hash provided by MyEtherWallet
+          <Text style={styles.boldText}>IMPORTANT:</Text> Only continue with
+          step 2 once the transaction from step 1 has been successfully mined,
+          you can check the state of the transaction from the tx hash provided
+          by MyEtherWallet
         </Text>
-        <Text style={styles.stakeInfoHeader}>
-          Step 2
-        </Text>
+        <Text style={styles.stakeInfoHeader}>Step 2</Text>
         <Text style={styles.stakeInfoText}>
           Whitelist the ETH address of the node you would like to stake for
         </Text>
@@ -296,8 +293,7 @@ export default class NodeConnectionView extends Component<Props, State> {
       <Modal
         onRequestClose={this.onRequestCloseStake}
         title="Stake Mainframe Token"
-        isOpen={this.state.showStakingModal}
-      >
+        isOpen={this.state.showStakingModal}>
         {steps[this.state.stakeStep - 1]}
       </Modal>
     )

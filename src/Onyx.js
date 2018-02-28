@@ -18,6 +18,7 @@ type State = {
   connectionError?: string,
   store?: Store,
   wsUrl?: string,
+  testNet?: boolean,
 }
 
 export default class Onyx extends Component<{}, State> {

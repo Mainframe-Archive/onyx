@@ -20,6 +20,7 @@ const ERRORS = {
 
 type Props = {
   isOpen: boolean,
+  mutationError: ?string,
   onCloseModal: () => void,
   onPressAddContact: (data: ChannelData) => void,
   viewerId: string,
@@ -79,20 +80,24 @@ export default class AddContactModal extends Component<Props, State> {
   }
 
   render() {
-    const { isOpen } = this.props
+    const { isOpen, mutationError } = this.props
     const { contactInput, errorMessage } = this.state
 
     return (
       <Modal
         isOpen={isOpen}
         onRequestClose={this.onCloseModal}
-        title="Add a contact"
-      >
+        title="Add a contact">
         <TextInput
           onChangeText={this.onChangeContactInput}
           placeholder="Contact public key"
           value={contactInput}
         />
+        {mutationError && (
+          <View>
+            <Text style={styles.errorMessage}>{mutationError}</Text>
+          </View>
+        )}
         {contactInput.length > 0 && (
           <View>
             {errorMessage.length > 0 && (
