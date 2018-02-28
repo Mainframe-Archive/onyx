@@ -235,7 +235,6 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   renderEnsError() {
-    console.log('error: ', this.state.ensError.message)
     return (
       <Modal
         onRequestClose={this.onRequestCloseStake}
