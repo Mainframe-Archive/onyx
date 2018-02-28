@@ -35,11 +35,15 @@ type State = {
   showCertsSelectModal?: boolean,
   stakeStep: number,
   whitelistAddress: ?string,
+  ensError?: string,
 }
 
 export default class NodeConnectionView extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
+
+    const stakeRequired = props.connectionError &&
+      props.connectionError.startsWith('You need to stake')
 
     this.state = {
       url: props.storedServerUrl,
@@ -47,28 +51,34 @@ export default class NodeConnectionView extends Component<Props, State> {
       loadingRemote: false,
       stakeStep: 1,
       whitelistAddress: props.address,
-      showStakingModal:
-        props.connectionError &&
-        props.connectionError.startsWith('You need to stake'),
+      showStakingModal: stakeRequired,
     }
-    this.resolveEns()
+    if (stakeRequired) {
+      this.resolveEns()
+    }
   }
 
-  async resolveEns () {
+  resolveEns = async () => {
     const { ethNetwork } = this.props
     const resolverContract = ResolverContract(ethNetwork)
     const stakeContract = StakeContract(ethNetwork)
     try {
-      const requiredStake = await stakeContract.requiredStake()
-      const stakeAddress = await resolverContract.resolve(ENS_NAMES.stake[ethNetwork])
-      const tokenAddress = await resolverContract.resolve(ENS_NAMES.token[ethNetwork])
+      const [requiredStake, stakeAddress, tokenAddress] = await Promise.all([
+        stakeContract.requiredStake(),
+        resolverContract.resolve(ENS_NAMES.stake[ethNetwork]),
+        resolverContract.resolve(ENS_NAMES.token[ethNetwork]),
+      ])
       this.setState({
         stakeAddress,
         tokenAddress,
         requiredStake,
+        ensError: null,
       })
     } catch (err) {
       console.warn('err: ', err)
+      this.setState({
+        ensError: err,
+      })
     }
   }
 
@@ -224,13 +234,39 @@ export default class NodeConnectionView extends Component<Props, State> {
     )
   }
 
+  renderEnsError() {
+    console.log('error: ', this.state.ensError.message)
+    return (
+      <Modal
+        onRequestClose={this.onRequestCloseStake}
+        title="ENS Error"
+        isOpen>
+        <View>
+          <Text style={styles.stakeInfoText}>
+            Sorry, there was a problem resolving ens.
+          </Text>
+          <Text style={styles.errorMessageText}>
+            Error: {this.state.ensError.message}
+          </Text>
+          <Button
+            title="Retry"
+            onPress={this.resolveEns}
+          />
+        </View>
+      </Modal>
+    )
+  }
+
   renderStakeRequiredModal() {
+    if (this.state.ensError) {
+      return this.renderEnsError()
+    }
     const showWhitelistError = this.state.showWhitelistError ? (
       <Text style={styles.errorMessage}>* Invalid ETH address</Text>
     ) : null
     const step1Button = this.state.stakeAddress ? (
       <Button
-        title="Step 1 - Approve Deposit of 1 MFT"
+        title="Step 1 - Approve deposit of 1 MFT"
         onPress={this.onPressApproveDeposit}
       />
     ) : (
@@ -271,7 +307,7 @@ export default class NodeConnectionView extends Component<Props, State> {
           onChangeText={this.onChangeWhitelistAddress}
         />
         <Button
-          title="Step 2 - Deposit 1 MFT and Whitelist"
+          title="Step 2 - Deposit 1 MFT and whitelist node"
           onPress={this.onPressDepositAndWhitelist}
         />
       </View>
@@ -280,10 +316,10 @@ export default class NodeConnectionView extends Component<Props, State> {
       <View>
         <Text style={styles.stakeInfoText}>
           Once the final transaction has been successfully mined, your node address
-          should now how have a stake and enable you to participate in the network
+          should have a stake associated with it and will enable you to participate in the network
         </Text>
         <Button
-          title="Restart Local Node"
+          title="Restart local node"
           onPress={this.onPressFinishStake}
         />
       </View>
@@ -434,5 +470,12 @@ const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: 'bold',
+  },
+  errorMessageText: {
+    padding: BASIC_SPACING,
+    backgroundColor: COLORS.LIGHT_GRAY,
+    color: COLORS.GRAY_47,
+    marginBottom: BASIC_SPACING,
+    borderRadius: 3,
   },
 })

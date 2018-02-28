@@ -10,7 +10,7 @@ const querystring = require('querystring')
 const { config } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
 
-const USE_TESTNET = process.env.USE_TESTNET || true
+const USE_TESTNET = process.env.USE_TESTNET || true // TODO: - default to false when contracts deployed to mainnet
 
 const SWARM_WS_URL =
   process.env.SWARM_WS_URL ||
