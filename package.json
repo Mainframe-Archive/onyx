@@ -47,6 +47,8 @@
     "redux-logger": "^3.0.6",
     "rxjs": "^5.5.5",
     "subscriptions-transport-ws": "^0.8.3",
+    "web3-eth-abi": "^1.0.0-beta.30",
+    "web3-eth-contract": "^1.0.0-beta.30",
     "whatwg-fetch": "2.0.3",
     "ws": "^3.3.2"
   },

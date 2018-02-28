@@ -1,7 +1,6 @@
 // @flow
 import React, { Component } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
-import { onSetWsUrl } from '../data/Electron'
 
 import Icon from './Icon'
 import Text from './Text'
@@ -10,20 +9,23 @@ import Button from './Form/Button'
 import Modal from './Modal'
 import CertSelectionModal, { storedCerts } from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
+import ResolverContract from '../contracts/ResolverContract'
+import StakeContract from '../contracts/StakeContract'
+import { ENS_NAMES } from '../constants'
+import { onSetWsUrl } from '../data/Electron'
+import abi from 'web3-eth-abi'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
 
 const shell = window.require('electron').shell
 
-const stakeAddress = '0x7e16016df8c3d0a944cf568309b4214ab9856bee'
-const tokenAddress = '0xb070079e7d689f96940155c5003587ecafd633d6'
-
 type Props = {
   address: ?string,
   defaultLocalhostUrl: string,
   storedServerUrl: string,
   connectionError: string,
+  ethNetwork: 'MAINNET' | 'TESTNET',
 }
 
 type State = {
@@ -33,11 +35,15 @@ type State = {
   showCertsSelectModal?: boolean,
   stakeStep: number,
   whitelistAddress: ?string,
+  ensError?: string,
 }
 
 export default class NodeConnectionView extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
+
+    const stakeRequired = props.connectionError &&
+      props.connectionError.startsWith('You need to stake')
 
     this.state = {
       url: props.storedServerUrl,
@@ -45,9 +51,34 @@ export default class NodeConnectionView extends Component<Props, State> {
       loadingRemote: false,
       stakeStep: 1,
       whitelistAddress: props.address,
-      showStakingModal:
-        props.connectionError &&
-        props.connectionError.startsWith('You need to stake'),
+      showStakingModal: stakeRequired,
+    }
+    if (stakeRequired) {
+      this.resolveEns()
+    }
+  }
+
+  resolveEns = async () => {
+    const { ethNetwork } = this.props
+    const resolverContract = ResolverContract(ethNetwork)
+    const stakeContract = StakeContract(ethNetwork)
+    try {
+      const [requiredStake, stakeAddress, tokenAddress] = await Promise.all([
+        stakeContract.requiredStake(),
+        resolverContract.resolve(ENS_NAMES.stake[ethNetwork]),
+        resolverContract.resolve(ENS_NAMES.token[ethNetwork]),
+      ])
+      this.setState({
+        stakeAddress,
+        tokenAddress,
+        requiredStake,
+        ensError: null,
+      })
+    } catch (err) {
+      console.warn('err: ', err)
+      this.setState({
+        ensError: err,
+      })
     }
   }
 
@@ -89,9 +120,19 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   onPressApproveDeposit = () => {
-    const transactionData =
-      '0x095ea7b30000000000000000000000007e16016df8c3d0a944cf568309b4214ab9856bee0000000000000000000000000000000000000000000000000de0b6b3a7640000'
-    const url = `https://www.myetherwallet.com/?to=${tokenAddress}&value=0&gaslimit=100000&data=${transactionData}#send-transaction`
+    const { stakeAddress, requiredStake } = this.state
+    const encodedApproveCall = abi.encodeFunctionCall({
+      name: 'approve',
+      type: 'function',
+      inputs: [{
+          type: 'address',
+          name: '_spender'
+      },{
+          type: 'uint256',
+          name: '_value'
+      }]
+    }, [stakeAddress, requiredStake])
+    const url = `https://www.myetherwallet.com/?to=${this.state.tokenAddress}&value=0&gaslimit=100000&data=${encodedApproveCall}#send-transaction`
     shell.openExternal(url)
     this.setState({
       stakeStep: 2,
@@ -105,7 +146,7 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   onPressDepositAndWhitelist = () => {
-    const { whitelistAddress } = this.state
+    const { whitelistAddress, requiredStake } = this.state
     if (
       whitelistAddress.substring(0, 2) === '0x' &&
       whitelistAddress.length === 42
@@ -113,10 +154,22 @@ export default class NodeConnectionView extends Component<Props, State> {
       this.setState({
         showWhitelistError: false,
       })
-      const trimmedAddress = whitelistAddress.substring(2, 42)
-      const transactionData = `0x959752980000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000${trimmedAddress}`
-      const url = `https://www.myetherwallet.com/?to=${stakeAddress}&value=0&gaslimit=200000&data=${transactionData}#send-transaction`
+      const encodedWhitelistCall = abi.encodeFunctionCall({
+        name: 'depositAndWhitelist',
+        type: 'function',
+        inputs: [{
+          type: 'uint256',
+          name: '_value'
+        },{
+          type: 'address',
+          name: 'whitelistAddress'
+        }]
+      }, [requiredStake, whitelistAddress])
+      const url = `https://www.myetherwallet.com/?to=${this.state.stakeAddress}&value=0&gaslimit=200000&data=${encodedWhitelistCall}#send-transaction`
       shell.openExternal(url)
+      this.setState({
+        stakeStep: 3,
+      })
     } else {
       this.setState({
         showWhitelistError: true,
@@ -128,6 +181,13 @@ export default class NodeConnectionView extends Component<Props, State> {
     this.setState({
       showStakingModal: false,
     })
+  }
+
+  onPressFinishStake = () => {
+    this.setState({
+      showStakingModal: false,
+    })
+    this.onPressConnectDefault()
   }
 
   // RENDER
@@ -174,10 +234,43 @@ export default class NodeConnectionView extends Component<Props, State> {
     )
   }
 
+  renderEnsError() {
+    return (
+      <Modal
+        onRequestClose={this.onRequestCloseStake}
+        title="ENS Error"
+        isOpen>
+        <View>
+          <Text style={styles.stakeInfoText}>
+            Sorry, there was a problem resolving ens.
+          </Text>
+          <Text style={styles.errorMessageText}>
+            Error: {this.state.ensError.message}
+          </Text>
+          <Button
+            title="Retry"
+            onPress={this.resolveEns}
+          />
+        </View>
+      </Modal>
+    )
+  }
+
   renderStakeRequiredModal() {
+    if (this.state.ensError) {
+      return this.renderEnsError()
+    }
     const showWhitelistError = this.state.showWhitelistError ? (
       <Text style={styles.errorMessage}>* Invalid ETH address</Text>
     ) : null
+    const step1Button = this.state.stakeAddress ? (
+      <Button
+        title="Step 1 - Approve deposit of 1 MFT"
+        onPress={this.onPressApproveDeposit}
+      />
+    ) : (
+      null
+    )
     const step1 = (
       <View>
         <Text style={styles.stakeInfoText}>
@@ -188,12 +281,10 @@ export default class NodeConnectionView extends Component<Props, State> {
         </Text>
         <Text style={styles.stakeInfoHeader}>Step 1</Text>
         <Text style={styles.stakeInfoText}>
-          Approve our staking contract to take your deposit
+          Approve our staking contract to take your deposit. You will need at least 1 MFT
+          in your wallet and a small amount of ETH to cover transaction fees
         </Text>
-        <Button
-          title="Step 1 - Approve Deposit of 1 MFT"
-          onPress={this.onPressApproveDeposit}
-        />
+        {step1Button}
       </View>
     )
     const step2 = (
@@ -215,17 +306,30 @@ export default class NodeConnectionView extends Component<Props, State> {
           onChangeText={this.onChangeWhitelistAddress}
         />
         <Button
-          title="Step 2 - Deposit 1 MFT and Whitelist"
+          title="Step 2 - Deposit 1 MFT and whitelist node"
           onPress={this.onPressDepositAndWhitelist}
         />
       </View>
     )
+    const step3 = (
+      <View>
+        <Text style={styles.stakeInfoText}>
+          Once the final transaction has been successfully mined, your node address
+          should have a stake associated with it and will enable you to participate in the network
+        </Text>
+        <Button
+          title="Restart local node"
+          onPress={this.onPressFinishStake}
+        />
+      </View>
+    )
+    const steps = [ step1, step2, step3 ]
     return (
       <Modal
         onRequestClose={this.onRequestCloseStake}
         title="Stake Mainframe Token"
         isOpen={this.state.showStakingModal}>
-        {this.state.stakeStep === 1 ? step1 : step2}
+        {steps[this.state.stakeStep - 1]}
       </Modal>
     )
   }
@@ -365,5 +469,12 @@ const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: 'bold',
+  },
+  errorMessageText: {
+    padding: BASIC_SPACING,
+    backgroundColor: COLORS.LIGHT_GRAY,
+    color: COLORS.GRAY_47,
+    marginBottom: BASIC_SPACING,
+    borderRadius: 3,
   },
 })
