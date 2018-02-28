@@ -10,6 +10,8 @@ const querystring = require('querystring')
 const { config } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
 
+const USE_TESTNET = process.env.USE_TESTNET || true // TODO: - Update to Mainnet when ready
+
 const SWARM_WS_URL =
   process.env.SWARM_WS_URL ||
   (config && config.swarmWsUrl) ||
@@ -162,6 +164,7 @@ const startLocalOnyxServer = async () => {
     port,
     store,
     unsecure: true,
+    testNet: USE_TESTNET,
   })
   return port
 }
@@ -230,6 +233,7 @@ const start = async () => {
           address: nodeAddress,
           wsUrl: storedWsUrl,
           connectionError: errorMsg,
+          testNet: USE_TESTNET,
         }
         if (appServer != null) {
           appServer.stop()

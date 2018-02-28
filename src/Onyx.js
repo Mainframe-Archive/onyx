@@ -48,7 +48,10 @@ export default class Onyx extends Component<{}, State> {
     if (params.wsUrl && params.wsUrl !== 'undefined') {
       state.wsUrl = params.wsUrl
     }
-
+    if (params.wsUrl && params.wsUrl !== 'undefined') {
+      state.wsUrl = params.wsUrl
+    }
+    state.testNet = params.testNet
     this.state = state
     this.wsConnected$ = new BehaviorSubject(false)
   }
@@ -111,7 +114,13 @@ export default class Onyx extends Component<{}, State> {
   }
 
   render() {
-    const { address, client, store, connectionError } = this.state
+    const {
+      address,
+      client,
+      store,
+      connectionError,
+      testNet,
+    } = this.state
     return client && store && !connectionError ? (
       <ApolloProvider client={client} store={store}>
         <App />
@@ -122,6 +131,7 @@ export default class Onyx extends Component<{}, State> {
         storedServerUrl={this.state.wsUrl}
         connectionError={connectionError}
         address={address}
+        ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
       />
     )
   }
