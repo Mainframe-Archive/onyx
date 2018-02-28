@@ -1,0 +1,13 @@
+[ignore]
+.*/node_modules/oboe/test/json/incomplete.json
+<PROJECT_ROOT>/lib/.*
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]

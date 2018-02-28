@@ -1,0 +1,14 @@
+{
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "electron": "1.7",
+          "node": 8
+        }
+      }
+    ],
+    "flow"
+  ]
+}
