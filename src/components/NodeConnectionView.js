@@ -1,6 +1,12 @@
 // @flow
+
+import createContracts from 'onyx-contracts'
 import React, { Component } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
+import abi from 'web3-eth-abi'
+
+import { ENS_NAMES } from '../constants'
+import { onSetWsUrl } from '../data/Electron'
 
 import Icon from './Icon'
 import Text from './Text'
@@ -9,11 +15,6 @@ import Button from './Form/Button'
 import Modal from './Modal'
 import CertSelectionModal, { storedCerts } from './CertSelectionModal'
 import MainframeBar, { FOOTER_SIZE } from './MainframeBar'
-import ResolverContract from '../contracts/ResolverContract'
-import StakeContract from '../contracts/StakeContract'
-import { ENS_NAMES } from '../constants'
-import { onSetWsUrl } from '../data/Electron'
-import abi from 'web3-eth-abi'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -42,7 +43,8 @@ export default class NodeConnectionView extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    const stakeRequired = props.connectionError &&
+    const stakeRequired =
+      props.connectionError &&
       props.connectionError.startsWith('You need to stake')
 
     this.state = {
@@ -60,13 +62,12 @@ export default class NodeConnectionView extends Component<Props, State> {
 
   resolveEns = async () => {
     const { ethNetwork } = this.props
-    const resolverContract = ResolverContract(ethNetwork)
-    const stakeContract = StakeContract(ethNetwork)
+    const contracts = createContracts(ethNetwork)
     try {
       const [requiredStake, stakeAddress, tokenAddress] = await Promise.all([
-        stakeContract.requiredStake(),
-        resolverContract.resolve(ENS_NAMES.stake[ethNetwork]),
-        resolverContract.resolve(ENS_NAMES.token[ethNetwork]),
+        contracts.getRequiredStake(),
+        contracts.ens.resolveName(ENS_NAMES.stake[ethNetwork]),
+        contracts.ens.resolveName(ENS_NAMES.token[ethNetwork]),
       ])
       this.setState({
         stakeAddress,
@@ -121,18 +122,26 @@ export default class NodeConnectionView extends Component<Props, State> {
 
   onPressApproveDeposit = () => {
     const { stakeAddress, requiredStake } = this.state
-    const encodedApproveCall = abi.encodeFunctionCall({
-      name: 'approve',
-      type: 'function',
-      inputs: [{
-          type: 'address',
-          name: '_spender'
-      },{
-          type: 'uint256',
-          name: '_value'
-      }]
-    }, [stakeAddress, requiredStake])
-    const url = `https://www.myetherwallet.com/?to=${this.state.tokenAddress}&value=0&gaslimit=100000&data=${encodedApproveCall}#send-transaction`
+    const encodedApproveCall = abi.encodeFunctionCall(
+      {
+        name: 'approve',
+        type: 'function',
+        inputs: [
+          {
+            type: 'address',
+            name: '_spender',
+          },
+          {
+            type: 'uint256',
+            name: '_value',
+          },
+        ],
+      },
+      [stakeAddress, requiredStake],
+    )
+    const url = `https://www.myetherwallet.com/?to=${
+      this.state.tokenAddress
+    }&value=0&gaslimit=100000&data=${encodedApproveCall}#send-transaction`
     shell.openExternal(url)
     this.setState({
       stakeStep: 2,
@@ -154,18 +163,26 @@ export default class NodeConnectionView extends Component<Props, State> {
       this.setState({
         showWhitelistError: false,
       })
-      const encodedWhitelistCall = abi.encodeFunctionCall({
-        name: 'depositAndWhitelist',
-        type: 'function',
-        inputs: [{
-          type: 'uint256',
-          name: '_value'
-        },{
-          type: 'address',
-          name: 'whitelistAddress'
-        }]
-      }, [requiredStake, whitelistAddress])
-      const url = `https://www.myetherwallet.com/?to=${this.state.stakeAddress}&value=0&gaslimit=200000&data=${encodedWhitelistCall}#send-transaction`
+      const encodedWhitelistCall = abi.encodeFunctionCall(
+        {
+          name: 'depositAndWhitelist',
+          type: 'function',
+          inputs: [
+            {
+              type: 'uint256',
+              name: '_value',
+            },
+            {
+              type: 'address',
+              name: 'whitelistAddress',
+            },
+          ],
+        },
+        [requiredStake, whitelistAddress],
+      )
+      const url = `https://www.myetherwallet.com/?to=${
+        this.state.stakeAddress
+      }&value=0&gaslimit=200000&data=${encodedWhitelistCall}#send-transaction`
       shell.openExternal(url)
       this.setState({
         stakeStep: 3,
@@ -236,10 +253,7 @@ export default class NodeConnectionView extends Component<Props, State> {
 
   renderEnsError() {
     return (
-      <Modal
-        onRequestClose={this.onRequestCloseStake}
-        title="ENS Error"
-        isOpen>
+      <Modal onRequestClose={this.onRequestCloseStake} title="ENS Error" isOpen>
         <View>
           <Text style={styles.stakeInfoText}>
             Sorry, there was a problem resolving ens.
@@ -247,10 +261,7 @@ export default class NodeConnectionView extends Component<Props, State> {
           <Text style={styles.errorMessageText}>
             Error: {this.state.ensError.message}
           </Text>
-          <Button
-            title="Retry"
-            onPress={this.resolveEns}
-          />
+          <Button title="Retry" onPress={this.resolveEns} />
         </View>
       </Modal>
     )
@@ -268,9 +279,7 @@ export default class NodeConnectionView extends Component<Props, State> {
         title="Step 1 - Approve deposit of 1 MFT"
         onPress={this.onPressApproveDeposit}
       />
-    ) : (
-      null
-    )
+    ) : null
     const step1 = (
       <View>
         <Text style={styles.stakeInfoText}>
@@ -281,8 +290,9 @@ export default class NodeConnectionView extends Component<Props, State> {
         </Text>
         <Text style={styles.stakeInfoHeader}>Step 1</Text>
         <Text style={styles.stakeInfoText}>
-          Approve our staking contract to take your deposit. You will need at least 1 MFT
-          in your wallet and a small amount of ETH to cover transaction fees
+          Approve our staking contract to take your deposit. You will need at
+          least 1 MFT in your wallet and a small amount of ETH to cover
+          transaction fees
         </Text>
         {step1Button}
       </View>
@@ -314,16 +324,14 @@ export default class NodeConnectionView extends Component<Props, State> {
     const step3 = (
       <View>
         <Text style={styles.stakeInfoText}>
-          Once the final transaction has been successfully mined, your node address
-          should have a stake associated with it and will enable you to participate in the network
+          Once the final transaction has been successfully mined, your node
+          address should have a stake associated with it and will enable you to
+          participate in the network
         </Text>
-        <Button
-          title="Restart local node"
-          onPress={this.onPressFinishStake}
-        />
+        <Button title="Restart local node" onPress={this.onPressFinishStake} />
       </View>
     )
-    const steps = [ step1, step2, step3 ]
+    const steps = [step1, step2, step3]
     return (
       <Modal
         onRequestClose={this.onRequestCloseStake}
