@@ -17,7 +17,7 @@ type Props = {
   onOpen: (id: string) => void,
 }
 
-export default class ConverationTitle extends Component<Props> {
+export default class ConversationTitle extends Component<Props> {
   static defaultProps = {
     isOpen: false,
     newMessages: false,
