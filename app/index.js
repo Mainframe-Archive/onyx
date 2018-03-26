@@ -183,6 +183,8 @@ const start = async () => {
   let urlParams
   let nodeAddress
 
+  const stakeRequiredError = 'You need to stake Mainframe tokens for your node'
+
   const storedWsUrl = store.get('wsUrl')
   if (storedWsUrl) {
     if (storedWsUrl === 'local') {
@@ -202,9 +204,14 @@ const start = async () => {
           await swarm.start()
         } catch (e) {
           console.log(e.stack)
-          errorMsg =
-            'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' +
-            e.toString()
+          if (e.message.includes('No stake found')) {
+            nodeAddress = e.message.split(' ').splice(-1)[0].trim()
+            errorMsg = stakeRequiredError
+          } else {
+            errorMsg =
+              'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' +
+              e.toString()
+          }
         }
       }
 
@@ -217,7 +224,7 @@ const start = async () => {
           swarm.stop()
           if (e.message.startsWith('Missing stake')) {
             nodeAddress = e.address
-            errorMsg = 'You need to stake Mainframe tokens for your node'
+            errorMsg = stakeRequiredError
           } else {
             errorMsg =
               'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +

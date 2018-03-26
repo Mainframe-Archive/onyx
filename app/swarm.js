@@ -74,7 +74,7 @@ const start = async () => {
       '--wsorigins',
       '*',
       '--ens-api',
-      '',
+      'https://ropsten.infura.io/',
     ])
 
     proc.catch(error => {
