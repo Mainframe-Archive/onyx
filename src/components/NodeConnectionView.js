@@ -139,7 +139,7 @@ export default class NodeConnectionView extends Component<Props, State> {
       },
       [stakeAddress, requiredStake],
     )
-    const url = `https://www.myetherwallet.com/?to=${
+    const url = `https://www.mycrypto.com/?to=${
       this.state.tokenAddress
     }&value=0&gaslimit=100000&data=${encodedApproveCall}#send-transaction`
     shell.openExternal(url)
@@ -180,7 +180,7 @@ export default class NodeConnectionView extends Component<Props, State> {
         },
         [requiredStake, whitelistAddress],
       )
-      const url = `https://www.myetherwallet.com/?to=${
+      const url = `https://www.mycrypto.com/?to=${
         this.state.stakeAddress
       }&value=0&gaslimit=200000&data=${encodedWhitelistCall}#send-transaction`
       shell.openExternal(url)
@@ -286,13 +286,13 @@ export default class NodeConnectionView extends Component<Props, State> {
           To participate in the Mainframe network you are required to stake one
           Mainframe token (1 MFT) to our staking contract. This requires two
           transactions, one to approve the deposit and a second to make the
-          deposit and whitelist your ETH address
+          deposit and whitelist your ETH address.
         </Text>
         <Text style={styles.stakeInfoHeader}>Step 1</Text>
         <Text style={styles.stakeInfoText}>
           Approve our staking contract to take your deposit. You will need at
           least 1 MFT in your wallet and a small amount of ETH to cover
-          transaction fees
+          transaction fees.
         </Text>
         {step1Button}
       </View>
@@ -303,7 +303,7 @@ export default class NodeConnectionView extends Component<Props, State> {
           <Text style={styles.boldText}>IMPORTANT:</Text> Only continue with
           step 2 once the transaction from step 1 has been successfully mined,
           you can check the state of the transaction from the tx hash provided
-          by MyEtherWallet
+          by MyCrypto.
         </Text>
         <Text style={styles.stakeInfoHeader}>Step 2</Text>
         <Text style={styles.stakeInfoText}>
@@ -326,7 +326,7 @@ export default class NodeConnectionView extends Component<Props, State> {
         <Text style={styles.stakeInfoText}>
           Once the final transaction has been successfully mined, your node
           address should have a stake associated with it and will enable you to
-          participate in the network
+          participate in the Mainframe network.
         </Text>
         <Button title="Restart local node" onPress={this.onPressFinishStake} />
       </View>
