@@ -17,6 +17,7 @@ import Conversation from './Conversation'
 import Loader from './Loader'
 import UserProfile from './UserProfile'
 import Button from './Form/Button'
+import Text from './Text'
 
 import { BASIC_SPACING } from '../styles'
 
@@ -67,8 +68,10 @@ class Contact extends Component<Props> {
       case 'RECEIVED':
         return <Button onPress={this.onPressAccept} title="Accept" />
       case 'SENT':
-        return (
+        return data.contact.profile.hasStake ? (
           <Button onPress={this.onPressRequest} title="Resend Invitation" />
+        ) : (
+          <Button disabled title="Resend disabled - user hasn't staked" />
         )
       default:
         return (

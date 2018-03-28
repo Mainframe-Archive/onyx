@@ -57,6 +57,7 @@ type Props = {
 type ModalName = 'channel' | 'contact' | 'profile'
 
 type State = {
+  newChannelError?: string,
   addContactError: ?string,
   openModal: ?ModalName,
   openProfile: ?Object,
@@ -69,6 +70,7 @@ class App extends Component<Props, State> {
   }
 
   state = {
+    newChannelError: undefined,
     addContactError: undefined,
     openModal: undefined,
     openProfile: undefined,
@@ -124,6 +126,7 @@ class App extends Component<Props, State> {
       addContactError: undefined,
       openModal: undefined,
       openProfile: undefined,
+      newChannelError: undefined,
     })
   }
 
@@ -151,9 +154,18 @@ class App extends Component<Props, State> {
   }
 
   onPressCreateChannel = async (channelData: ChannelData) => {
-    this.onCloseModal()
-    const { data } = await this.props.createChannel(channelData)
-    this.props.setOpenChannel(data.createChannel.id)
+    try {
+      const { data } = await this.props.createChannel(channelData)
+      this.props.setOpenChannel(data.createChannel.id)
+      this.onCloseModal()
+    } catch (err) {
+      const errMsg = err.message.includes('No stake found')
+      ? `Failed to create channel, one of the selected participants doesn't have a stake`
+      : 'Sorry, there was a problem creating a new channel'
+      this.setState({
+        newChannelError: errMsg,
+      })
+    }
   }
 
   onPressOpenAddContact = () => {
@@ -208,6 +220,7 @@ class App extends Component<Props, State> {
       <CreateChannelModal
         isOpen={this.state.openModal === 'channel'}
         onCloseModal={this.onCloseModal}
+        mutationError={this.state.newChannelError}
         // $FlowFixMe
         onPressCreateChannel={this.onPressCreateChannel}
         contacts={data.viewer.contacts}

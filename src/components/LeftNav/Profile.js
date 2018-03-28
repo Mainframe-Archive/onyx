@@ -5,6 +5,7 @@ import { compose } from 'react-apollo'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
 import Text from '../Text'
 import Avatar from '../Avatar'
+import Icon from '../Icon'
 import {
   AcceptContactMutation,
   RequestContactMutation,
@@ -56,8 +57,18 @@ export class Profile extends Component<Props> {
     this.onOpen()
   }
 
-  renderBullet() {
-    return this.props.newMessages ? <View style={styles.redBullet} /> : null
+  renderIndicator() {
+    const { large, newMessages, profile } = this.props
+    if (newMessages) {
+      return <View style={styles.redBullet} />
+    } else if (!profile.hasStake && !large) {
+      return (
+        <View style={styles.exclamationContainer}>
+          <Text>!</Text>
+        </View>
+      )
+    }
+    return null
   }
 
   renderState() {
@@ -103,13 +114,15 @@ export class Profile extends Component<Props> {
       nameStyles.push(styles.large)
     }
 
-    if (newMessages) {
-      nameStyles.push(styles.redText)
-    }
-
     const containerStyles = [styles.container]
     if (isOpen) {
       containerStyles.push(styles.open)
+    }
+
+    if (!profile.hasStake && !large) {
+      nameStyles.push(styles.fadedText)
+    } else if (newMessages) {
+      nameStyles.push(styles.redText)
     }
 
     return (
@@ -132,7 +145,7 @@ export class Profile extends Component<Props> {
             </Text>
           )}
         </View>
-        {this.renderBullet()}
+        {this.renderIndicator()}
         {this.renderState()}
       </TouchableOpacity>
     )
@@ -165,6 +178,9 @@ const styles = StyleSheet.create({
   redText: {
     color: COLORS.PRIMARY_RED,
     fontWeight: '600',
+  },
+  fadedText: {
+    color: COLORS.TRANSPARENT_WHITE,
   },
   large: {
     fontWeight: '500',
@@ -209,6 +225,16 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: COLORS.PRIMARY_RED,
     marginHorizontal: BASIC_SPACING,
+  },
+  exclamationContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.PRIMARY_RED,
+    marginHorizontal: BASIC_SPACING,
+    color: COLORS.DARK_BLUE,
+    alignItems: 'center',
+    fontWeight: 900,
   },
 })
 

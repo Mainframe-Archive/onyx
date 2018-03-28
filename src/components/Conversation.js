@@ -587,7 +587,14 @@ class Conversation extends Component<Props, State> {
       )
     }
 
+    const containerStyles = [styles.container]
+    const titleStyles = [styles.title]
+    const inputStyles = [styles.input]
+    const editorStyles = [styles.editor]
+    const typingStyles = [styles.typingText]
+
     let subject = ''
+    let DMPeerHasNoStake = false
     if (data.conversation.type === 'CHANNEL') {
       subject = `#${data.conversation.subject}`
     } else {
@@ -596,13 +603,11 @@ class Conversation extends Component<Props, State> {
         data.conversation.peers[0] &&
         data.conversation.peers[0].profile
       subject = peerProfile.name || peerProfile.id.substr(0, 8)
+      if (!peerProfile.hasStake) {
+        inputStyles.push(styles.inputDisabled)
+        DMPeerHasNoStake = true
+      }
     }
-
-    const containerStyles = [styles.container]
-    const titleStyles = [styles.title]
-    const inputStyles = [styles.input]
-    const editorStyles = [styles.editor]
-    const typingStyles = [styles.typingText]
 
     const fileIcon = file
       ? 'file-red'
@@ -615,6 +620,28 @@ class Conversation extends Component<Props, State> {
       editorStyles.push(styles.editorDarkLine)
       typingStyles.push(styles.whiteText)
     }
+    const noStakeMessage = `Communication with this user is disabled until they stake MFT.`
+    const inputView = (DMPeerHasNoStake) ? (
+      <View style={inputStyles}>
+        <Text style={styles.redText}>{noStakeMessage}</Text>
+      </View>
+    ) : (
+      <View style={inputStyles}>
+        <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
+          <Icon name={fileIcon} />
+        </TouchableOpacity>
+        <View onClick={this.focusEditor} style={editorStyles}>
+          <Editor
+            editorState={editorState}
+            handleReturn={this.handleReturn}
+            onChange={this.onEditorChange}
+            placeholder={`Message ${subject}`}
+            //$FlowFixMe
+            ref={this.bindEditor}
+          />
+        </View>
+      </View>
+    )
 
     return (
       <View
@@ -689,21 +716,7 @@ class Conversation extends Component<Props, State> {
             )}
           </AutoSizer>
         </View>
-        <View style={inputStyles}>
-          <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
-            <Icon name={fileIcon} />
-          </TouchableOpacity>
-          <View onClick={this.focusEditor} style={editorStyles}>
-            <Editor
-              editorState={editorState}
-              handleReturn={this.handleReturn}
-              onChange={this.onEditorChange}
-              placeholder={`Message ${subject}`}
-              //$FlowFixMe
-              ref={this.bindEditor}
-            />
-          </View>
-        </View>
+        {inputView}
         <View style={styles.typing}>
           <Text style={typingStyles} numberOfLines={1}>
             {file && (
@@ -840,6 +853,10 @@ const styles = StyleSheet.create({
   },
   editorDarkLine: {
     borderLeftColor: COLORS.GRAY_57,
+  },
+  inputDisabled: {
+    borderColor: COLORS.PRIMARY_RED,
+    borderWidth: 1,
   },
   button: {
     justifyContent: 'flex-end',
