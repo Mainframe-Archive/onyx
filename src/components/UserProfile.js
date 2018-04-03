@@ -64,7 +64,7 @@ export default class UserProfile extends Component<Props, State> {
         <View style={styles.userProfile}>
           {!hideTitle && <Text style={styles.title}>{title}</Text>}
           <View style={styles.avatarArea}>
-            <Avatar size="xx-large" profile={profile} blockyOver="large" />
+            <Avatar size="xx-large" profile={profile} blockyOver="large" hideStakeIndicator />
           </View>
           {!!profile.bio && (
             <View style={styles.userData}>

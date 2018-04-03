@@ -139,6 +139,7 @@ export const UpdateProfileMutation = graphql(
         name
         bio
         avatar
+        hasStake
       }
     }
   `,

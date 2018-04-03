@@ -65,7 +65,7 @@ export class Profile extends Component<Props> {
           </View>
         )
       case 'RECEIVED':
-        return (
+        return this.props.profile.hasStake ? (
           <View style={styles.stateArea}>
             <TouchableOpacity
               onPress={this.onPressAccept}
@@ -74,6 +74,8 @@ export class Profile extends Component<Props> {
               <Text style={styles.acceptText}>Accept</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          null
         )
       case null:
         return (
