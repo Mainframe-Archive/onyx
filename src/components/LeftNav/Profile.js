@@ -5,7 +5,6 @@ import { compose } from 'react-apollo'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
 import Text from '../Text'
 import Avatar from '../Avatar'
-import Icon from '../Icon'
 import {
   AcceptContactMutation,
   RequestContactMutation,
@@ -55,20 +54,6 @@ export class Profile extends Component<Props> {
   onPressInvite = () => {
     this.props.requestContact(this.props.profile.id)
     this.onOpen()
-  }
-
-  renderIndicator() {
-    const { large, newMessages, profile } = this.props
-    if (newMessages) {
-      return <View style={styles.redBullet} />
-    } else if (!profile.hasStake && !large) {
-      return (
-        <View style={styles.exclamationContainer}>
-          <Text>!</Text>
-        </View>
-      )
-    }
-    return null
   }
 
   renderState() {
@@ -145,7 +130,6 @@ export class Profile extends Component<Props> {
             </Text>
           )}
         </View>
-        {this.renderIndicator()}
         {this.renderState()}
       </TouchableOpacity>
     )
@@ -225,16 +209,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: COLORS.PRIMARY_RED,
     marginHorizontal: BASIC_SPACING,
-  },
-  exclamationContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: COLORS.PRIMARY_RED,
-    marginHorizontal: BASIC_SPACING,
-    color: COLORS.DARK_BLUE,
-    alignItems: 'center',
-    fontWeight: 900,
   },
 })
 

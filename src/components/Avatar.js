@@ -4,15 +4,18 @@ import React, { Component } from 'react'
 import { Image, View, StyleSheet } from 'react-native-web'
 import Blockies from 'react-blockies'
 import PropTypes from 'prop-types'
+import NoStakeIcon from './NoStakeIcon'
 
 type AvatarSize = 'small' | 'large' | 'x-large' | 'xx-large'
 type Props = {
   profile: {
     id: string,
     avatar: ?string, // Swarm Hash
+    hasStake?: boolean,
   },
   size: AvatarSize,
   blocky?: boolean,
+  hideStakeIndicator?: boolean,
   blockyOver?: AvatarSize,
 }
 
@@ -47,18 +50,26 @@ export default class Avatar extends Component<Props, State> {
   }
 
   render() {
-    const { profile, size, blocky, blockyOver } = this.props
+    const { profile, size, blocky, blockyOver, hideStakeIndicator } = this.props
     const { error } = this.state
     const avatarSize = AVATAR_SIZE[size]
     const containerStyles = [styles.container]
     containerStyles.push({ width: avatarSize, height: avatarSize })
+    const noStakeIndicator = !profile.hasStake && !hideStakeIndicator ? (
+      <View style={styles.noStakeIcon}>
+        <NoStakeIcon />
+      </View>
+    ) : null
     return blocky || profile.avatar == null || error ? (
-      <View style={containerStyles}>
-        <Blockies
-          seed={profile.id}
-          size={8}
-          scale={Math.ceil(avatarSize / 8)}
-        />
+      <View>
+        <View style={containerStyles}>
+          <Blockies
+            seed={profile.id}
+            size={8}
+            scale={Math.ceil(avatarSize / 8)}
+          />
+        </View>
+        {noStakeIndicator}
       </View>
     ) : (
       <View>
@@ -98,4 +109,11 @@ const styles = StyleSheet.create({
     right: -10,
     bottom: 10,
   },
+  noStakeIcon: {
+    position: 'absolute',
+    height: 22,
+    width: 22,
+    left: -5,
+    top: 0,
+  }
 })

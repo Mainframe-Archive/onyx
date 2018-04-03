@@ -620,25 +620,37 @@ class Conversation extends Component<Props, State> {
       editorStyles.push(styles.editorDarkLine)
       typingStyles.push(styles.whiteText)
     }
+
+
+    const channelPeerHasNoStake = data.conversation.peers.find(p => !p.profile.hasStake)
+    console.log('ChannelPeerHasNoStake: ', channelPeerHasNoStake)
+    const missingStakeMessage = `Participants that haven't staked will not receive messages`
+    const channelStakeWarning = channelPeerHasNoStake ? (
+      <Text style={styles.stakeWarning}>{missingStakeMessage}</Text>
+    ) : null
+
     const noStakeMessage = `Communication with this user is disabled until they stake MFT.`
-    const inputView = (DMPeerHasNoStake) ? (
+    const inputView = DMPeerHasNoStake ? (
       <View style={inputStyles}>
         <Text style={styles.redText}>{noStakeMessage}</Text>
       </View>
     ) : (
-      <View style={inputStyles}>
-        <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
-          <Icon name={fileIcon} />
-        </TouchableOpacity>
-        <View onClick={this.focusEditor} style={editorStyles}>
-          <Editor
-            editorState={editorState}
-            handleReturn={this.handleReturn}
-            onChange={this.onEditorChange}
-            placeholder={`Message ${subject}`}
-            //$FlowFixMe
-            ref={this.bindEditor}
-          />
+      <View>
+        {channelStakeWarning}
+        <View style={inputStyles}>
+          <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
+            <Icon name={fileIcon} />
+          </TouchableOpacity>
+          <View onClick={this.focusEditor} style={editorStyles}>
+            <Editor
+              editorState={editorState}
+              handleReturn={this.handleReturn}
+              onChange={this.onEditorChange}
+              placeholder={`Message ${subject}`}
+              //$FlowFixMe
+              ref={this.bindEditor}
+            />
+          </View>
         </View>
       </View>
     )
@@ -935,6 +947,11 @@ const styles = StyleSheet.create({
   resendText: {
     color: COLORS.PRIMARY_RED,
     fontSize: 12,
+  },
+  stakeWarning: {
+    color: COLORS.PRIMARY_RED,
+    fontSize: 12,
+    paddingHorizontal: BASIC_SPACING * 2,
   },
 })
 

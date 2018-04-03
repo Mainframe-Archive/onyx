@@ -89,6 +89,7 @@ export class EditProfile extends Component<Props, State> {
         await this.saveProfile({
           name: this.state.name,
           bio: this.state.bio,
+          hasStake: true,
         })
         if (firstEdit) {
           this.props.onCloseModal()
