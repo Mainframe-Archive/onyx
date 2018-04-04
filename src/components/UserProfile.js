@@ -198,6 +198,6 @@ const styles = StyleSheet.create({
   noStakeMessage: {
     textAlign: 'center',
     color: COLORS.PRIMARY_RED,
-    fontSize: 12,
+    fontSize: 13,
   },
 })

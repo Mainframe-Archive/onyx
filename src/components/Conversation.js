@@ -83,6 +83,9 @@ const SUPPORTED_FILE_ICONS = {
   'application/pdf': 'pdf',
 }
 
+const channelNoStakeMessage = `Participants that haven't staked will not receive messages`
+const dmNoStakeMessage = `Communication with this user is disabled until they stake MFT.`
+
 class MessageRow extends Component<MessageProps> {
   static contextTypes = {
     httpServerUrl: PropTypes.string.isRequired,
@@ -621,18 +624,14 @@ class Conversation extends Component<Props, State> {
       typingStyles.push(styles.whiteText)
     }
 
-
     const channelPeerHasNoStake = data.conversation.peers.find(p => !p.profile.hasStake)
-    console.log('ChannelPeerHasNoStake: ', channelPeerHasNoStake)
-    const missingStakeMessage = `Participants that haven't staked will not receive messages`
     const channelStakeWarning = channelPeerHasNoStake ? (
-      <Text style={styles.stakeWarning}>{missingStakeMessage}</Text>
+      <Text style={styles.stakeWarning}>{channelNoStakeMessage}</Text>
     ) : null
 
-    const noStakeMessage = `Communication with this user is disabled until they stake MFT.`
     const inputView = DMPeerHasNoStake ? (
       <View style={inputStyles}>
-        <Text style={styles.redText}>{noStakeMessage}</Text>
+        <Text style={styles.redText}>{dmNoStakeMessage}</Text>
       </View>
     ) : (
       <View>
