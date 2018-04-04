@@ -39,5 +39,6 @@ export const ProfileData = gql`
     avatar
     bio
     name
+    hasStake
   }
 `

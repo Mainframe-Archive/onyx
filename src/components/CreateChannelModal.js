@@ -39,12 +39,14 @@ export const Peer = ({
   }
 
   const name = profile.name || profile.id
-  const disabled = state !== 'ACCEPTED'
+  const disabled = state !== 'ACCEPTED' || !profile.hasStake
   const peerStyle = [styles.peer]
   const nameStyle = [styles.peerName]
   if (selected) {
     peerStyle.push(styles.peerSelected)
     nameStyle.push(styles.peerNameSelected)
+  } else if (disabled) {
+    peerStyle.push(styles.peerDisabled)
   }
 
   if (large) {
@@ -73,6 +75,7 @@ type Props = {
     profile: Profile,
     state: string,
   }>,
+  mutationError?: string,
   isOpen: boolean,
   onCloseModal: () => void,
   onPressCreateChannel: (data: ChannelData) => void,
@@ -173,7 +176,7 @@ export default class CreateChannelModal extends Component<Props, State> {
   }
 
   render() {
-    const { isOpen } = this.props
+    const { isOpen, mutationError } = this.props
     const { darkInput, selectedPeers, subjectInput } = this.state
 
     const darkTextStyles = [styles.iconText]
@@ -191,6 +194,10 @@ export default class CreateChannelModal extends Component<Props, State> {
       directTextStyles.push(styles.redText)
     }
 
+    const errorMessage = mutationError ? (
+      <Text style={styles.errorText}>{mutationError}</Text>
+    ) : null
+
     return (
       <Modal
         isOpen={isOpen}
@@ -198,6 +205,7 @@ export default class CreateChannelModal extends Component<Props, State> {
         title="Add a new channel"
         dark={darkInput}
       >
+        {errorMessage}
         <TextInput
           onChangeText={this.onChangeSubjectInput}
           placeholder="Channel subject"
@@ -206,7 +214,7 @@ export default class CreateChannelModal extends Component<Props, State> {
         <View style={styles.peersArea}>
           <Text style={titleStyles}>Add peers</Text>
           <Text style={styles.modalSubtitle}>
-            Only accepted contacts can be added
+            Only accepted contacts with stake can be added
           </Text>
           {this.renderPeers()}
         </View>
@@ -276,6 +284,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.LIGHTEST_BLUE,
     paddingRight: 2 * BASIC_SPACING,
   },
+  peerDisabled: {
+    opacity: 0.5,
+  },
   peerName: {
     flex: 1,
     maxWidth: 200,
@@ -309,5 +320,15 @@ const styles = StyleSheet.create({
   },
   whiteText: {
     color: COLORS.WHITE,
+  },
+  errorContainer: {
+    margin: BASIC_SPACING,
+    padding: BASIC_SPACING,
+    backgroundColor: COLORS.GRAY_E6,
+  },
+  errorText: {
+    fontSize: 13,
+    padding: BASIC_SPACING,
+    color: COLORS.PRIMARY_RED,
   },
 })
