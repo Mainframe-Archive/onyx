@@ -17,7 +17,6 @@ import Conversation from './Conversation'
 import Loader from './Loader'
 import UserProfile from './UserProfile'
 import Button from './Form/Button'
-import Text from './Text'
 
 import { BASIC_SPACING } from '../styles'
 
@@ -162,7 +161,7 @@ const ContactQuery = graphql(
         data.subscribeToMore({
           document: gql`
             ${ContactData}
-            subscription ContactChangedSubscription ($id: ID!) {
+            subscription ContactChangedSubscription($id: ID!) {
               contactChanged(id: $id) {
                 ...ContactData
               }
