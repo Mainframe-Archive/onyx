@@ -47,8 +47,9 @@ export class Profile extends Component<Props> {
   }
 
   onPressAccept = () => {
-    this.props.acceptContact(this.props.profile.id)
-    this.onOpen()
+    this.props.acceptContact(this.props.profile.id).then(() => {
+      this.onOpen()
+    })
   }
 
   onPressInvite = () => {
