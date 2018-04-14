@@ -66,7 +66,7 @@
     "css-loader": "0.28.7",
     "del-cli": "^1.1.0",
     "dotenv": "4.0.0",
-    "electron": "~1.7.9",
+    "electron": "~> 1.8.2-beta5",
     "electron-builder": "^19.48.3",
     "eslint": "4.13.1",
     "eslint-config-react-app": "^2.0.1",
