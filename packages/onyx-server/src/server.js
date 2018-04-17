@@ -1,7 +1,7 @@
 // @flow
 
 import debug from 'debug'
-import type { PSS } from 'erebos'
+import type { PssAPI } from 'erebos'
 import https from 'https'
 import http from 'http'
 import fs from 'fs'
@@ -14,13 +14,13 @@ import createBzzRoutes from './bzz'
 import graphqlServer from './graphql/server'
 
 export default (
-  pss: PSS,
+  pss: PssAPI,
   db: DB,
   httpUrl: string,
   port: number,
   useTLS: boolean,
   certsDir: string,
-): Promise<void> => {
+): Promise<net$Server> => {
   return new Promise((resolve, reject) => {
     const log = debug('onyx:server')
 
@@ -35,13 +35,15 @@ export default (
       '/mobile_client_cert',
       (req: express$Request, res: express$Response) => {
         res.download(path.join(certsDir, 'client.p12'))
-    })
+      },
+    )
 
     unsecureApp.get(
       '/ca_cert',
       (req: express$Request, res: express$Response) => {
         res.download(path.join(certsDir, 'ca.crt'))
-    })
+      },
+    )
 
     const unsecureServer = http.createServer(unsecureApp)
     unsecureServer.listen(5002)
@@ -58,9 +60,7 @@ export default (
         options.ca = fs.readFileSync(path.join(certsDir, 'ca-crt.pem'))
       } catch (err) {
         console.warn(
-          `error reading ssl certificates, please make sure to run the certificate generation script.\n ${
-            err
-          }`,
+          `error reading ssl certificates, please make sure to run the certificate generation script.\n ${err}`,
         )
         throw err
       }
@@ -69,14 +69,20 @@ export default (
       server = http.createServer(app)
     }
 
-    server.listen(port, useTLS ? '0.0.0.0' : 'localhost', err => {
-      if (err) {
-        reject(err)
-      } else {
-        log(`running on port ${port}`)
-        graphql.onCreated(server)
-        resolve(server)
-      }
-    })
+    server.listen(
+      {
+        port,
+        host: useTLS ? '0.0.0.0' : 'localhost',
+      },
+      err => {
+        if (err) {
+          reject(err)
+        } else {
+          log(`running on port ${port}`)
+          graphql.onCreated(server)
+          resolve(server)
+        }
+      },
+    )
   })
 }

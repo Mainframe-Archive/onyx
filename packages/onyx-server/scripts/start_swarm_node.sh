@@ -5,7 +5,7 @@ if [[ $# -ne 1 ]]; then
   exit 1
 fi
 
-GIT_TAG="onyx-0.4"
+GIT_TAG="pss-staking"
 DATADIR="$1"
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 EXT_DEPS_DIR="$SCRIPTPATH/external_deps"
@@ -47,7 +47,7 @@ $GODIR/build/bin/swarm \
     --password $DATADIR/password \
     --verbosity 4 \
     --bzzaccount $KEY \
-    --ens-api '' \
+    --ens-api 'https://ropsten.infura.io/' \
     --pss \
     --bzznetworkid 922 \
     --bootnodes enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@52.51.239.180:30399 \

@@ -1,20 +1,23 @@
 // @flow
 
 import debug from 'debug'
-import { BZZ } from 'erebos'
+import { BzzAPI } from 'erebos'
 import getRawBody from 'raw-body'
 
 export default (swarmHttpUrl: string, app: express$Application) => {
-  const bzz = new BZZ(swarmHttpUrl)
+  const bzz = new BzzAPI(swarmHttpUrl)
 
-  app.get('/files/:hash', async (req: express$Request, res: express$Response) => {
-    const file = await bzz.downloadRawBuffer(req.params.hash)
-    if (file) {
-      res.send(file)
-    } else {
-      res.status(404).send('not found')
-    }
-  })
+  app.get(
+    '/files/:hash',
+    async (req: express$Request, res: express$Response) => {
+      const file = await bzz.downloadRawBuffer(req.params.hash)
+      if (file) {
+        res.send(file)
+      } else {
+        res.status(404).send('not found')
+      }
+    },
+  )
 
   app.post('/files', async (req: express$Request, res: express$Response) => {
     try {

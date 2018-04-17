@@ -1,17 +1,17 @@
-// flow-typed signature: 20e450c8f1207351dfd072e2497d9dff
-// flow-typed version: 3e79b97257/debug_v3.x.x/flow_>=v0.28.x
+// flow-typed signature: da5374f88debab76c20fc67be7295ba7
+// flow-typed version: da30fe6876/debug_v3.x.x/flow_>=v0.28.x
 
-declare module 'debug' {
+declare module "debug" {
   declare type Debugger = {
     (...args: Array<mixed>): void,
     (formatter: string, ...args: Array<mixed>): void,
     (err: Error, ...args: Array<mixed>): void,
     enabled: boolean,
     log: () => {},
-    namespace: string;
+    namespace: string
   };
 
-  declare function exports(namespace: string): Debugger;
+  declare module.exports: (namespace: string) => Debugger;
 
   declare var names: Array<string>;
   declare var skips: Array<string>;
@@ -27,4 +27,4 @@ declare module 'debug' {
   declare var formatters: {
     [formatter: string]: () => {}
   };
-};
+}

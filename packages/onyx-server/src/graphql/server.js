@@ -1,6 +1,6 @@
 // @flow
 
-import type { PSS } from 'erebos'
+import type { PssAPI } from 'erebos'
 import debug from 'debug'
 // $FlowFixMe
 import { execute, subscribe } from 'graphql'
@@ -12,18 +12,21 @@ import type DB from '../db'
 
 import createSchema from './schema'
 
-export default (pss: PSS, db: DB, port: number, app: express$Application) => {
+export default (
+  pss: PssAPI,
+  db: DB,
+  port: number,
+  app: express$Application,
+) => {
   const schema = createSchema(pss, db, port)
   const log = debug('onyx:graphql')
 
   app.use('/graphql', bodyParser.json(), graphqlExpress({ schema }))
-  app.use('/graphiql', graphiqlExpress({
-    endpointURL: '/graphql',
-  }))
+  app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }))
 
   return {
     schema,
-    onCreated: (server: express$Application ) => {
+    onCreated: (server: net$Server) => {
       SubscriptionServer.create(
         {
           execute,

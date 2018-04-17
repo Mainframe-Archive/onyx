@@ -1,5 +1,7 @@
 [ignore]
 .*/node_modules/graphql/.*
+.*/node_modules/oboe/test/json/incomplete.json
+.*/node_modules/rx-socket/lib/index.js.flow
 <PROJECT_ROOT>/lib/.*
 
 [include]

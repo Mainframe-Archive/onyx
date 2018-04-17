@@ -15,6 +15,7 @@ export type Profile = {
   avatar?: ?string, // Swarm hash
   name?: ?string,
   bio?: ?string,
+  hasStake?: boolean,
 }
 
 export type FileData = {
@@ -106,8 +107,7 @@ type Viewer = {
   profile: ?Profile,
 }
 
-type Timer = number
-type ConvoTypings = Map<hex, Timer> // keyed by peer hex
+type ConvoTypings = Map<hex, TimeoutID> // keyed by peer hex
 
 type State = {
   address: string,
@@ -118,12 +118,14 @@ type State = {
 }
 
 export default class DB {
+  contracts: Object
   pubsub: PubSub = new PubSub()
 
   _store: Conf
   _typings: Map<hex, ConvoTypings> = new Map()
 
-  constructor(store: ?Conf, name?: string) {
+  constructor(contracts: Object, store: ?Conf, name?: string) {
+    this.contracts = contracts
     this._store = store || new Conf({ configName: name || 'onyx-server' })
     if (!this._store.has('state')) {
       this.resetState()
@@ -193,6 +195,7 @@ export default class DB {
   }
 
   setProfile(profile: Profile) {
+    profile.hasStake = true
     this._store.set('state.profile', profile)
   }
 
@@ -261,8 +264,8 @@ export default class DB {
     return this.getConversations('CHANNEL')
   }
 
-  // $FlowFixMe
   getViewer(): Viewer {
+    // $FlowFixMe
     return {
       channels: this.getChannels(),
       contacts: this.getContacts(true),
@@ -305,6 +308,14 @@ export default class DB {
   upsertContact(contact: Contact) {
     const existing = this.getContact(contact.profile.id)
     this.setContact(existing ? merge({}, existing, contact) : contact)
+  }
+
+  setContactStake(id: string, hasStake: boolean) {
+    const contact = this.getContact(id)
+    if (contact != null) {
+      contact.profile.hasStake = hasStake
+      this.setContact(contact)
+    }
   }
 
   addMessage(
