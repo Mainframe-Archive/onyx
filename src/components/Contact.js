@@ -65,10 +65,16 @@ class Contact extends Component<Props> {
 
     switch (data.contact.state) {
       case 'RECEIVED':
-        return <Button onPress={this.onPressAccept} title="Accept" />
+        return data.contact.profile.hasStake ? (
+          <Button onPress={this.onPressAccept} title="Accept" />
+        ) : (
+          <Button disabled title="Accept disabled - user hasn't staked" />
+        )
       case 'SENT':
-        return (
+        return data.contact.profile.hasStake ? (
           <Button onPress={this.onPressRequest} title="Resend Invitation" />
+        ) : (
+          <Button disabled title="Resend disabled - user hasn't staked" />
         )
       default:
         return (
@@ -155,7 +161,7 @@ const ContactQuery = graphql(
         data.subscribeToMore({
           document: gql`
             ${ContactData}
-            subscription ContactChangedSubscription ($id: ID!) {
+            subscription ContactChangedSubscription($id: ID!) {
               contactChanged(id: $id) {
                 ...ContactData
               }

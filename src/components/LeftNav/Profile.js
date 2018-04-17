@@ -57,10 +57,6 @@ export class Profile extends Component<Props> {
     this.onOpen()
   }
 
-  renderBullet() {
-    return this.props.newMessages ? <View style={styles.redBullet} /> : null
-  }
-
   renderState() {
     switch (this.props.state) {
       case 'SENT':
@@ -70,7 +66,7 @@ export class Profile extends Component<Props> {
           </View>
         )
       case 'RECEIVED':
-        return (
+        return this.props.profile.hasStake ? (
           <View style={styles.stateArea}>
             <TouchableOpacity
               onPress={this.onPressAccept}
@@ -79,6 +75,8 @@ export class Profile extends Component<Props> {
               <Text style={styles.acceptText}>Accept</Text>
             </TouchableOpacity>
           </View>
+        ) : (
+          null
         )
       case null:
         return (
@@ -104,13 +102,15 @@ export class Profile extends Component<Props> {
       nameStyles.push(styles.large)
     }
 
-    if (newMessages) {
-      nameStyles.push(styles.redText)
-    }
-
     const containerStyles = [styles.container]
     if (isOpen) {
       containerStyles.push(styles.open)
+    }
+
+    if (!profile.hasStake && !large) {
+      nameStyles.push(styles.fadedText)
+    } else if (newMessages) {
+      nameStyles.push(styles.redText)
     }
 
     return (
@@ -133,7 +133,6 @@ export class Profile extends Component<Props> {
             </Text>
           )}
         </View>
-        {this.renderBullet()}
         {this.renderState()}
       </TouchableOpacity>
     )
@@ -166,6 +165,9 @@ const styles = StyleSheet.create({
   redText: {
     color: COLORS.PRIMARY_RED,
     fontWeight: '600',
+  },
+  fadedText: {
+    color: COLORS.TRANSPARENT_WHITE,
   },
   large: {
     fontWeight: '500',

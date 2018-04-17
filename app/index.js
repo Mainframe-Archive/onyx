@@ -10,6 +10,8 @@ const querystring = require('querystring')
 const { config } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
 
+const USE_TESTNET = process.env.USE_TESTNET || true // TODO: - default to false when contracts deployed to mainnet
+
 const SWARM_WS_URL =
   process.env.SWARM_WS_URL ||
   (config && config.swarmWsUrl) ||
@@ -162,6 +164,7 @@ const startLocalOnyxServer = async () => {
     port,
     store,
     unsecure: true,
+    testNet: USE_TESTNET,
   })
   return port
 }
@@ -178,6 +181,9 @@ const start = async () => {
   }
   let appUrl = `http://localhost:${appPort}`
   let urlParams
+  let nodeAddress
+
+  const stakeRequiredError = 'You need to stake Mainframe tokens for your node'
 
   const storedWsUrl = store.get('wsUrl')
   if (storedWsUrl) {
@@ -198,9 +204,14 @@ const start = async () => {
           await swarm.start()
         } catch (e) {
           console.log(e.stack)
-          errorMsg =
-            'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' +
-            e.toString()
+          if (e.message.includes('No stake found')) {
+            nodeAddress = e.message.split(' ').splice(-1)[0].trim()
+            errorMsg = stakeRequiredError
+          } else {
+            errorMsg =
+              'There was an error starting the local Swarm node, you may want to check if you have a Swarm node running already, or if the port 30399 is in use\nDebug: ' +
+              e.toString()
+          }
         }
       }
 
@@ -210,18 +221,26 @@ const start = async () => {
           urlParams = { wsUrl: `ws://localhost:${serverPort}/graphql` }
         } catch (e) {
           console.log(e.stack)
-          errorMsg =
-            'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +
-            SWARM_WS_URL +
-            '\nDebug: ' +
-            e.toString()
+          swarm.stop()
+          if (e.message.startsWith('Missing stake')) {
+            nodeAddress = e.address
+            errorMsg = stakeRequiredError
+          } else {
+            errorMsg =
+              'There was an error starting the local GraphQL server, you may want to check you have a Swarm node WebSocket interface listening on ' +
+              SWARM_WS_URL +
+              '\nDebug: ' +
+              e.toString()
+          }
         }
       }
 
       if (errorMsg) {
         urlParams = {
+          address: nodeAddress,
           wsUrl: storedWsUrl,
           connectionError: errorMsg,
+          testNet: USE_TESTNET,
         }
         if (appServer != null) {
           appServer.stop()

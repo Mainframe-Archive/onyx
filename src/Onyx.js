@@ -13,10 +13,12 @@ import createClient from './data/Apollo'
 import createStore, { type Store } from './data/Store'
 
 type State = {
+  address?: string,
   client?: ApolloClient,
   connectionError?: string,
   store?: Store,
   wsUrl?: string,
+  testNet?: boolean,
 }
 
 export default class Onyx extends Component<{}, State> {
@@ -38,19 +40,25 @@ export default class Onyx extends Component<{}, State> {
     const params = parse(document.location.search)
     const state = {}
 
+    if (params.address) {
+      state.address = params.address
+    }
     if (params.connectionError) {
       state.connectionError = params.connectionError
     }
     if (params.wsUrl && params.wsUrl !== 'undefined') {
       state.wsUrl = params.wsUrl
     }
-
+    if (params.wsUrl && params.wsUrl !== 'undefined') {
+      state.wsUrl = params.wsUrl
+    }
+    state.testNet = params.testNet
     this.state = state
     this.wsConnected$ = new BehaviorSubject(false)
   }
 
   componentDidMount() {
-    if (this.state.wsUrl) {
+    if (this.state.wsUrl && !this.state.connectionError) {
       this.loadStore()
     }
   }
@@ -75,10 +83,12 @@ export default class Onyx extends Component<{}, State> {
     })
   }
 
-  connectionCallback = (error) => {
+  connectionCallback = error => {
     let connectionError
     if (error) {
-      connectionError = 'Error connecting to websocket, please check you entered a valid URL\nDEBUG: ' + error.toString()
+      connectionError =
+        'Error connecting to websocket, please check you entered a valid URL\nDEBUG: ' +
+        error.toString()
     } else {
       this.wsConnected$.next(true)
     }
@@ -88,15 +98,11 @@ export default class Onyx extends Component<{}, State> {
 
   async loadStore() {
     try {
-      const client = createClient(
-        this.state.wsUrl,
-        this.connectionCallback,
-        {
-          onDisconnected: this.onDisconnected,
-          onConnecting: this.onConnecting,
-          onReconnecting: this.onConnecting,
-        },
-      )
+      const client = createClient(this.state.wsUrl, this.connectionCallback, {
+        onDisconnected: this.onDisconnected,
+        onConnecting: this.onConnecting,
+        onReconnecting: this.onConnecting,
+      })
       const store = await createStore(client)
       this.setState({ client, store })
     } catch (err) {
@@ -109,7 +115,13 @@ export default class Onyx extends Component<{}, State> {
   }
 
   render() {
-    const { client, store, connectionError } = this.state
+    const {
+      address,
+      client,
+      store,
+      connectionError,
+      testNet,
+    } = this.state
     return client && store && !connectionError ? (
       <ApolloProvider client={client} store={store}>
         <App />
@@ -119,6 +131,8 @@ export default class Onyx extends Component<{}, State> {
         defaultLocalhostUrl="ws://localhost:5002/graphql"
         storedServerUrl={this.state.wsUrl}
         connectionError={connectionError}
+        address={address}
+        ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
       />
     )
   }

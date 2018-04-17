@@ -34,11 +34,7 @@ const fragmentMatcher = new IntrospectionFragmentMatcher({
   },
 })
 
-export default (
-  url: string,
-  connectionCallback: (error) => void,
-  events,
-) => {
+export default (url: string, connectionCallback: error => void, events) => {
   const certPaths = store.get('certs.filePaths')
   const certFiles = {}
   try {
@@ -59,8 +55,7 @@ export default (
   // WebSocket impl doesn't support using tls certs
 
   class OnyxWebSocket extends WebSocket {
-
-    constructor (url, protocol) {
+    constructor(url, protocol) {
       super(url, protocol, certFiles)
     }
   }
