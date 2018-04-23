@@ -65,16 +65,10 @@ class Contact extends Component<Props> {
 
     switch (data.contact.state) {
       case 'RECEIVED':
-        return data.contact.profile.hasStake ? (
-          <Button onPress={this.onPressAccept} title="Accept" />
-        ) : (
-          <Button disabled title="Accept disabled - user hasn't staked" />
-        )
+        return <Button onPress={this.onPressAccept} title="Accept" />
       case 'SENT':
-        return data.contact.profile.hasStake ? (
+        return (
           <Button onPress={this.onPressRequest} title="Resend Invitation" />
-        ) : (
-          <Button disabled title="Resend disabled - user hasn't staked" />
         )
       default:
         return (

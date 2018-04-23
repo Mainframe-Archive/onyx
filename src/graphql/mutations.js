@@ -49,6 +49,28 @@ export const CreateChannelMutation = graphql(
   },
 )
 
+export type InviteMoreInput = {
+  id: ID,
+  peers: Array<ID>,
+}
+
+export type InviteMoreFunc = (input: InviteMoreInput) => Promise<*>
+
+export const InviteMoreMutation = graphql(
+  gql`
+    mutation InviteMoreMutation($input: InviteMoreInput!) {
+      inviteMore(input: $input) {
+        id
+      }
+    }
+  `,
+  {
+    props: ({ mutate }) => ({
+      inviteMore: (input: InviteMoreInput) => mutate({ variables: { input } }),
+    }),
+  },
+)
+
 export type RequestContactFunc = (id: ID) => Promise<*>
 
 export const RequestContactMutation = graphql(
@@ -144,16 +166,20 @@ export const UpdateProfileMutation = graphql(
   `,
   {
     props: ({ mutate }) => ({
-      updateProfile: (input: ProfileInput) => mutate({
-        variables: { input },
-        updateQueries: {
-          AppQuery: (state, { mutationResult }) => {
-            const profile = Object.assign(state.viewer.profile, mutationResult.data.updateProfile)
-            const nextViewer = Object.assign(state.viewer, { profile })
-            return {...state, viewer: nextViewer}
+      updateProfile: (input: ProfileInput) =>
+        mutate({
+          variables: { input },
+          updateQueries: {
+            AppQuery: (state, { mutationResult }) => {
+              const profile = Object.assign(
+                state.viewer.profile,
+                mutationResult.data.updateProfile,
+              )
+              const nextViewer = Object.assign(state.viewer, { profile })
+              return { ...state, viewer: nextViewer }
+            },
           },
-        }
-      }),
+        }),
     }),
   },
 )
@@ -172,5 +198,5 @@ export const ResendInvitesMutation = graphql(
     props: ({ mutate }) => ({
       resendInvites: (id: ID) => mutate({ variables: { id } }),
     }),
-  }
+  },
 )

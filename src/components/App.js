@@ -24,7 +24,9 @@ import {
 } from '../graphql/mutations'
 
 import Contact from './Contact'
-import CreateChannelModal, { type ChannelData } from './CreateChannelModal'
+import CreateChannelModal, {
+  type CreateChannelData,
+} from './CreateChannelModal'
 import AddContactModal from './AddContactModal'
 import UserProfileModal from './UserProfileModal'
 import Conversation from './Conversation'
@@ -153,15 +155,15 @@ class App extends Component<Props, State> {
     this.setState({ openModal: undefined })
   }
 
-  onPressCreateChannel = async (channelData: ChannelData) => {
+  onPressCreateChannel = async (channelData: CreateChannelData) => {
     try {
       const { data } = await this.props.createChannel(channelData)
       this.props.setOpenChannel(data.createChannel.id)
       this.onCloseModal()
     } catch (err) {
       const errMsg = err.message.includes('No stake found')
-      ? `Failed to create channel, one of the selected participants doesn't have a stake`
-      : 'Sorry, there was a problem creating a new channel'
+        ? `Failed to create channel, one of the selected participants doesn't have a stake`
+        : 'Sorry, there was a problem creating a new channel'
       this.setState({
         newChannelError: errMsg,
       })
@@ -266,7 +268,13 @@ class App extends Component<Props, State> {
     if (openContact != null) {
       main = <Contact id={openContact} key={openContact} />
     } else if (openChannel != null) {
-      main = <Conversation id={openChannel} key={openChannel} />
+      main = (
+        <Conversation
+          id={openChannel}
+          key={openChannel}
+          contacts={data.viewer.contacts}
+        />
+      )
     }
 
     return (
