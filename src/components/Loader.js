@@ -10,7 +10,16 @@ const ANIMATION_CONFIG = {
   yoyo: true,
 }
 
-export default class Loader extends Component<{}> {
+type Props = {
+  width: number,
+  height: number,
+}
+
+export default class Loader extends Component<Props> {
+  static defaultProps = {
+    width: 108,
+    height: 54,
+  }
   animMask: ?any = null
   animDark: ?any = null
   animRed: ?any = null
@@ -64,8 +73,8 @@ export default class Loader extends Component<{}> {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width="108"
-        height="58"
+        width={this.props.width}
+        height={this.props.height}
         viewBox="0 0 108 58"
       >
         <defs>

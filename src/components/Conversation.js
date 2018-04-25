@@ -226,6 +226,7 @@ type State = {
   file: ?File,
   typingText: string,
   openProfile: ?Object,
+  sendig: boolean,
 }
 
 class Conversation extends Component<Props, State> {
@@ -256,6 +257,7 @@ class Conversation extends Component<Props, State> {
       file: undefined,
       typingText: '',
       openProfile: null,
+      sending: false,
     }
 
     this.cache = new CellMeasurerCache({
@@ -336,7 +338,8 @@ class Conversation extends Component<Props, State> {
   componentDidUpdate(prevProps: Props) {
     //First time getting the conversation
     if (
-      (prevProps.data && !prevProps.data.conversation) &&
+      prevProps.data &&
+      !prevProps.data.conversation &&
       this.props.data.conversation
     ) {
       this.setFirstPointer(this.props)
@@ -437,7 +440,7 @@ class Conversation extends Component<Props, State> {
     }
   }
 
-  sendMessage = () => {
+  sendMessage = async () => {
     const { editorState, file } = this.state
     const text = editorState.getCurrentContent().getPlainText()
     const blocks = []
@@ -449,10 +452,12 @@ class Conversation extends Component<Props, State> {
     }
 
     if (blocks.length > 0) {
-      this.props.sendMessage({ blocks, convoID: this.props.id })
+      this.setState({ sending: true })
       // Reset input
+      await this.props.sendMessage({ blocks, convoID: this.props.id })
       this.setState(
         {
+          sending: false,
           editorState: EditorState.createEmpty(),
           file: undefined,
         },
@@ -624,7 +629,9 @@ class Conversation extends Component<Props, State> {
       typingStyles.push(styles.whiteText)
     }
 
-    const channelPeerHasNoStake = data.conversation.peers.find(p => !p.profile.hasStake)
+    const channelPeerHasNoStake = data.conversation.peers.find(
+      p => !p.profile.hasStake,
+    )
     const channelStakeWarning = channelPeerHasNoStake ? (
       <Text style={styles.stakeWarning}>{channelNoStakeMessage}</Text>
     ) : null
@@ -637,11 +644,16 @@ class Conversation extends Component<Props, State> {
       <View>
         {channelStakeWarning}
         <View style={inputStyles}>
-          <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
+          <TouchableOpacity
+            onPress={this.addFile}
+            disabled={this.state.sending}
+            style={styles.inputButton}
+          >
             <Icon name={fileIcon} />
           </TouchableOpacity>
           <View onClick={this.focusEditor} style={editorStyles}>
             <Editor
+              readOnly={this.state.sending}
               editorState={editorState}
               handleReturn={this.handleReturn}
               onChange={this.onEditorChange}
@@ -650,6 +662,7 @@ class Conversation extends Component<Props, State> {
               ref={this.bindEditor}
             />
           </View>
+          {this.state.sending && <Loader width={45} height={20} />}
         </View>
       </View>
     )
