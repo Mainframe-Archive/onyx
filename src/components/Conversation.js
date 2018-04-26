@@ -226,7 +226,7 @@ type State = {
   file: ?File,
   typingText: string,
   openProfile: ?Object,
-  sendig: boolean,
+  sending: boolean,
 }
 
 class Conversation extends Component<Props, State> {
