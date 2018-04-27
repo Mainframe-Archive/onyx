@@ -1,4 +1,4 @@
-# onyx
+# Onyx
 
 Decentralized messaging application using PSS.
 

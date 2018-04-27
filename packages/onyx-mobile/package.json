@@ -21,9 +21,9 @@
     "apollo-client": "^1.9.3",
     "babel-preset-react-native-stage-0": "^1.0.1",
     "graphql": "^0.11.7",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.10",
     "moment": "^2.19.1",
-    "prop-types": "^15.6.0",
+    "prop-types": "^15.6.1",
     "react": "16.0.0",
     "react-apollo": "^1.4.16",
     "react-native": "0.50.3",
@@ -36,15 +36,13 @@
     "react-native-vector-icons": "^4.4.2",
     "react-navigation": "^1.0.0-beta.15",
     "react-redux": "^5.0.6",
-    "redux": "^3.7.2",
+    "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-persist": "^4.10.1",
-    "rxjs": "^5.5.5",
+    "rxjs": "^5.5.10",
     "subscriptions-transport-ws": "^0.8.3"
   },
   "rnpm": {
-    "assets": [
-      "./assets/fonts"
-    ]
+    "assets": ["./assets/fonts"]
   }
 }

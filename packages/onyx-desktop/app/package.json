@@ -11,7 +11,7 @@
     "fs-extra": "^5.0.0",
     "get-port": "^3.2.0",
     "mkdirp": "^0.5.1",
-    "onyx-server": "^0.4.5",
+    "onyx-server": "*",
     "static-server": "^3.0.0"
   }
 }

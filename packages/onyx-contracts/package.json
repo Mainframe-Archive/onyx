@@ -17,17 +17,10 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "web3-eth-contract": "^1.0.0-beta.30",
-    "web3-utils": "^1.0.0-beta.30"
+    "web3-eth-contract": "^1.0.0-beta.34",
+    "web3-utils": "^1.0.0-beta.34"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-flow": "^6.23.0",
-    "cross-env": "^5.1.3",
-    "del-cli": "^1.1.0",
-    "flow-bin": "^0.66.0",
-    "flow-copy-source": "^1.3.0"
+    "flow-bin": "^0.71.0"
   }
 }

@@ -34,26 +34,15 @@
     "graphql-tools": "^2.23.1",
     "graphql-type-json": "^0.2.0",
     "ip": "^1.1.5",
-    "lodash": "^4.17.5",
-    "onyx-contracts": "^0.1.0",
+    "lodash": "^4.17.10",
+    "onyx-contracts": "*",
     "raw-body": "^2.3.2",
-    "rxjs": "^5.5.8",
+    "rxjs": "^5.5.10",
     "subscriptions-transport-ws": "^0.9.7",
     "uuid": "^3.2.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-plugin-syntax-class-properties": "^6.13.0",
-    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-flow": "^6.23.0",
-    "del-cli": "^1.1.0",
-    "flow-bin": "^0.69.0",
-    "flow-copy-source": "^1.2.1",
-    "prettier": "^1.11.1"
+    "flow-bin": "^0.71.0"
   },
   "files": ["bin/*", "lib/*", "scripts/*", "cert-configs/*"]
 }
