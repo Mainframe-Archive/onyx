@@ -1,0 +1,8 @@
+{
+  "lerna": "2.10.2",
+  "version": "0.0.0",
+  "npmClient": "yarn",
+  "npmClientArgs": ["--ignore-engines"],
+  "useWorkspaces": true,
+  "packages": ["packages/*"]
+}

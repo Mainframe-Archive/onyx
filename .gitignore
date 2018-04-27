@@ -1,5 +1,2 @@
 node_modules
-/dist
-/tmp
-/bin
-/app/build
+lerna-debug.log
