@@ -452,20 +452,24 @@ class Conversation extends Component<Props, State> {
     }
 
     if (blocks.length > 0) {
-      this.setState({ sending: true })
-      // Reset input
-      await this.props.sendMessage({ blocks, convoID: this.props.id })
-      this.setState(
-        {
-          sending: false,
-          editorState: EditorState.createEmpty(),
-          file: undefined,
-        },
-        () => {
-          // $FlowFixMe
-          this.focusEditor()
-        },
-      )
+      try {
+        this.setState({ sending: true })
+        // Reset input
+        await this.props.sendMessage({ blocks, convoID: this.props.id })
+        this.setState(
+          {
+            sending: false,
+            editorState: EditorState.createEmpty(),
+            file: undefined,
+          },
+          () => {
+            // $FlowFixMe
+            this.focusEditor()
+          },
+        )
+      } catch (e) {
+        this.setState({ sending: false })
+      }
     }
   }
 
