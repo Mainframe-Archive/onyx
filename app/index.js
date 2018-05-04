@@ -8,16 +8,16 @@ const querystring = require('querystring')
 
 let appServer, mainWindow
 
-const shouldQuit = app.makeSingleInstance(() => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.focus()
-  }
-})
-
-if (shouldQuit) {
-  app.quit()
-}
+// const shouldQuit = app.makeSingleInstance(() => {
+//   if (mainWindow) {
+//     if (mainWindow.isMinimized()) mainWindow.restore()
+//     mainWindow.focus()
+//   }
+// })
+//
+// if (shouldQuit) {
+//   app.quit()
+// }
 
 const store = new Store({
   name: is.development ? 'onyx-summit-dev' : 'onyx-summit',
