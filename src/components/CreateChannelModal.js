@@ -6,9 +6,9 @@ import { StyleSheet, Switch, View, TouchableOpacity } from 'react-native-web'
 import TextInput from './Form/TextInput'
 import Button from './Form/Button'
 import Text from './Text'
-import Avatar from './Avatar'
 import Modal from './Modal'
 import Icon from './Icon'
+import Peer from './ChannelSelectPeer'
 
 import COLORS from '../colors'
 import { BASIC_SPACING } from '../styles'
@@ -19,52 +19,7 @@ type Profile = {
   name: ?string,
 }
 
-type PeerProps = {
-  profile: Profile,
-  state: string,
-  selected: boolean,
-  large?: boolean,
-  onSelectPeer: (id: string) => void,
-}
-
-export const Peer = ({
-  profile,
-  state,
-  selected,
-  onSelectPeer,
-  large,
-}: PeerProps) => {
-  const onSelect = () => {
-    onSelectPeer(profile.id)
-  }
-
-  const name = profile.name || profile.id
-  const disabled = state !== 'ACCEPTED' || !profile.hasStake
-  const peerStyle = [styles.peer]
-  const nameStyle = [styles.peerName]
-  if (selected) {
-    peerStyle.push(styles.peerSelected)
-    nameStyle.push(styles.peerNameSelected)
-  } else if (disabled) {
-    peerStyle.push(styles.peerDisabled)
-  }
-
-  if (large) {
-    peerStyle.push(styles.peerLarge)
-  }
-
-  return (
-    <TouchableOpacity style={peerStyle} onPress={onSelect} disabled={disabled}>
-      <Avatar profile={profile} />
-      <Text numberOfLines={1} style={nameStyle}>
-        {name}
-      </Text>
-      {selected && <Icon name="checkmark" />}
-    </TouchableOpacity>
-  )
-}
-
-export type ChannelData = {
+export type CreateChannelData = {
   dark: boolean,
   peers: Array<string>,
   subject: string,
@@ -166,7 +121,6 @@ export default class CreateChannelModal extends Component<Props, State> {
             <Peer
               key={profile.id}
               profile={profile}
-              state={state}
               selected={selectedPeers.has(profile.id)}
               onSelectPeer={this.toggleSelectedPeer}
             />
@@ -203,8 +157,7 @@ export default class CreateChannelModal extends Component<Props, State> {
         isOpen={isOpen}
         onRequestClose={this.onCloseModal}
         title="Add a new channel"
-        dark={darkInput}
-      >
+        dark={darkInput}>
         {errorMessage}
         <TextInput
           onChangeText={this.onChangeSubjectInput}
@@ -213,9 +166,6 @@ export default class CreateChannelModal extends Component<Props, State> {
         />
         <View style={styles.peersArea}>
           <Text style={titleStyles}>Add peers</Text>
-          <Text style={styles.modalSubtitle}>
-            Only accepted contacts with stake can be added
-          </Text>
           {this.renderPeers()}
         </View>
         <View style={styles.privacyLevel}>
@@ -269,33 +219,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: BASIC_SPACING,
     flexWrap: 'wrap',
-  },
-  peer: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: BASIC_SPACING / 2,
-    borderRadius: 50,
-  },
-  peerLarge: {
-    width: 'auto',
-  },
-  peerSelected: {
-    backgroundColor: COLORS.LIGHTEST_BLUE,
-    paddingRight: 2 * BASIC_SPACING,
-  },
-  peerDisabled: {
-    opacity: 0.5,
-  },
-  peerName: {
-    flex: 1,
-    maxWidth: 200,
-    marginLeft: BASIC_SPACING,
-    color: COLORS.MEDIUM_GRAY,
-    fontSize: 14,
-  },
-  peerNameSelected: {
-    color: COLORS.WHITE,
   },
   privacyLevel: {
     marginBottom: BASIC_SPACING,

@@ -22,7 +22,7 @@ type Props = {
   isOpen: boolean,
   mutationError: ?string,
   onCloseModal: () => void,
-  onPressAddContact: (data: ChannelData) => void,
+  onPressAddContact: (data: Object) => void,
   viewerId: string,
 }
 

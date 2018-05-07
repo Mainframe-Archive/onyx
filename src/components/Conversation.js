@@ -20,16 +20,22 @@ import {
   type RowRendererParams,
 } from 'react-virtualized'
 
-import { MessageData, ProfileData } from '../graphql/fragments'
+import {
+  ConversationData,
+  MessageData,
+  ProfileData,
+} from '../graphql/fragments'
 import {
   SendMessageMutation,
   SetTypingMutation,
   UpdatePointerMutation,
   ResendInvitesMutation,
+  InviteMoreMutation,
   type SendMessageFunc,
   type SetTypingFunc,
   type UpdatePointerFunc,
   type ResendInvitesFunc,
+  type InviteMoreFunc,
 } from '../graphql/mutations'
 
 import Loader from './Loader'
@@ -37,7 +43,8 @@ import Avatar, { AVATAR_SIZE } from './Avatar'
 import Text from './Text'
 import UserProfileModal from './UserProfileModal'
 import Icon from './Icon'
-
+import ParticipantsModal from './ChannelParticipantsModal'
+import InviteModal from './ChannelInviteModal'
 import FileSelector from './FileSelector'
 
 import COLORS from '../colors'
@@ -206,12 +213,15 @@ type UnsubscribeFunc = () => void
 type SubscribeFunc = (id: string) => UnsubscribeFunc
 
 type Props = {
+  contacts: Array<{ profile: Profile, state: string }>,
   data: Object,
   id: string,
   sendMessage: SendMessageFunc,
   setTyping: SetTypingFunc,
   updatePointer: UpdatePointerFunc,
   resendInvites: ResendInvitesFunc,
+  inviteMore: InviteMoreFunc,
+  subscribeToConversationPeersChanged: SubscribeFunc,
   subscribeToMessageAdded: SubscribeFunc,
   subscribeToTypingsChanged: SubscribeFunc,
 }
@@ -226,6 +236,8 @@ type State = {
   file: ?File,
   typingText: string,
   openProfile: ?Object,
+  participantsModalOpen: boolean,
+  inviteModalOpen: boolean,
   sending: boolean,
 }
 
@@ -257,6 +269,8 @@ class Conversation extends Component<Props, State> {
       file: undefined,
       typingText: '',
       openProfile: null,
+      participantsModalOpen: false,
+      inviteModalOpen: false,
       sending: false,
     }
 
@@ -292,36 +306,45 @@ class Conversation extends Component<Props, State> {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.data && !this.unsubscribeMessageAdded) {
-      this.unsubscribeMessageAdded = this.props.subscribeToMessageAdded(
-        this.props.id,
-      )
-      this.unsubscribeTypingsChanged = this.context.client
-        .subscribe({
-          query: gql`
-            ${ProfileData}
-            subscription TypingsChangedSubscription($id: ID!) {
-              typingsChanged(id: $id) {
-                ...ProfileData
+    if (nextProps.data) {
+      if (!this.unsubscribeConversationPeersChanged) {
+        this.unsubscribeConversationPeersChanged = this.props.subscribeToConversationPeersChanged(
+          this.props.id,
+        )
+      }
+      if (!this.unsubscribeMessageAdded) {
+        this.unsubscribeMessageAdded = this.props.subscribeToMessageAdded(
+          this.props.id,
+        )
+      }
+      if (!this.unsubscribeTypingsChanged) {
+        this.unsubscribeTypingsChanged = this.context.client
+          .subscribe({
+            query: gql`
+              ${ProfileData}
+              subscription TypingsChangedSubscription($id: ID!) {
+                typingsChanged(id: $id) {
+                  ...ProfileData
+                }
               }
-            }
-          `,
-          variables: { id: this.props.id },
-        })
-        .subscribe({
-          next: ({ typingsChanged }) => {
-            const toBe = typingsChanged.length > 1 ? 'are' : 'is'
-            const typingText =
-              typingsChanged.length > 0
-                ? typingsChanged
-                    .map(p => p.name || p.id.substr(0, 8))
-                    .join(' and ') + ` ${toBe} typing`
-                : ''
-            this.setState(
-              s => (s.typingText === typingText ? null : { typingText }),
-            )
-          },
-        }).unsubscribe
+            `,
+            variables: { id: this.props.id },
+          })
+          .subscribe({
+            next: ({ typingsChanged }) => {
+              const toBe = typingsChanged.length > 1 ? 'are' : 'is'
+              const typingText =
+                typingsChanged.length > 0
+                  ? typingsChanged
+                      .map(p => p.name || p.id.substr(0, 8))
+                      .join(' and ') + ` ${toBe} typing`
+                  : ''
+              this.setState(
+                s => (s.typingText === typingText ? null : { typingText }),
+              )
+            },
+          }).unsubscribe
+      }
     }
   }
 
@@ -329,9 +352,11 @@ class Conversation extends Component<Props, State> {
     if (this.typingTimer != null) {
       clearTimeout(this.typingTimer)
     }
-    if (this.context.wsConnected$.value && this.unsubscribeMessageAdded) {
-      this.unsubscribeMessageAdded()
-      this.unsubscribeTypingsChanged()
+    if (this.context.wsConnected$.value) {
+      this.unsubscribeConversationPeersChanged &&
+        this.unsubscribeConversationPeersChanged()
+      this.unsubscribeMessageAdded && this.unsubscribeMessageAdded()
+      this.unsubscribeTypingsChanged && this.unsubscribeTypingsChanged()
     }
   }
 
@@ -556,8 +581,39 @@ class Conversation extends Component<Props, State> {
     ) : null
   }
 
+  openPeerProfile = (id: string) => {
+    if (id === this.props.data.viewer.profile.id) {
+      this.showProfile(this.props.data.viewer.profile)
+    } else {
+      const peer = this.props.data.conversation.peers.find(
+        p => p.profile.id === id,
+      )
+      this.showProfile(peer.profile)
+    }
+  }
+
   showMyProfile = () => {
     this.showProfile(this.props.data.viewer.profile)
+  }
+
+  onOpenParticipantsModal = () => {
+    this.setState({ participantsModalOpen: true })
+  }
+
+  onCloseParticipantsModal = () => {
+    this.setState({ participantsModalOpen: false })
+  }
+
+  onOpenInviteModal = () => {
+    this.setState({ inviteModalOpen: true })
+  }
+
+  onCloseInviteModal = () => {
+    this.setState({ inviteModalOpen: false })
+  }
+
+  onPressInviteMore = input => {
+    this.props.inviteMore(input)
   }
 
   onScroll = ({
@@ -576,20 +632,29 @@ class Conversation extends Component<Props, State> {
     this.notRendered = false
   }
 
-  renderResendInvites = () => {
+  renderChannelButtons = () => {
     return this.props.data.conversation.type === 'CHANNEL' ? (
       <TouchableOpacity
-        style={styles.resendButton}
-        onPress={this.onPressResendInvites}
+        style={styles.participantsButton}
+        onPress={this.onOpenParticipantsModal}
       >
-        <Text style={styles.resendText}>Resend Invites</Text>
+        <Icon name="participants" />
+        <Text style={styles.participantsCount}>
+          {this.props.data.conversation.peers.length + 1}
+        </Text>
       </TouchableOpacity>
     ) : null
   }
 
   render() {
     const { data } = this.props
-    const { editorState, typingText, file } = this.state
+    const {
+      editorState,
+      typingText,
+      file,
+      participantsModalOpen,
+      inviteModalOpen,
+    } = this.state
 
     if (data == null || data.conversation == null) {
       return (
@@ -599,6 +664,7 @@ class Conversation extends Component<Props, State> {
       )
     }
 
+    const isChannel = data.conversation.type === 'CHANNEL'
     const containerStyles = [styles.container]
     const titleStyles = [styles.title]
     const inputStyles = [styles.input]
@@ -607,7 +673,7 @@ class Conversation extends Component<Props, State> {
 
     let subject = ''
     let DMPeerHasNoStake = false
-    if (data.conversation.type === 'CHANNEL') {
+    if (isChannel) {
       subject = `#${data.conversation.subject}`
     } else {
       const peerProfile =
@@ -692,33 +758,26 @@ class Conversation extends Component<Props, State> {
             </View>
 
             <Text style={styles.subtitle}>
-              {data.conversation.type === 'CHANNEL'
-                ? 'Channel'
-                : 'Direct Message'}
+              {isChannel ? 'Channel' : 'Direct Message'}
             </Text>
           </View>
           <View className="participants-list" style={styles.participants}>
-            <TouchableOpacity
-              onPress={this.showMyProfile}
-              style={styles.avatar}
-            >
-              <Avatar profile={data.viewer.profile} />
-            </TouchableOpacity>
-            {data.conversation.peers.map(p => {
-              const showProfile = () => {
-                this.showProfile(p.profile)
-              }
-              return (
-                <TouchableOpacity
-                  key={p.profile.id}
-                  onPress={showProfile}
-                  style={styles.avatar}
-                >
-                  <Avatar profile={p.profile} />
-                </TouchableOpacity>
-              )
-            })}
-            {this.renderResendInvites()}
+            {isChannel
+              ? this.renderChannelButtons()
+              : data.conversation.peers.map(p => {
+                  const showProfile = () => {
+                    this.showProfile(p.profile)
+                  }
+                  return (
+                    <TouchableOpacity
+                      key={p.profile.id}
+                      onPress={showProfile}
+                      style={styles.avatar}
+                    >
+                      <Avatar profile={p.profile} />
+                    </TouchableOpacity>
+                  )
+                })}
           </View>
         </View>
         <View style={styles.messages}>
@@ -760,6 +819,32 @@ class Conversation extends Component<Props, State> {
           //$FlowFixMe
           ref={this.bindFileSelector}
         />
+        {isChannel ? (
+          <ParticipantsModal
+            isOpen={
+              participantsModalOpen &&
+              !this.state.openProfile &&
+              !inviteModalOpen
+            }
+            profile={data.viewer.profile}
+            channel={data.conversation}
+            onCloseModal={this.onCloseParticipantsModal}
+            onSelectPeer={this.openPeerProfile}
+            onPressInviteMore={this.onOpenInviteModal}
+            onPressResendInvites={this.onPressResendInvites}
+          />
+        ) : null}
+        {isChannel ? (
+          <InviteModal
+            isOpen={inviteModalOpen}
+            profile={data.viewer.profile}
+            channel={data.conversation}
+            contacts={this.props.contacts}
+            onCloseModal={this.onCloseInviteModal}
+            onSelectPeer={this.openPeerProfile}
+            onPressInviteMore={this.onPressInviteMore}
+          />
+        ) : null}
       </View>
     )
   }
@@ -803,6 +888,15 @@ const styles = StyleSheet.create({
   titleArea: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  participantsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  participantsCount: {
+    marginLeft: BASIC_SPACING / 2,
+    color: COLORS.MEDIUM_GRAY,
   },
   participants: {
     flexDirection: 'row',
@@ -973,24 +1067,11 @@ const styles = StyleSheet.create({
 
 const ConvoQuery = graphql(
   gql`
-    ${MessageData}
+    ${ConversationData}
     ${ProfileData}
     query ConversationQuery($id: ID!) {
       conversation(id: $id) {
-        type
-        subject
-        messages {
-          ...MessageData
-        }
-        peers {
-          profile {
-            ...ProfileData
-          }
-          state
-        }
-        pointer
-        lastActiveTimestamp
-        dark
+        ...ConversationData
       }
 
       viewer {
@@ -1009,6 +1090,30 @@ const ConvoQuery = graphql(
     }),
     props: ({ data }) => ({
       data,
+      subscribeToConversationPeersChanged: (id: string) =>
+        data.subscribeToMore({
+          document: gql`
+            ${ProfileData}
+            subscription ConversationPeersChangedSubscription($id: ID!) {
+              conversationPeersChanged(id: $id) {
+                peers {
+                  profile {
+                    ...ProfileData
+                  }
+                  state
+                }
+              }
+            }
+          `,
+          variables: { id },
+          updateQuery: (prev, { subscriptionData }) => ({
+            ...prev,
+            conversation: {
+              ...prev.conversation,
+              peers: subscriptionData.data.conversationPeersChanged.peers,
+            },
+          }),
+        }),
       subscribeToMessageAdded: (id: string) =>
         data.subscribeToMore({
           document: gql`
@@ -1045,9 +1150,9 @@ const ConvoQuery = graphql(
 // $FlowFixMe
 export default compose(
   SetTypingMutation,
-  SetTypingMutation,
   SendMessageMutation,
   UpdatePointerMutation,
   ResendInvitesMutation,
+  InviteMoreMutation,
   ConvoQuery,
 )(Conversation)

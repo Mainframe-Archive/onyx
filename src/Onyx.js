@@ -115,13 +115,7 @@ export default class Onyx extends Component<{}, State> {
   }
 
   render() {
-    const {
-      address,
-      client,
-      store,
-      connectionError,
-      testNet,
-    } = this.state
+    const { address, client, store, connectionError, testNet } = this.state
     return client && store && !connectionError ? (
       <ApolloProvider client={client} store={store}>
         <App />

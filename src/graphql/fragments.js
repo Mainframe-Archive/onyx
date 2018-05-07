@@ -42,3 +42,25 @@ export const ProfileData = gql`
     hasStake
   }
 `
+
+export const ConversationData = gql`
+  ${MessageData}
+  ${ProfileData}
+  fragment ConversationData on Conversation {
+    id
+    type
+    subject
+    messages {
+      ...MessageData
+    }
+    peers {
+      profile {
+        ...ProfileData
+      }
+      state
+    }
+    pointer
+    lastActiveTimestamp
+    dark
+  }
+`

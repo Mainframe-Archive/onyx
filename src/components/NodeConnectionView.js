@@ -367,12 +367,6 @@ export default class NodeConnectionView extends Component<Props, State> {
             <View style={styles.icon}>
               <Icon name="mainframe-icon" />
             </View>
-            {this.renderLocalConnectButton()}
-            <View style={styles.separator}>
-              <View style={[styles.separatorLine, styles.lineLeft]} />
-              <Text style={styles.separatorLabel}>OR</Text>
-              <View style={[styles.separatorLine, styles.lineRight]} />
-            </View>
             <TextInput
               white
               value={this.state.url}

@@ -53,10 +53,6 @@ export default class UserProfile extends Component<Props, State> {
     const editButton = canEdit ? (
       <Button title="Edit my profile" onPress={this.props.onPressEdit} />
     ) : null
-    const noStakeText = '* This user has no stake'
-    const noStakeMessage = !profile.hasStake ? (
-      <Text style={styles.noStakeMessage}>{noStakeText}</Text>
-    ) : null
 
     const title = profile.name || profile.id.substr(0, 8)
     return (
@@ -64,14 +60,18 @@ export default class UserProfile extends Component<Props, State> {
         <View style={styles.userProfile}>
           {!hideTitle && <Text style={styles.title}>{title}</Text>}
           <View style={styles.avatarArea}>
-            <Avatar size="xx-large" profile={profile} blockyOver="large" hideStakeIndicator />
+            <Avatar
+              size="xx-large"
+              profile={profile}
+              blockyOver="large"
+              hideStakeIndicator
+            />
           </View>
           {!!profile.bio && (
             <View style={styles.userData}>
               <Text style={styles.bio}>{profile.bio}</Text>
             </View>
           )}
-          {noStakeMessage}
           {editButton}
         </View>
         {!connectedQROpen && (
@@ -84,7 +84,12 @@ export default class UserProfile extends Component<Props, State> {
                 </View>
               ) : profile.avatar ? (
                 <View style={styles.qrCode}>
-                  <Avatar size="x-large" hideStakeIndicator profile={profile} blocky />
+                  <Avatar
+                    size="x-large"
+                    hideStakeIndicator
+                    profile={profile}
+                    blocky
+                  />
                 </View>
               ) : null}
               <View>
@@ -102,16 +107,14 @@ export default class UserProfile extends Component<Props, State> {
             {!connectedQROpen ? (
               <TouchableOpacity
                 onPress={this.toggleQR}
-                style={styles.showQrButton}
-              >
+                style={styles.showQrButton}>
                 <Icon name="see-qr" />
                 <Text style={styles.showQrButtonText}>See QR code</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 onPress={this.toggleQR}
-                style={styles.showQrButton}
-              >
+                style={styles.showQrButton}>
                 <Icon name="circled-cross" />
                 <Text style={styles.showQrButtonText}>Hide QR code</Text>
               </TouchableOpacity>
