@@ -44,6 +44,7 @@ import Text from './Text'
 import UserProfileModal from './UserProfileModal'
 import Icon from './Icon'
 import ParticipantsModal from './ChannelParticipantsModal'
+import InviteModal from './ChannelInviteModal'
 import FileSelector from './FileSelector'
 
 import COLORS from '../colors'
@@ -236,6 +237,7 @@ type State = {
   typingText: string,
   openProfile: ?Object,
   participantsModalOpen: boolean,
+  inviteModalOpen: boolean,
 }
 
 class Conversation extends Component<Props, State> {
@@ -267,6 +269,7 @@ class Conversation extends Component<Props, State> {
       typingText: '',
       openProfile: null,
       participantsModalOpen: false,
+      inviteModalOpen: false,
     }
 
     this.cache = new CellMeasurerCache({
@@ -530,7 +533,8 @@ class Conversation extends Component<Props, State> {
             columnIndex={0}
             key={key}
             parent={parent}
-            rowIndex={index}>
+            rowIndex={index}
+          >
             <MessageRow
               dark={data.conversation.dark}
               hasPointer={index === this.firstPointer}
@@ -569,6 +573,17 @@ class Conversation extends Component<Props, State> {
     ) : null
   }
 
+  openPeerProfile = (id: string) => {
+    if (id === this.props.data.viewer.profile.id) {
+      this.showProfile(this.props.data.viewer.profile)
+    } else {
+      const peer = this.props.data.conversation.peers.find(
+        p => p.profile.id === id,
+      )
+      this.showProfile(peer.profile)
+    }
+  }
+
   showMyProfile = () => {
     this.showProfile(this.props.data.viewer.profile)
   }
@@ -579,6 +594,14 @@ class Conversation extends Component<Props, State> {
 
   onCloseParticipantsModal = () => {
     this.setState({ participantsModalOpen: false })
+  }
+
+  onOpenInviteModal = () => {
+    this.setState({ inviteModalOpen: true })
+  }
+
+  onCloseInviteModal = () => {
+    this.setState({ inviteModalOpen: false })
   }
 
   onPressInviteMore = input => {
@@ -604,16 +627,26 @@ class Conversation extends Component<Props, State> {
   renderChannelButtons = () => {
     return this.props.data.conversation.type === 'CHANNEL' ? (
       <TouchableOpacity
-        style={styles.resendButton}
-        onPress={this.onOpenParticipantsModal}>
-        <Text style={styles.resendText}>Manage Participants</Text>
+        style={styles.participantsButton}
+        onPress={this.onOpenParticipantsModal}
+      >
+        <Icon name="participants" />
+        <Text style={styles.participantsCount}>
+          {this.props.data.conversation.peers.length + 1}
+        </Text>
       </TouchableOpacity>
     ) : null
   }
 
   render() {
     const { data } = this.props
-    const { editorState, typingText, file, participantsModalOpen } = this.state
+    const {
+      editorState,
+      typingText,
+      file,
+      participantsModalOpen,
+      inviteModalOpen,
+    } = this.state
 
     if (data == null || data.conversation == null) {
       return (
@@ -694,7 +727,8 @@ class Conversation extends Component<Props, State> {
       <View
         onDragOver={this.onDragOver}
         onDrop={this.onDrop}
-        style={containerStyles}>
+        style={containerStyles}
+      >
         {this.renderProfileModal()}
         <View style={styles.header}>
           <View>
@@ -714,25 +748,22 @@ class Conversation extends Component<Props, State> {
             </Text>
           </View>
           <View className="participants-list" style={styles.participants}>
-            <TouchableOpacity
-              onPress={this.showMyProfile}
-              style={styles.avatar}>
-              <Avatar profile={data.viewer.profile} />
-            </TouchableOpacity>
-            {data.conversation.peers.map(p => {
-              const showProfile = () => {
-                this.showProfile(p.profile)
-              }
-              return (
-                <TouchableOpacity
-                  key={p.profile.id}
-                  onPress={showProfile}
-                  style={styles.avatar}>
-                  <Avatar profile={p.profile} />
-                </TouchableOpacity>
-              )
-            })}
-            {this.renderChannelButtons()}
+            {isChannel
+              ? this.renderChannelButtons()
+              : data.conversation.peers.map(p => {
+                  const showProfile = () => {
+                    this.showProfile(p.profile)
+                  }
+                  return (
+                    <TouchableOpacity
+                      key={p.profile.id}
+                      onPress={showProfile}
+                      style={styles.avatar}
+                    >
+                      <Avatar profile={p.profile} />
+                    </TouchableOpacity>
+                  )
+                })}
           </View>
         </View>
         <View style={styles.messages}>
@@ -776,12 +807,28 @@ class Conversation extends Component<Props, State> {
         />
         {isChannel ? (
           <ParticipantsModal
-            isOpen={participantsModalOpen}
+            isOpen={
+              participantsModalOpen &&
+              !this.state.openProfile &&
+              !inviteModalOpen
+            }
+            profile={data.viewer.profile}
+            channel={data.conversation}
+            onCloseModal={this.onCloseParticipantsModal}
+            onSelectPeer={this.openPeerProfile}
+            onPressInviteMore={this.onOpenInviteModal}
+            onPressResendInvites={this.onPressResendInvites}
+          />
+        ) : null}
+        {isChannel ? (
+          <InviteModal
+            isOpen={inviteModalOpen}
+            profile={data.viewer.profile}
             channel={data.conversation}
             contacts={this.props.contacts}
-            onCloseModal={this.onCloseParticipantsModal}
+            onCloseModal={this.onCloseInviteModal}
+            onSelectPeer={this.openPeerProfile}
             onPressInviteMore={this.onPressInviteMore}
-            onPressResendInvites={this.onPressResendInvites}
           />
         ) : null}
       </View>
@@ -827,6 +874,15 @@ const styles = StyleSheet.create({
   titleArea: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  participantsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  participantsCount: {
+    marginLeft: BASIC_SPACING / 2,
+    color: COLORS.MEDIUM_GRAY,
   },
   participants: {
     flexDirection: 'row',

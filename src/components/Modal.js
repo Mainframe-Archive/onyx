@@ -34,7 +34,7 @@ export default class Modal extends Component<Props> {
       isOpen,
       dark,
     } = this.props
-    
+
     const darkStyle = dark ? styles.dark : styles.light
     const titleStyle = dark ? [styles.title, styles.whiteText] : styles.title
     const containerStyles = [styles.container, darkStyle]
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginLeft: 2 * BASIC_SPACING,
   },
   modalSubtitle: {
-    paddingHorizontal: 4 * BASIC_SPACING,
+    paddingHorizontal: 3 * BASIC_SPACING,
     paddingBottom: BASIC_SPACING,
     fontSize: 12,
     color: COLORS.LIGHTEST_BLUE,

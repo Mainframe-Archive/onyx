@@ -23,6 +23,8 @@ import GenericFile from './icons/generic-file.svg'
 import Download from './icons/download.svg'
 import Camera from './icons/camera_icon.svg'
 import Rolling from './icons/rolling.svg'
+import Add from './icons/add.svg'
+import Participants from './icons/participants.svg'
 
 const ICONS = {
   plus: PlusIcon,
@@ -47,6 +49,8 @@ const ICONS = {
   'generic-file': GenericFile,
   camera: Camera,
   rolling: Rolling,
+  add: Add,
+  participants: Participants,
 }
 
 type Props = {

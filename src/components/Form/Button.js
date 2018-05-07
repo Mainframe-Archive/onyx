@@ -1,8 +1,9 @@
 // @flow
 
 import React, { Component } from 'react'
-import { TouchableOpacity, StyleSheet } from 'react-native-web'
+import { View, TouchableOpacity, StyleSheet } from 'react-native-web'
 import Text from '../Text'
+import Icon from '../Icon'
 
 import COLORS from '../../colors'
 import { BASIC_SPACING, INPUT_HEIGHT } from '../../styles'
@@ -13,6 +14,7 @@ type Props = {
   outlineStyle?: boolean,
   style?: number | Array<number | Object> | Object,
   textStyle?: number | Array<number | Object> | Object,
+  rightIcon?: string,
   onPress?: Function,
 }
 
@@ -25,6 +27,7 @@ export default class Button extends Component<Props> {
       outlineStyle,
       style,
       textStyle,
+      rightIcon,
     } = this.props
 
     const containerStyles = [styles.container]
@@ -53,7 +56,15 @@ export default class Button extends Component<Props> {
         onPress={onPress}
         style={containerStyles}
       >
-        <Text style={textStyles}>{title}</Text>
+        <View style={styles.textArea}>
+          <Text style={textStyles}>{title}</Text>
+        </View>
+
+        {rightIcon && (
+          <View style={styles.iconArea}>
+            <Icon name={rightIcon} />
+          </View>
+        )}
       </TouchableOpacity>
     )
   }
@@ -67,8 +78,13 @@ const styles = StyleSheet.create({
     flex: 1,
     marginVertical: BASIC_SPACING,
     paddingHorizontal: BASIC_SPACING * 3,
-    justifyContent: 'center',
     flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textArea: {
+    flex: 1,
   },
   outlineContainer: {
     borderWidth: 2,
