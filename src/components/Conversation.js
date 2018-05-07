@@ -238,6 +238,7 @@ type State = {
   openProfile: ?Object,
   participantsModalOpen: boolean,
   inviteModalOpen: boolean,
+  sending: boolean,
 }
 
 class Conversation extends Component<Props, State> {
@@ -270,6 +271,7 @@ class Conversation extends Component<Props, State> {
       openProfile: null,
       participantsModalOpen: false,
       inviteModalOpen: false,
+      sending: false,
     }
 
     this.cache = new CellMeasurerCache({
@@ -463,7 +465,7 @@ class Conversation extends Component<Props, State> {
     }
   }
 
-  sendMessage = () => {
+  sendMessage = async () => {
     const { editorState, file } = this.state
     const text = editorState.getCurrentContent().getPlainText()
     const blocks = []
@@ -475,18 +477,24 @@ class Conversation extends Component<Props, State> {
     }
 
     if (blocks.length > 0) {
-      this.props.sendMessage({ blocks, convoID: this.props.id })
-      // Reset input
-      this.setState(
-        {
-          editorState: EditorState.createEmpty(),
-          file: undefined,
-        },
-        () => {
-          // $FlowFixMe
-          this.focusEditor()
-        },
-      )
+      try {
+        this.setState({ sending: true })
+        // Reset input
+        await this.props.sendMessage({ blocks, convoID: this.props.id })
+        this.setState(
+          {
+            sending: false,
+            editorState: EditorState.createEmpty(),
+            file: undefined,
+          },
+          () => {
+            // $FlowFixMe
+            this.focusEditor()
+          },
+        )
+      } catch (e) {
+        this.setState({ sending: false })
+      }
     }
   }
 
@@ -706,11 +714,16 @@ class Conversation extends Component<Props, State> {
       <View>
         {channelStakeWarning}
         <View style={inputStyles}>
-          <TouchableOpacity onPress={this.addFile} style={styles.inputButton}>
+          <TouchableOpacity
+            onPress={this.addFile}
+            disabled={this.state.sending}
+            style={styles.inputButton}
+          >
             <Icon name={fileIcon} />
           </TouchableOpacity>
           <View onClick={this.focusEditor} style={editorStyles}>
             <Editor
+              readOnly={this.state.sending}
               editorState={editorState}
               handleReturn={this.handleReturn}
               onChange={this.onEditorChange}
@@ -719,6 +732,7 @@ class Conversation extends Component<Props, State> {
               ref={this.bindEditor}
             />
           </View>
+          {this.state.sending && <Loader width={45} height={20} />}
         </View>
       </View>
     )
