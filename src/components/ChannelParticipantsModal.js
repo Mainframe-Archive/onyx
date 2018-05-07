@@ -1,9 +1,7 @@
 // @flow
 
 import React, { Component } from 'react'
-import { StyleSheet, View } from 'react-native-web'
-
-import type { InviteMoreInput } from '../graphql/mutations'
+import { StyleSheet, View, TouchableOpacity } from 'react-native-web'
 
 import Button from './Form/Button'
 import Text from './Text'
@@ -21,7 +19,7 @@ type Profile = {
 
 type Contact = {
   profile: Profile,
-  state: string,
+  state?: string,
 }
 
 export type ChannelData = {
@@ -31,45 +29,15 @@ export type ChannelData = {
 
 type Props = {
   channel: ChannelData,
-  contacts: Array<Contact>,
+  profile: Contact,
   mutationError?: string,
+  onSelectPeer: (id: string) => void,
   onCloseModal: () => void,
-  onPressInviteMore: (input: InviteMoreInput) => void,
-}
-
-type State = {
-  disabledPeers: Set<string>,
-  selectedPeers: Set<string>,
+  onPressInviteMore: () => void,
 }
 
 export default class ChannelParticipantsModal extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-
-    this.state = {
-      disabledPeers: new Set(props.channel.peers.map(p => p.profile.id)),
-      selectedPeers: new Set(),
-    }
-  }
-
-  resetState = () => {
-    this.setState({
-      selectedPeers: new Set(),
-    })
-  }
-
   onCloseModal = () => {
-    this.resetState()
-    this.props.onCloseModal()
-  }
-
-  onPressInviteMore = () => {
-    const { selectedPeers } = this.state
-    this.resetState()
-    this.props.onPressInviteMore({
-      id: this.props.channel.id,
-      peers: Array.from(selectedPeers),
-    })
     this.props.onCloseModal()
   }
 
@@ -78,43 +46,26 @@ export default class ChannelParticipantsModal extends Component<Props, State> {
     this.props.onCloseModal()
   }
 
-  toggleSelectedPeer = (id: string) => {
-    this.setState((s: State) => {
-      const selectedPeers = s.selectedPeers
-      if (selectedPeers.has(id)) {
-        selectedPeers.delete(id)
-      } else {
-        selectedPeers.add(id)
-      }
-      return { selectedPeers }
-    })
-  }
-
   renderPeers = () => {
-    const { contacts } = this.props
-    const { disabledPeers, selectedPeers } = this.state
+    const { channel, profile } = this.props
 
+    const participants = [{ profile }, ...channel.peers]
     return (
       <View style={styles.peersList}>
-        {contacts
-          .filter(({ state }) => state === 'ACCEPTED')
-          .map(({ profile, state }) => (
-            <Peer
-              key={profile.id}
-              profile={profile}
-              disabled={disabledPeers.has(profile.id)}
-              selected={selectedPeers.has(profile.id)}
-              onSelectPeer={this.toggleSelectedPeer}
-            />
-          ))}
+        {participants.map(({ profile, state }) => (
+          <Peer
+            key={profile.id}
+            profile={profile}
+            onSelectPeer={this.props.onSelectPeer}
+            large
+          />
+        ))}
       </View>
     )
   }
 
   render() {
     const { isOpen, mutationError } = this.props
-    const { selectedPeers } = this.state
-
     const errorMessage = mutationError ? (
       <Text style={styles.errorText}>{mutationError}</Text>
     ) : null
@@ -123,14 +74,27 @@ export default class ChannelParticipantsModal extends Component<Props, State> {
       <Modal
         isOpen={isOpen}
         onRequestClose={this.onCloseModal}
-        title="Add contacts to this channel">
+        title="Participants"
+        subtitle={`${this.props.channel.peers.length + 1} participants in #${
+          this.props.channel.subject
+        }`}
+      >
+        <View style={styles.separator} />
         {errorMessage}
+
+        <TouchableOpacity
+          style={styles.resendButton}
+          onPress={this.onPressResendInvites}
+        >
+          <Text style={styles.resendText}>Resend invites</Text>
+          <Text style={[styles.resendText, styles.arrowIcon]}>></Text>
+        </TouchableOpacity>
         <View style={styles.peersArea}>{this.renderPeers()}</View>
-        {selectedPeers.size === 0 ? (
-          <Button onPress={this.onPressResendInvites} title="Resend Invites" />
-        ) : (
-          <Button onPress={this.onPressInviteMore} title="Invite Contacts" />
-        )}
+        <Button
+          onPress={this.props.onPressInviteMore}
+          rightIcon="add"
+          title="Invite more people"
+        />
       </Modal>
     )
   }
@@ -142,40 +106,36 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 450,
     paddingVertical: BASIC_SPACING,
+    marginBottom: 2 * BASIC_SPACING,
+    maxHeight: '40vh',
+    overflowY: 'auto',
+    flexWrap: 'nowrap',
   },
-  modalTitle: {
-    fontSize: 16,
-    color: COLORS.PRIMARY_BLUE,
+  resendButton: {
+    marginBottom: BASIC_SPACING,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
   },
-  modalSubtitle: {
-    fontSize: 12,
-    color: COLORS.LIGHTEST_BLUE,
+  resendText: {
+    color: COLORS.PRIMARY_RED,
+    fontSize: 14,
+  },
+  arrowIcon: {
+    fontSize: 20,
+    marginLeft: BASIC_SPACING / 2,
   },
   peersList: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     paddingVertical: BASIC_SPACING,
     flexWrap: 'wrap',
   },
-  icon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconText: {
-    marginHorizontal: BASIC_SPACING,
-    color: COLORS.MEDIUM_GRAY,
-    fontSize: 20,
-  },
-  redText: {
-    color: COLORS.PRIMARY_RED,
-  },
-  whiteText: {
-    color: COLORS.WHITE,
-  },
-  errorContainer: {
-    margin: BASIC_SPACING,
-    padding: BASIC_SPACING,
-    backgroundColor: COLORS.GRAY_E6,
+  separator: {
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: COLORS.GRAY_E6,
+    marginVertical: 2 * BASIC_SPACING,
+    width: '100%',
   },
   errorText: {
     fontSize: 13,
