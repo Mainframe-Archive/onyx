@@ -13,7 +13,7 @@ else
   exit 1
 fi
 
-GIT_REF=onyx-0.4
+GIT_REF="pss-staking"
 ROOT_DIR=$(pwd)
 BIN_DIR=$ROOT_DIR/bin
 TMP_DIR=$ROOT_DIR/tmp
@@ -26,7 +26,7 @@ mkdir -p $TMP_DIR
 if [[ ! -e $TMP_DIR/go-ethereum ]]; then
     cd $TMP_DIR
     echo "cloning the go-ethereum repo"
-    git clone --depth 1 https://github.com/MainframeHQ/go-ethereum.git -b pss
+    git clone --depth 1 https://github.com/MainframeHQ/go-ethereum.git -b $GIT_REF
 fi
 
 cd $TMP_DIR/go-ethereum
