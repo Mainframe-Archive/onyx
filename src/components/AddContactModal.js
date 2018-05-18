@@ -105,7 +105,7 @@ export default class AddContactModal extends Component<Props, State> {
             )}
             {errorMessage !== ERRORS.INVALID_KEY && (
               <View style={styles.blocky}>
-                <Avatar size="x-large" blocky profile={{ id: contactInput }} />
+                <Avatar size="x-large" blocky profile={{ id: contactInput, hasStake: true }} />
               </View>
             )}
           </View>
