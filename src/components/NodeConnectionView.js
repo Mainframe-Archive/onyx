@@ -176,7 +176,7 @@ export default class NodeConnectionView extends Component<Props, State> {
       },
       [stakingContractAddress, requiredStake, encodedStakeCall],
     )
-    const url = `https://www.mycrypto.com/?to=${
+    const url = `https://legacy.mycrypto.com/?to=${
       this.state.tokenAddress
     }&value=0&gaslimit=200000&data=${encodedApproveCall}#send-transaction`
     shell.openExternal(url)
@@ -292,6 +292,11 @@ export default class NodeConnectionView extends Component<Props, State> {
         onPress={this.onPressApproveDeposit}
       />
     ) : null
+    const networkMessage = 'This is a testnet version, ensure you switch to the Ropsten network on MyCrypto'
+    const switchNetworkMessage = this.props.ethNetwork === 'TESTNET'
+    ? <Text style={styles.importantMessage}>{networkMessage}</Text>
+    : null
+
     const infoText = `To participate in the Mainframe network you are required to stake ${stakeAmount} MFT to our\
  staking contract. You will need at least ${stakeAmount} MFT in your wallet and a small amount of ETH to cover\
  transaction fees. You will be able to withdraw your stake at any time.`
@@ -325,6 +330,7 @@ export default class NodeConnectionView extends Component<Props, State> {
           placeholder="whitelist address"
           onChangeText={this.onChangeWhitelistAddress}
         />
+        {switchNetworkMessage}
         {step1Button}
       </View>
     )
@@ -492,6 +498,12 @@ const styles = StyleSheet.create({
     color: COLORS.GRAY_47,
     marginBottom: BASIC_SPACING,
     borderRadius: 3,
+  },
+  importantMessage: {
+    color: COLORS.PRIMARY_RED,
+    fontSize: 16,
+    textAlign: 'center',
+    padding: 5,
   },
   link: {
     color: COLORS.PRIMARY_RED,
