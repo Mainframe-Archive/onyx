@@ -242,9 +242,6 @@ const start = async () => {
           connectionError: errorMsg,
           testNet: USE_TESTNET,
         }
-        if (appServer != null) {
-          appServer.stop()
-        }
       }
     } else {
       // Use stored remote server url
