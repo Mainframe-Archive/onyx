@@ -5,7 +5,8 @@ import { parse } from 'query-string'
 import React, { Component } from 'react'
 import { ApolloProvider, type ApolloClient } from 'react-apollo'
 import { BehaviorSubject } from 'rxjs'
-
+import { View, StyleSheet } from 'react-native'
+import UpdateModal from './components/UpdateModal'
 import App from './components/App'
 import NodeConnectionView from './components/NodeConnectionView'
 
@@ -19,6 +20,7 @@ type State = {
   store?: Store,
   wsUrl?: string,
   testNet?: boolean,
+  noUpdates?: boolean,
 }
 
 export default class Onyx extends Component<{}, State> {
@@ -114,26 +116,41 @@ export default class Onyx extends Component<{}, State> {
     }
   }
 
+  onDismissUpdate = () => {
+    this.setState({
+      noUpdates: true,
+    })
+  }
+
   render() {
-    const {
-      address,
-      client,
-      store,
-      connectionError,
-      testNet,
-    } = this.state
-    return client && store && !connectionError ? (
-      <ApolloProvider client={client} store={store}>
-        <App />
-      </ApolloProvider>
-    ) : (
-      <NodeConnectionView
-        defaultLocalhostUrl="ws://localhost:5002/graphql"
-        storedServerUrl={this.state.wsUrl}
-        connectionError={connectionError}
-        address={address}
-        ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
-      />
+    const { address, client, store, connectionError, testNet } = this.state
+    return (
+      <View style={styles.outter}>
+        <UpdateModal
+          onDismiss={this.onDismissUpdate}
+          onError={this.onDismissUpdate}
+        />
+        {client && store && !connectionError ? (
+          <ApolloProvider client={client} store={store}>
+            <App showingUpdates={!this.state.noUpdates} />
+          </ApolloProvider>
+        ) : (
+          <NodeConnectionView
+            defaultLocalhostUrl="ws://localhost:5002/graphql"
+            storedServerUrl={this.state.wsUrl}
+            connectionError={connectionError}
+            showingUpdates={!this.state.noUpdates}
+            address={address}
+            ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
+          />
+        )}
+      </View>
     )
   }
 }
+
+const styles = StyleSheet.create({
+  outter: {
+    flex: 1,
+  },
+})

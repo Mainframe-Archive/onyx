@@ -28,6 +28,7 @@ type Props = {
   storedServerUrl: string,
   connectionError: string,
   ethNetwork: 'MAINNET' | 'TESTNET',
+  showingUpdates: boolean,
 }
 
 type State = {
@@ -67,7 +68,11 @@ export default class NodeConnectionView extends Component<Props, State> {
     const { ethNetwork } = this.props
     const contracts = createContracts(ethNetwork)
     try {
-      const [requiredStake, stakingContractAddress, tokenAddress] = await Promise.all([
+      const [
+        requiredStake,
+        stakingContractAddress,
+        tokenAddress,
+      ] = await Promise.all([
         contracts.getRequiredStake(),
         contracts.ens.resolveName(ENS_NAMES.stake[ethNetwork]),
         contracts.ens.resolveName(ENS_NAMES.token[ethNetwork]),
@@ -132,10 +137,10 @@ export default class NodeConnectionView extends Component<Props, State> {
     } = this.state
 
     if (!web3Utils.isAddress(whitelistAddress)) {
-      this.setState({showWhitelistError: true})
+      this.setState({ showWhitelistError: true })
       return
     } else if (!web3Utils.isAddress(ethAddress)) {
-      this.setState({showEthAddressError: true})
+      this.setState({ showEthAddressError: true })
       return
     }
 
@@ -169,7 +174,7 @@ export default class NodeConnectionView extends Component<Props, State> {
           {
             name: 'data',
             type: 'bytes',
-          }
+          },
         ],
         name: 'approveAndCall',
         type: 'function',
@@ -224,7 +229,8 @@ export default class NodeConnectionView extends Component<Props, State> {
       <View>
         <TouchableOpacity
           onPress={this.onPressConnectDefault}
-          style={[styles.defaultNodeButton, buttonStyles]}>
+          style={[styles.defaultNodeButton, buttonStyles]}
+        >
           <View style={styles.buttonText}>
             <Text style={styles.defaultNodeButtonTitle}>
               Start local Onyx server
@@ -279,7 +285,9 @@ export default class NodeConnectionView extends Component<Props, State> {
     if (this.state.ensError) {
       return this.renderEnsError()
     }
-    const stakeAmount = requiredStake ? web3Utils.fromWei(this.state.requiredStake, 'ether') : 0
+    const stakeAmount = requiredStake
+      ? web3Utils.fromWei(this.state.requiredStake, 'ether')
+      : 0
     const showWhitelistError = this.state.showWhitelistError ? (
       <Text style={styles.errorMessage}>* Invalid address</Text>
     ) : null
@@ -292,23 +300,23 @@ export default class NodeConnectionView extends Component<Props, State> {
         onPress={this.onPressApproveDeposit}
       />
     ) : null
-    const networkMessage = 'This is a testnet version, ensure you switch to the Ropsten network on MyCrypto'
-    const switchNetworkMessage = this.props.ethNetwork === 'TESTNET'
-    ? <Text style={styles.importantMessage}>{networkMessage}</Text>
-    : null
+    const networkMessage =
+      'This is a testnet version, ensure you switch to the Ropsten network on MyCrypto'
+    const switchNetworkMessage =
+      this.props.ethNetwork === 'TESTNET' ? (
+        <Text style={styles.importantMessage}>{networkMessage}</Text>
+      ) : null
 
     const infoText = `To participate in the Mainframe network you are required to stake ${stakeAmount} MFT to our\
  staking contract. You will need at least ${stakeAmount} MFT in your wallet and a small amount of ETH to cover\
  transaction fees. You will be able to withdraw your stake at any time.`
 
-   const finishText = `Once you've completed the transaction on MyCrypto and it has been successfully mined, your node\
+    const finishText = `Once you've completed the transaction on MyCrypto and it has been successfully mined, your node\
  address should have a stake associated with it and will enable you to\
  participate in the Mainframe network. You can check the transaction state via`
     const step1 = (
       <View>
-        <Text style={styles.stakeInfoText}>
-          {infoText}
-        </Text>
+        <Text style={styles.stakeInfoText}>{infoText}</Text>
         <Text style={styles.stakeInfoHeader}>ETH Address</Text>
         <Text style={styles.stakeInfoText}>
           Please enter the ETH address holding MFT you wish to stake from.
@@ -321,8 +329,8 @@ export default class NodeConnectionView extends Component<Props, State> {
         />
         <Text style={styles.stakeInfoHeader}>Node Address</Text>
         <Text style={styles.stakeInfoText}>
-          Please edit the node address below if you wish to stake
-          for a different node.
+          Please edit the node address below if you wish to stake for a
+          different node.
         </Text>
         {showWhitelistError}
         <TextInput
@@ -350,7 +358,8 @@ export default class NodeConnectionView extends Component<Props, State> {
       <Modal
         onRequestClose={this.onRequestCloseStake}
         title="Stake Mainframe Token"
-        isOpen={this.state.showStakingModal}>
+        isOpen={this.state.showStakingModal && !this.props.showingUpdates}
+      >
         {steps[this.state.stakeStep - 1]}
       </Modal>
     )
