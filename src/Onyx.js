@@ -20,7 +20,7 @@ type State = {
   store?: Store,
   wsUrl?: string,
   testNet?: boolean,
-  noUpdates?: boolean,
+  hasUpdates: boolean,
 }
 
 export default class Onyx extends Component<{}, State> {
@@ -40,7 +40,9 @@ export default class Onyx extends Component<{}, State> {
     super(props)
 
     const params = parse(document.location.search)
-    const state = {}
+    const state = {
+      hasUpdates: false,
+    }
 
     if (params.address) {
       state.address = params.address
@@ -118,7 +120,13 @@ export default class Onyx extends Component<{}, State> {
 
   onDismissUpdate = () => {
     this.setState({
-      noUpdates: true,
+      hasUpdates: false,
+    })
+  }
+
+  onGetUpdates = () => {
+    this.setState({
+      hasUpdates: true,
     })
   }
 
@@ -127,19 +135,20 @@ export default class Onyx extends Component<{}, State> {
     return (
       <View style={styles.outter}>
         <UpdateModal
+          onGetUpdates={this.onGetUpdates}
           onDismiss={this.onDismissUpdate}
           onError={this.onDismissUpdate}
         />
         {client && store && !connectionError ? (
           <ApolloProvider client={client} store={store}>
-            <App showingUpdates={!this.state.noUpdates} />
+            <App showingUpdates={this.state.hasUpdates} />
           </ApolloProvider>
         ) : (
           <NodeConnectionView
             defaultLocalhostUrl="ws://localhost:5002/graphql"
             storedServerUrl={this.state.wsUrl}
             connectionError={connectionError}
-            showingUpdates={!this.state.noUpdates}
+            showingUpdates={this.state.hasUpdates}
             address={address}
             ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
           />

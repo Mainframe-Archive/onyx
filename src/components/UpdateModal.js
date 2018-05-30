@@ -10,6 +10,7 @@ import { BASIC_SPACING } from '../styles'
 const shell = window.require('electron').shell
 
 type Props = {
+  onGetUpdates?: () => void,
   onError?: () => void,
   onDismiss?: () => void,
 }
@@ -27,6 +28,11 @@ type State = {
 const CURRENT_VERSION = '0.4.2'
 const VERSION_URL = 'https://mainframe.com/onyx-version.json'
 
+const VersionCheckException = message => {
+  this.message = message
+  this.name = 'VersionCheckException'
+}
+
 export default class UpdateModal extends Component<Props, State> {
   state: State = {
     open: false,
@@ -38,20 +44,24 @@ export default class UpdateModal extends Component<Props, State> {
   }
 
   componentDidMount() {
-    fetch(VERSION_URL)
+    fetch(VERSION_URL, {
+      method: 'GET',
+      mode: 'cors',
+    })
       .then(response => {
         if (response.ok) {
           return response.json()
         } else {
-          this.props.onError && this.props.onError()
+          throw new VersionCheckException('Error loading version')
         }
       })
       .then(data => {
-        if (data.version && data.version > CURRENT_VERSION) {
+        if (data.version && data.version !== CURRENT_VERSION) {
           this.setState({
             open: true,
             update: data,
           })
+          this.props.onGetUpdates && this.props.onGetUpdates()
         } else {
           this.props.onDismiss && this.props.onDismiss()
         }
