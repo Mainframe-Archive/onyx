@@ -40,13 +40,16 @@ const checkUpdates = () => {
           {
             type: 'warning',
             title: data.title || 'Update Available',
-            message: data.description,
+            message:
+              data.description || 'A new version of Onyx has been released!',
             cancelId: 0,
-            buttons: ['Cancel', data.button],
+            buttons: ['Cancel', data.button || 'Download'],
           },
           async index => {
             if (index === 1) {
-              shell.openExternal(data.url)
+              shell.openExternal(
+                data.url || 'https://github.com/MainframeHQ/onyx/releases',
+              )
             }
           },
         )
