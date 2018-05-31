@@ -52,6 +52,7 @@ type Props = {
   setOpenContact: (id: string) => void,
   subscribeToChannelsChanged: SubscribeFunc,
   subscribeToContactsChanged: SubscribeFunc,
+  showingUpdates: boolean,
 }
 
 type ModalName = 'channel' | 'contact' | 'profile'
@@ -160,8 +161,8 @@ class App extends Component<Props, State> {
       this.onCloseModal()
     } catch (err) {
       const errMsg = err.message.includes('No stake found')
-      ? `Failed to create channel, one of the selected participants doesn't have a stake`
-      : 'Sorry, there was a problem creating a new channel'
+        ? `Failed to create channel, one of the selected participants doesn't have a stake`
+        : 'Sorry, there was a problem creating a new channel'
       this.setState({
         newChannelError: errMsg,
       })
@@ -204,7 +205,7 @@ class App extends Component<Props, State> {
 
   renderProfileModal() {
     const { openProfile } = this.state
-    return openProfile ? (
+    return openProfile && !this.props.showingUpdates ? (
       <UserProfileModal
         profile={openProfile}
         serverURL={this.props.data.serverURL}

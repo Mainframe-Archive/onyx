@@ -5,7 +5,8 @@ import { parse } from 'query-string'
 import React, { Component } from 'react'
 import { ApolloProvider, type ApolloClient } from 'react-apollo'
 import { BehaviorSubject } from 'rxjs'
-
+import { View, StyleSheet } from 'react-native'
+import UpdateModal from './components/UpdateModal'
 import App from './components/App'
 import NodeConnectionView from './components/NodeConnectionView'
 
@@ -19,6 +20,7 @@ type State = {
   store?: Store,
   wsUrl?: string,
   testNet?: boolean,
+  hasUpdates: boolean,
 }
 
 export default class Onyx extends Component<{}, State> {
@@ -38,7 +40,9 @@ export default class Onyx extends Component<{}, State> {
     super(props)
 
     const params = parse(document.location.search)
-    const state = {}
+    const state = {
+      hasUpdates: false,
+    }
 
     if (params.address) {
       state.address = params.address
@@ -114,26 +118,48 @@ export default class Onyx extends Component<{}, State> {
     }
   }
 
+  onDismissUpdate = () => {
+    this.setState({
+      hasUpdates: false,
+    })
+  }
+
+  onGetUpdates = () => {
+    this.setState({
+      hasUpdates: true,
+    })
+  }
+
   render() {
-    const {
-      address,
-      client,
-      store,
-      connectionError,
-      testNet,
-    } = this.state
-    return client && store && !connectionError ? (
-      <ApolloProvider client={client} store={store}>
-        <App />
-      </ApolloProvider>
-    ) : (
-      <NodeConnectionView
-        defaultLocalhostUrl="ws://localhost:5002/graphql"
-        storedServerUrl={this.state.wsUrl}
-        connectionError={connectionError}
-        address={address}
-        ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
-      />
+    const { address, client, store, connectionError, testNet } = this.state
+    return (
+      <View style={styles.outter}>
+        <UpdateModal
+          onGetUpdates={this.onGetUpdates}
+          onDismiss={this.onDismissUpdate}
+          onError={this.onDismissUpdate}
+        />
+        {client && store && !connectionError ? (
+          <ApolloProvider client={client} store={store}>
+            <App showingUpdates={this.state.hasUpdates} />
+          </ApolloProvider>
+        ) : (
+          <NodeConnectionView
+            defaultLocalhostUrl="ws://localhost:5002/graphql"
+            storedServerUrl={this.state.wsUrl}
+            connectionError={connectionError}
+            showingUpdates={this.state.hasUpdates}
+            address={address}
+            ethNetwork={testNet ? 'TESTNET' : 'MAINNET'}
+          />
+        )}
+      </View>
     )
   }
 }
+
+const styles = StyleSheet.create({
+  outter: {
+    flex: 1,
+  },
+})
