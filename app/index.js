@@ -1,4 +1,5 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain, Menu, shell } = require('electron')
+const fetch = require('node-fetch')
 const { appReady, is } = require('electron-util')
 const Store = require('electron-store')
 const getPort = require('get-port')
@@ -7,8 +8,10 @@ const StaticServer = require('static-server')
 const path = require('path')
 const querystring = require('querystring')
 
-const { config } = require(path.join(__dirname, 'package.json'))
+const { config, version } = require(path.join(__dirname, 'package.json'))
 const swarm = require('./swarm')
+
+const VERSION_CHECK_URL = 'https://mainframe.com/onyx-version.json'
 
 const USE_TESTNET = process.env.USE_TESTNET || true // TODO: - default to false when contracts deployed to mainnet
 
@@ -20,6 +23,44 @@ const SWARM_HTTP_URL =
   process.env.SWARM_HTTP_URL ||
   (config && config.swarmHttpUrl) ||
   'https://onyx-storage.mainframe.com'
+
+const VersionCheckException = message => {
+  this.message = message
+  this.name = 'VersionCheckException'
+}
+
+const checkUpdates = () => {
+  fetch(VERSION_CHECK_URL)
+    .then(res => {
+      if (res.ok) {
+        return res.json()
+      } else {
+        throw new VersionCheckException('Error loading version')
+      }
+    })
+    .then(data => {
+      if (version !== data.version) {
+        dialog.showMessageBox(
+          mainWindow,
+          {
+            type: 'warning',
+            title: data.title,
+            message: data.description,
+            cancelId: 0,
+            buttons: ['Cancel', data.button],
+          },
+          async index => {
+            if (index === 1) {
+              shell.openExternal(data.url)
+            }
+          },
+        )
+      }
+    })
+    .catch(() => {
+      console.warn('Error fetching updates data')
+    })
+}
 
 let appServer, mainWindow
 
@@ -131,6 +172,7 @@ const createMainWindow = async url => {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    checkUpdates()
   })
   mainWindow.on('closed', () => {
     swarm.stop()
@@ -205,7 +247,10 @@ const start = async () => {
         } catch (e) {
           console.log(e.stack)
           if (e.message.includes('No stake found')) {
-            nodeAddress = e.message.split(' ').splice(-1)[0].trim()
+            nodeAddress = e.message
+              .split(' ')
+              .splice(-1)[0]
+              .trim()
             errorMsg = stakeRequiredError
           } else {
             errorMsg =
