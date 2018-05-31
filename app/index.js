@@ -24,18 +24,13 @@ const SWARM_HTTP_URL =
   (config && config.swarmHttpUrl) ||
   'https://onyx-storage.mainframe.com'
 
-const VersionCheckException = message => {
-  this.message = message
-  this.name = 'VersionCheckException'
-}
-
 const checkUpdates = () => {
   fetch(VERSION_CHECK_URL)
     .then(res => {
       if (res.ok) {
         return res.json()
       } else {
-        throw new VersionCheckException('Error loading version')
+        throw new Error('Error loading version')
       }
     })
     .then(data => {
@@ -44,7 +39,7 @@ const checkUpdates = () => {
           mainWindow,
           {
             type: 'warning',
-            title: data.title,
+            title: data.title || 'Update Available',
             message: data.description,
             cancelId: 0,
             buttons: ['Cancel', data.button],
