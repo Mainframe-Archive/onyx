@@ -34,7 +34,7 @@ const checkUpdates = () => {
       }
     })
     .then(data => {
-      if (version !== data.version) {
+      if (data.versions.includes(version)) {
         dialog.showMessageBox(
           mainWindow,
           {
