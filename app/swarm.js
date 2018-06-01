@@ -63,18 +63,18 @@ const start = async () => {
       pwdPath,
       '--bzzaccount',
       keystore.address,
-      '--pss',
       '--verbosity',
       '4',
       '--bzznetworkid',
-      '922',
+      '1000',
       '--bootnodes',
-      'enode://e834e83b4ed693b98d1a31d47b54f75043734c6c77d81137830e657e8b005a8f13b4833efddbd534f2c06636574d1305773648f1f39dd16c5145d18402c6bca3@52.51.239.180:30399',
+      'enode://b3417a20b07104ce2f948d7458fc03c73ad5918ae6be24eaf840322c70ffa8d0f59473139bef8ef0b4caffe7bc99018ab3686b1a757d73c1a7bfd880d2b7e7ef@52.31.117.198:30399,enode://762d482f6a400c89210be4d180b192dd5f921ca9f1a42a1651293f242613874f3e4e22589be582e0837c816c0c5366c00c32b7760ca345d65eb9ed75897db8c0@54.153.70.43:30399,enode://fc8d3eb2d5cfe4ed05c9e722518c895e006456448a49c2915e30beffd1ddb1ee17cd12abd550f1745d8b17060bf6c46e822e051ae4deca0e21d7fa7a15bb4c43@13.113.67.30:30399',
       '--ws',
       '--wsorigins',
       '*',
       '--ens-api',
-      'https://ropsten.infura.io/',
+      'https://ropsten.infura.io/55HkPWVAJQjGH4ucvfW9',
+      '--nosync',
     ])
 
     proc.catch(error => {

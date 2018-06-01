@@ -29,7 +29,7 @@ export default class Onyx extends Component<{}, State> {
 
   getChildContext() {
     return {
-      httpServerUrl: 'https://onyx-storage.mainframe.com',
+      httpServerUrl: 'https://onyx-staking-storage.mainframe.com',
       wsConnected$: this.wsConnected$,
     }
   }

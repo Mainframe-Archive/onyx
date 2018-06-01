@@ -22,7 +22,7 @@ const SWARM_WS_URL =
 const SWARM_HTTP_URL =
   process.env.SWARM_HTTP_URL ||
   (config && config.swarmHttpUrl) ||
-  'https://onyx-storage.mainframe.com'
+  'https://onyx-staking-storage.mainframe.com'
 
 const checkUpdates = () => {
   fetch(VERSION_CHECK_URL)

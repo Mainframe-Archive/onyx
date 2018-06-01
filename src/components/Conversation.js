@@ -117,7 +117,7 @@ class MessageRow extends Component<MessageProps> {
 
     const onPressFile = file
       ? () => {
-          document.location.href = `${this.context.httpServerUrl}/bzzr:/${
+          document.location.href = `${this.context.httpServerUrl}/bzz-raw:/${
             file.hash
           }`
         }
@@ -133,7 +133,7 @@ class MessageRow extends Component<MessageProps> {
           <View style={styles.messageImage}>
             <img
               alt={file.name}
-              src={`${this.context.httpServerUrl}/bzzr:/${file.hash}`}
+              src={`${this.context.httpServerUrl}/bzz-raw:/${file.hash}`}
               className="message-image"
             />
           </View>
@@ -385,7 +385,7 @@ class Conversation extends Component<Props, State> {
   sendFile = (file: Object) => {
     const reader = new FileReader()
     reader.onload = async e => {
-      const res = await fetch(`${this.context.httpServerUrl}/bzzr:`, {
+      const res = await fetch(`${this.context.httpServerUrl}/bzz-raw:`, {
         body: e.currentTarget.result,
         headers: {
           'Content-Length': file.size,
