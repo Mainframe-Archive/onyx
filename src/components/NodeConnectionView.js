@@ -211,7 +211,7 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   onPressEtherscan = () => {
-    shell.openExternal(`http://etherscan.com/address/${this.state.ethAddress}`)
+    shell.openExternal(`http://etherscan.io/address/${this.state.ethAddress}`)
   }
 
   // RENDER

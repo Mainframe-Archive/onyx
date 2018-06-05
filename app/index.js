@@ -13,7 +13,7 @@ const swarm = require('./swarm')
 
 const VERSION_CHECK_URL = 'https://mainframe.com/onyx-version.json'
 
-const USE_TESTNET = process.env.USE_TESTNET || true // TODO: - default to false when contracts deployed to mainnet
+const USE_TESTNET = process.env.USE_TESTNET || false
 
 const SWARM_WS_URL =
   process.env.SWARM_WS_URL ||
@@ -220,7 +220,7 @@ const start = async () => {
     appPort = appServer.port
   }
   let appUrl = `http://localhost:${appPort}`
-  let urlParams
+  let urlParams = { testNet: USE_TESTNET }
   let nodeAddress
 
   const stakeRequiredError = 'You need to stake Mainframe tokens for your node'
@@ -261,7 +261,7 @@ const start = async () => {
       if (!errorMsg) {
         try {
           const serverPort = await startLocalOnyxServer(appPort)
-          urlParams = { wsUrl: `ws://localhost:${serverPort}/graphql` }
+          urlParams.wsUrl = `ws://localhost:${serverPort}/graphql`
         } catch (e) {
           console.log(e.stack)
           swarm.stop()
@@ -294,7 +294,7 @@ const start = async () => {
       } else if (storedWsUrl.indexOf('/') !== -1) {
         domain = storedWsUrl.split('/')[0]
       }
-      urlParams = { wsUrl: storedWsUrl }
+      urlParams.wsUrl = storedWsUrl
       if (!domain) {
         urlParams.connectionError = 'Invalid ws url'
       }

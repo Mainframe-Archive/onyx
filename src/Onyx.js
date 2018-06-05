@@ -52,7 +52,7 @@ export default class Onyx extends Component<{}, State> {
     if (params.wsUrl && params.wsUrl !== 'undefined') {
       state.wsUrl = params.wsUrl
     }
-    state.testNet = params.testNet
+    state.testNet = params.testNet === 'true'
     this.state = state
     this.wsConnected$ = new BehaviorSubject(false)
   }

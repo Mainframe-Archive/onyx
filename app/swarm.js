@@ -73,7 +73,7 @@ const start = async () => {
       '--wsorigins',
       '*',
       '--ens-api',
-      'https://ropsten.infura.io/55HkPWVAJQjGH4ucvfW9',
+      'https://mainnet.infura.io/55HkPWVAJQjGH4ucvfW9',
       '--nosync',
     ])
 
