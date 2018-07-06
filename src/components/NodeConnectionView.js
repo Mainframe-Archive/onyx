@@ -183,7 +183,7 @@ export default class NodeConnectionView extends Component<Props, State> {
       )
       const url = `https://legacy.mycrypto.com/?to=${
         this.state.stakeAddress
-      }&value=0&gaslimit=100000&data=${encodedWhitelistCall}#send-transaction`
+      }&value=0&gaslimit=150000&data=${encodedWhitelistCall}#send-transaction`
       shell.openExternal(url)
       this.setState({
         stakeStep: 3,
