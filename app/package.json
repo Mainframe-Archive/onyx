@@ -1,6 +1,6 @@
 {
   "name": "Onyx",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Decentralized messaging application based on PSS",
   "main": "index.js",
   "author": "Mainframe",
