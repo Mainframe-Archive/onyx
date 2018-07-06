@@ -4,7 +4,6 @@ import createContracts from 'onyx-contracts'
 import React, { Component } from 'react'
 import { View, StyleSheet, TouchableOpacity } from 'react-native-web'
 import abi from 'web3-eth-abi'
-import web3Utils from 'web3-utils'
 
 import { ENS_NAMES } from '../constants'
 import { onSetWsUrl } from '../data/Electron'
@@ -36,7 +35,6 @@ type State = {
   loadingRemote: boolean,
   showCertsSelectModal?: boolean,
   stakeStep: number,
-  ethAddress: ?string,
   whitelistAddress: ?string,
   ensError?: string,
 }
@@ -56,9 +54,12 @@ export default class NodeConnectionView extends Component<Props, State> {
       stakeStep: 1,
       whitelistAddress: props.address,
       showStakingModal: stakeRequired,
-      ethAddress: '',
+      stakeRequired,
     }
-    if (stakeRequired) {
+  }
+
+  componentDidMount() {
+    if (this.state.stakeRequired) {
       this.resolveEns()
     }
   }
@@ -67,15 +68,15 @@ export default class NodeConnectionView extends Component<Props, State> {
     const { ethNetwork } = this.props
     const contracts = createContracts(ethNetwork)
     try {
-      const [requiredStake, stakingContractAddress, tokenAddress] = await Promise.all([
+      const [requiredStake, stakeAddress, tokenAddress] = await Promise.all([
         contracts.getRequiredStake(),
         contracts.ens.resolveName(ENS_NAMES.stake[ethNetwork]),
         contracts.ens.resolveName(ENS_NAMES.token[ethNetwork]),
       ])
       this.setState({
-        stakingContractAddress,
-        tokenAddress,
         requiredStake,
+        tokenAddress,
+        stakeAddress,
         ensError: null,
       })
     } catch (err) {
@@ -124,61 +125,27 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   onPressApproveDeposit = () => {
-    const {
-      stakingContractAddress,
-      requiredStake,
-      whitelistAddress,
-      ethAddress,
-    } = this.state
-
-    if (!web3Utils.isAddress(whitelistAddress)) {
-      this.setState({showWhitelistError: true})
-      return
-    } else if (!web3Utils.isAddress(ethAddress)) {
-      this.setState({showEthAddressError: true})
-      return
-    }
-
-    const encodedStakeCall = abi.encodeFunctionCall(
-      {
-        inputs: [
-          {
-            name: 'staker',
-            type: 'address',
-          },
-          {
-            name: 'whitelistAddress',
-            type: 'address',
-          },
-        ],
-        name: 'stake',
-      },
-      [ethAddress, whitelistAddress],
-    )
+    const { stakeAddress, requiredStake } = this.state
     const encodedApproveCall = abi.encodeFunctionCall(
       {
+        name: 'approve',
+        type: 'function',
         inputs: [
           {
-            name: 'spender',
             type: 'address',
+            name: '_spender',
           },
           {
-            name: 'value',
             type: 'uint256',
+            name: '_value',
           },
-          {
-            name: 'data',
-            type: 'bytes',
-          }
         ],
-        name: 'approveAndCall',
-        type: 'function',
       },
-      [stakingContractAddress, requiredStake, encodedStakeCall],
+      [stakeAddress, requiredStake],
     )
     const url = `https://legacy.mycrypto.com/?to=${
       this.state.tokenAddress
-    }&value=0&gaslimit=200000&data=${encodedApproveCall}#send-transaction`
+    }&value=0&gaslimit=100000&data=${encodedApproveCall}#send-transaction`
     shell.openExternal(url)
     this.setState({
       stakeStep: 2,
@@ -191,10 +158,41 @@ export default class NodeConnectionView extends Component<Props, State> {
     })
   }
 
-  onChangeEthAddress = value => {
-    this.setState({
-      ethAddress: value,
-    })
+  onPressDepositAndWhitelist = () => {
+    const { whitelistAddress } = this.state
+    if (
+      whitelistAddress.substring(0, 2) === '0x' &&
+      whitelistAddress.length === 42
+    ) {
+      this.setState({
+        showWhitelistError: false,
+      })
+
+      const encodedWhitelistCall = abi.encodeFunctionCall(
+        {
+          name: 'stake',
+          type: 'function',
+          inputs: [
+            {
+              name: 'whitelistAddress',
+              type: 'address',
+            },
+          ],
+        },
+        [whitelistAddress],
+      )
+      const url = `https://legacy.mycrypto.com/?to=${
+        this.state.stakeAddress
+      }&value=0&gaslimit=100000&data=${encodedWhitelistCall}#send-transaction`
+      shell.openExternal(url)
+      this.setState({
+        stakeStep: 3,
+      })
+    } else {
+      this.setState({
+        showWhitelistError: true,
+      })
+    }
   }
 
   onRequestCloseStake = () => {
@@ -208,10 +206,6 @@ export default class NodeConnectionView extends Component<Props, State> {
       showStakingModal: false,
     })
     this.onPressConnectDefault()
-  }
-
-  onPressEtherscan = () => {
-    shell.openExternal(`http://etherscan.io/address/${this.state.ethAddress}`)
   }
 
   // RENDER
@@ -275,54 +269,46 @@ export default class NodeConnectionView extends Component<Props, State> {
   }
 
   renderStakeRequiredModal() {
-    const { requiredStake } = this.state
     if (this.state.ensError) {
       return this.renderEnsError()
     }
-    const stakeAmount = requiredStake ? web3Utils.fromWei(this.state.requiredStake, 'ether') : 0
     const showWhitelistError = this.state.showWhitelistError ? (
-      <Text style={styles.errorMessage}>* Invalid address</Text>
+      <Text style={styles.errorMessage}>* Invalid ETH address</Text>
     ) : null
-    const showEthAddressError = this.state.showEthAddressError ? (
-      <Text style={styles.errorMessage}>* Invalid address</Text>
-    ) : null
-    const step1Button = this.state.stakingContractAddress ? (
+    const step1Button = this.state.stakeAddress ? (
       <Button
-        title={`Stake ${stakeAmount} MFT`}
+        title="Step 1 - Approve deposit of 1 MFT"
         onPress={this.onPressApproveDeposit}
       />
     ) : null
-    const networkMessage = 'This is a testnet version, ensure you switch to the Ropsten network on MyCrypto'
-    const switchNetworkMessage = this.props.ethNetwork === 'TESTNET'
-    ? <Text style={styles.importantMessage}>{networkMessage}</Text>
-    : null
-
-    const infoText = `To participate in the Mainframe network you are required to stake ${stakeAmount} MFT to our\
- staking contract. You will need at least ${stakeAmount} MFT in your wallet and a small amount of ETH to cover\
- transaction fees. You will be able to withdraw your stake at any time.`
-
-   const finishText = `Once you've completed the transaction on MyCrypto and it has been successfully mined, your node\
- address should have a stake associated with it and will enable you to\
- participate in the Mainframe network. You can check the transaction state via`
     const step1 = (
       <View>
         <Text style={styles.stakeInfoText}>
-          {infoText}
+          To participate in the Mainframe network you are required to stake one
+          Mainframe token (1 MFT) to our staking contract. This requires two
+          transactions, one to approve the deposit and a second to make the
+          deposit and whitelist your ETH address.
         </Text>
-        <Text style={styles.stakeInfoHeader}>ETH Address</Text>
+        <Text style={styles.stakeInfoHeader}>Step 1</Text>
         <Text style={styles.stakeInfoText}>
-          Please enter the ETH address holding MFT you wish to stake from.
+          Approve our staking contract to take your deposit. You will need at
+          least 1 MFT in your wallet and a small amount of ETH to cover
+          transaction fees.
         </Text>
-        {showEthAddressError}
-        <TextInput
-          value={this.state.ethAddress}
-          placeholder="ETH address"
-          onChangeText={this.onChangeEthAddress}
-        />
-        <Text style={styles.stakeInfoHeader}>Node Address</Text>
+        {step1Button}
+      </View>
+    )
+    const step2 = (
+      <View>
         <Text style={styles.stakeInfoText}>
-          Please edit the node address below if you wish to stake
-          for a different node.
+          <Text style={styles.boldText}>IMPORTANT:</Text> Only continue with
+          step 2 once the transaction from step 1 has been successfully mined,
+          you can check the state of the transaction from the tx hash provided
+          by MyCrypto.
+        </Text>
+        <Text style={styles.stakeInfoHeader}>Step 2</Text>
+        <Text style={styles.stakeInfoText}>
+          Whitelist the ETH address of the node you would like to stake for
         </Text>
         {showWhitelistError}
         <TextInput
@@ -330,22 +316,23 @@ export default class NodeConnectionView extends Component<Props, State> {
           placeholder="whitelist address"
           onChangeText={this.onChangeWhitelistAddress}
         />
-        {switchNetworkMessage}
-        {step1Button}
+        <Button
+          title="Step 2 - Deposit 1 MFT and whitelist node"
+          onPress={this.onPressDepositAndWhitelist}
+        />
       </View>
     )
-    const step2 = (
+    const step3 = (
       <View>
         <Text style={styles.stakeInfoText}>
-          {finishText}
-          <TouchableOpacity onPress={this.onPressEtherscan}>
-            <Text style={styles.link}>etherscan.</Text>
-          </TouchableOpacity>
+          Once the final transaction has been successfully mined, your node
+          address should have a stake associated with it and will enable you to
+          participate in the Mainframe network.
         </Text>
         <Button title="Restart local node" onPress={this.onPressFinishStake} />
       </View>
     )
-    const steps = [step1, step2]
+    const steps = [step1, step2, step3]
     return (
       <Modal
         onRequestClose={this.onRequestCloseStake}
@@ -498,14 +485,5 @@ const styles = StyleSheet.create({
     color: COLORS.GRAY_47,
     marginBottom: BASIC_SPACING,
     borderRadius: 3,
-  },
-  importantMessage: {
-    color: COLORS.PRIMARY_RED,
-    fontSize: 16,
-    textAlign: 'center',
-    padding: 5,
-  },
-  link: {
-    color: COLORS.PRIMARY_RED,
   },
 })
