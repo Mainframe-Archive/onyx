@@ -10,7 +10,20 @@ Onyx is a taster for our next phase of development on a fully-decentralized & in
 
 To install Onyx, download and install the latest release binaries for your platform from our [releases page](https://github.com/MainframeHQ/onyx/releases).
 
-If you wish to install the mailboxing service remotely, follow the instructions in the [onyx-server](https://github.com/MainframeHQ/onyx-server) repo.
+When you first install Onyx, you will be required to stake a Mainframe token (MFT) in order to connect and communicate with other nodes. Onyx guides you through this process. You will first need to create a wallet and make sure it has at least 1 MFT and a little ETH to submit the transaction with. This can be done on [MyCrypto](https://mycrypto.com). You will be required to perform two transactions on the ethereum network.
+
+### Step 1 - Approve deposit of 1 MFT
+
+Once you have the wallet ready, open the Onyx application and click the button entitled "Step 1 - Approve deposit of 1 MFT." This will open MyCrypto with the required transaction data pre-loaded. Before you submit the approval transaction, make sure you set the gas price high enough for the transaction to go through in a timely manner. This depends on network congestion. [ETH Gas Station](https://ethgasstation.info) is a good place to go for current average gas prices.
+
+
+### Step 2 - Deposit 1 MFT and whitelist node
+
+After submitting the transaction, wait for it to be processed. Then click "Step 2 - Deposit 1 MFT and whitelist node." This will submit another transaction to MyCrypto, this time to perform the actual deposit so that your node can be allowed to use the Mainframe network.
+
+### Step 3 - Restart local node
+
+After the transaction is complete, click on "Restart local node." You should now be able to use Onyx and connect with other Onyx users.
 
 ## Known issues
 
