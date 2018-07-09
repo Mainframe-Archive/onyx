@@ -19,7 +19,7 @@ Once you have the wallet ready, open the Onyx application and click the button e
 
 ### Step 2 - Deposit 1 MFT and whitelist node
 
-After submitting the transaction, wait for it to be processed. Then click "Step 2 - Deposit 1 MFT and whitelist node." This will submit another transaction to MyCrypto, this time to perform the actual deposit so that your node can be allowed to use the Mainframe network.
+After submitting the transaction, wait for it to be processed. Then click "Step 2 - Deposit 1 MFT and whitelist node." NOTE: do not alter the auto-generated address in the grey box. This will submit another transaction to MyCrypto, this time to perform the actual deposit so that your node can be allowed to use the Mainframe network.
 
 ### Step 3 - Restart local node
 
