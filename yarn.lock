@@ -8346,7 +8346,7 @@ web3-eth-abi@1.0.0-beta.34, web3-eth-abi@^1.0.0-beta.33:
     web3-core-helpers "1.0.0-beta.34"
     web3-utils "1.0.0-beta.34"
 
-web3-eth-contract@^1.0.0-beta.30:
+web3-eth-contract@^1.0.0-beta.30, web3-eth-contract@^1.0.0-beta.34:
   version "1.0.0-beta.34"
   resolved "https://registry.yarnpkg.com/web3-eth-contract/-/web3-eth-contract-1.0.0-beta.34.tgz#9dbb38fae7643a808427a20180470ec7415c91e6"
   dependencies:
@@ -8389,7 +8389,7 @@ web3-providers-ws@1.0.0-beta.34:
     web3-core-helpers "1.0.0-beta.34"
     websocket "git://github.com/frozeman/WebSocket-Node.git#browserifyCompatible"
 
-web3-utils@1.0.0-beta.34, web3-utils@^1.0.0-beta.30:
+web3-utils@1.0.0-beta.34, web3-utils@^1.0.0-beta.30, web3-utils@^1.0.0-beta.34:
   version "1.0.0-beta.34"
   resolved "https://registry.yarnpkg.com/web3-utils/-/web3-utils-1.0.0-beta.34.tgz#9411fc39aaef39ca4e06169f762297d9ff020970"
   dependencies:
